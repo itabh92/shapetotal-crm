@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shape Total CRM — Catálogo & Precificação Inteligente</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Password Lock Screen -->
+  <div id="authOverlay" class="auth-overlay">
+    <div class="auth-box">
+      <div class="auth-icon">🔒</div>
+      <div class="auth-title">Catálogo Restrito</div>
+      <div class="auth-sub">Digite a senha de acesso para liberar o catálogo:</div>
+      <form id="authForm" onsubmit="event.preventDefault(); window.CRM.checkPassword();">
+        <input id="authInput" class="auth-input" type="password" placeholder="Digite a senha..." autocomplete="current-password" autofocus />
+        <button type="submit" class="auth-btn">Acessar Catálogo</button>
+        <div id="authError" class="auth-err">Senha incorreta. Tente novamente.</div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- Top Sticky Header -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-logo">ST</div>
+        <div>
+          <div class="brand-title">SHAPE TOTAL · CRM EDITÁVEL</div>
+          <div class="brand-sub">884 SKUs Oficiais · Fotos Importadas · Cálculo Mín / Ideal / Máx em Tempo Real</div>
+        </div>
+      </div>
+
+      <div class="global-controls internal-only">
+        <div class="ctrl-group">
+          <label for="inputCotacao">💵 Dólar (R$):</label>
+          <input id="inputCotacao" class="ctrl-input" type="number" step="0.01" value="5.60" />
+        </div>
+        <div class="ctrl-group">
+          <label for="inputFrete">🚚 Frete (%):</label>
+          <input id="inputFrete" class="ctrl-input" type="number" step="1" value="30" />
+        </div>
+        <div class="ctrl-group">
+          <label for="inputTaxaCartao">💳 Cartão (+R$):</label>
+          <input id="inputTaxaCartao" class="ctrl-input" type="number" step="5" value="100" />
+        </div>
+
+        <div class="tier-switch" title="Escolher qual faixa de lucro aplicar no preço principal">
+          <button class="tier-btn" data-tier="min">🟢 Mínimo</button>
+          <button class="tier-btn active-rec" data-tier="rec">🎯 Recomendado</button>
+          <button class="tier-btn" data-tier="max">🔥 Máximo</button>
+        </div>
+
+        <button id="btnToggleMargins" class="btn btn-amber">⚙️ Margens por Grupo</button>
+      </div>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_especial')">📋 Tabela Tirzepatida & Reta</button>
+        <button class="btn btn-primary" onclick="window.CRM.openWhatsAppCatalogModal('grok')">🧬 Guia Grok WhatsApp</button>
+        <button class="btn btn-blue" onclick="window.CRM.openWhatsAppCatalogModal('filtro')">📲 Lista WhatsApp Atual</button>
+        <button id="btnViewMode" class="btn">📊 Ver Planilha</button>
+        <button id="btnClientMode" class="btn">👁️ Modo Cliente</button>
+        <button class="btn" onclick="window.CRM.lockApp()" title="Bloquear tela">🔒 Sair</button>
+        <button class="btn internal-only" onclick="window.CRM.exportCSV()">📥 Excel/CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Collapsible Group Margin Configuration -->
+    <section id="marginDrawer" class="config-panel internal-only">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 style="font-size:15px; font-weight:800;">⚙️ Configurar Faixas de Lucro por Categoria (Mínimo / Recomendado / Máximo)</h3>
+          <p style="font-size:12px; color:var(--text-muted);">Altere qualquer porcentagem abaixo e todos os produtos daquele grupo recalculam na hora.</p>
+        </div>
+      </div>
+      <div id="marginConfigGrid" class="config-grid"></div>
+    </section>
+
+    <!-- KPI Strip -->
+    <section class="kpi-strip internal-only">
+      <div class="kpi-card">
+        <div class="kpi-label">Produtos Filtrados</div>
+        <div id="kpiCount" class="kpi-value">884 SKUs</div>
+        <div id="kpiCountSub" class="kpi-sub">Carregando...</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Multiplicador de Custo</div>
+        <div id="kpiMult" class="kpi-value" style="color:#38bdf8;">R$ 7,28</div>
+        <div id="kpiMultSub" class="kpi-sub">Dólar R$ 5,60 + 30% frete</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ticket Médio de Venda</div>
+        <div id="kpiAvgPrice" class="kpi-value" style="color:var(--accent);">R$ 0,00</div>
+        <div id="kpiAvgCost" class="kpi-sub">Custo médio: R$ 0,00</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Lucro Líquido Médio / Un</div>
+        <div id="kpiAvgProfit" class="kpi-value" style="color:#34d399;">R$ 0,00</div>
+        <div id="kpiAvgProfitSub" class="kpi-sub">Faixa ativa: Recomendado</div>
+      </div>
+    </section>
+
+    <!-- Main Category Tabs requested by User -->
+    <nav class="group-tabs">
+      <button class="group-tab active" data-group="todas">🌐 Todas <span class="tab-count">884</span></button>
+      <button class="group-tab" data-group="anabolizantes">💪 Anabolizantes <span class="tab-count">464</span></button>
+      <button class="group-tab" data-group="emagrecedores">🔥 Emagrecedores <span class="tab-count">140</span></button>
+      <button class="group-tab" data-group="saude_mental">🧠 Saúde Mental <span class="tab-count">20</span></button>
+      <button class="group-tab" data-group="peptideos">🧬 Peptídeos & HGH <span class="tab-count">201</span></button>
+      <button class="group-tab" data-group="estetico_outros">✨ Estético & Outros <span class="tab-count">59</span></button>
+    </nav>
+
+    <!-- Search & Filter Bar -->
+    <section class="filter-bar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input id="searchInput" type="text" placeholder="Pesquisar por produto, princípio ativo (ex: tirzepatida, retatrutide, bpc, enantato), marca ou código SHAPE..." />
+      </div>
+
+      <select id="subCatSelect" class="filter-select"></select>
+      <select id="brandSelect" class="filter-select"></select>
+
+      <select id="stockSelect" class="filter-select">
+        <option value="com_estoque">✅ Só com Estoque</option>
+        <option value="todos">📦 Todos (Com e Sem Estoque)</option>
+        <option value="sem_estoque">❌ Sem Estoque (Esgotados)</option>
+      </select>
+
+      <select id="branchSelect" class="filter-select">
+        <option value="todas">🌎 Filial: Todas (CDE + PJ + SG)</option>
+        <option value="cde">🇵🇾 Ciudad del Este (CDE)</option>
+        <option value="pj">🇵🇾 Pedro Juan (PJ)</option>
+        <option value="sg">🇵🇾 Saltos del Guairá (SG)</option>
+      </select>
+
+      <select id="sortSelect" class="filter-select">
+        <option value="estoque_desc">🔥 Maior Estoque</option>
+        <option value="preco_asc">💲 Menor Preço</option>
+        <option value="preco_desc">💎 Maior Preço</option>
+        <option value="lucro_desc">💰 Maior Lucro (R$)</option>
+        <option value="nome_asc">🔤 Nome (A-Z)</option>
+      </select>
+    </section>
+
+    <!-- Products Grid / Table Container -->
+    <section id="productsContainer" class="product-grid"></section>
+
+  </main>
+
+  <!-- Floating Cart Button -->
+  <div id="cartFloatingBar" class="cart-bar" onclick="window.CRM.openCartModal()"></div>
+
+  <!-- Modal: Edit Single Product -->
+  <div id="editProductModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="editModalTitle" style="font-size:16px;font-weight:800;">Editar Produto</h3>
+        <button class="btn" onclick="document.getElementById('editProductModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+      <input type="hidden" id="editProdId" />
+      <div id="editModalSummary" style="background:var(--bg-panel);padding:10px;border-radius:8px;font-size:12px;margin-bottom:14px;border:1px solid var(--border);"></div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
+        <div class="m-field">
+          <label>Custo Fonte (USD)</label>
+          <input id="editProdUsd" type="number" step="0.5" />
+        </div>
+        <div class="m-field">
+          <label>Margem Customizada (%)</label>
+          <input id="editProdMargin" type="number" step="1" placeholder="Usar padrão do grupo" />
+        </div>
+        <div class="m-field">
+          <label>Preço Final Travado (R$)</label>
+          <input id="editProdPrice" type="number" step="1" placeholder="Opcional (ex: 450)" />
+        </div>
+      </div>
+
+      <div class="m-field" style="margin-bottom:16px;">
+        <label>Descrição Comercial (aparece no card e na linha do WhatsApp)</label>
+        <input id="editProdDesc" type="text" placeholder="Ex: Focado em queimar gordura localizada sem reter líquido..." style="text-align:left;padding:8px 10px;" />
+      </div>
+
+      <div style="display:flex; justify-content:space-between;">
+        <button class="btn" style="color:#f87171" onclick="window.CRM.resetProductOverride()">🔄 Restaurar Padrão do Grupo</button>
+        <button class="btn btn-primary" onclick="window.CRM.saveProductModal()">💾 Salvar Alterações</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: WhatsApp Catalog / Quote Generator -->
+  <div id="waCatalogModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size:16px;font-weight:800;">📲 Texto Pronto para Copiar e Colar no WhatsApp</h3>
+        <button class="btn" onclick="document.getElementById('waCatalogModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+      <textarea id="waCatalogText" class="wa-textarea"></textarea>
+      <div style="display:flex; justify-content:space-between; margin-top:12px;">
+        <button class="btn" onclick="window.CRM.clearCart()">🗑️ Limpar Orçamento</button>
+        <button id="btnCopyWaModal" class="btn btn-primary">📋 Copiar Tudo para o WhatsApp</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
+
+  <script src="dados_catalogo.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
