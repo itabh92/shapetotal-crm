@@ -3,14 +3,15 @@
 """
 MASTER GENERATOR: 5 Catálogos Oficiais da Shape Total 2026.
 Classificação Canônica e Exclusiva dos 884 SKUs (sem sobreposições).
-Gera os 5 PDFs oficiais com fotos 600x600, layout profissional ReportLab,
-preços de margem máxima (PIX e Cartão até 6x), atualiza o site e sincroniza.
+Garante valores fixos oficiais das Tirzepatidas e Retatrutidas enviadas por Italo,
+margem máxima para o restante, exclui versões antigas e mantém apenas as mais novas.
 """
 
 import os
 import json
 import math
 import shutil
+import glob
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.platypus import (
@@ -26,6 +27,50 @@ JSON_PATH = os.path.join(BASE_DIR, 'catalogo_dados.json')
 DADOS_JS_PATH = os.path.join(BASE_DIR, 'dados_catalogo.js')
 DOWNLOADS_DIR = '/Users/italosouza/Downloads'
 DESKTOP_DIR = '/Users/italosouza/Desktop'
+
+# TABELA OFICIAL DE PREÇOS FIXOS DEFINIDA POR ITALO
+# (Mantém rigorosamente estes valores; para os demais aplica margem máxima)
+SPECIAL_FIXED = {
+    # Linha Tirzepatida 60 mg (4 frascos x 15 mg ou Multi-Dose 15 mg) -> Pix: R$ 900,00 | Cartão: R$ 1.000,00
+    2848: (900, 1000),  # TG 15mg x 4 (60mg)
+    3207: (900, 1000),  # Tirzec 15mg x 4 (60mg)
+    2889: (900, 1000),  # Lipoless 15mg x 4 (60mg)
+    2988: (900, 1000),  # Lipoland 15mg x 4 (60mg)
+    3072: (900, 1000),  # Lipoland MD 15mg
+    2997: (900, 1000),  # Lipoless MD 15mg
+    2996: (900, 1000),  # Tirzec MD 15mg
+    3308: (900, 1000),  # T36 MD 15mg
+    3381: (900, 1000),  # T36 15mg x 4 (60mg)
+    3039: (900, 1000),  # Gluconex 15mg x 4 (60mg)
+    3136: (900, 1000),  # Tirzedral 15mg x 4 (60mg)
+    3203: (900, 1000),  # Tirzedral MD 15mg
+    446:  (900, 1000),  # Lipoless 15mg x 4 Jer
+    3389: (900, 1000),  # Slimex 15mg x 4 (60mg)
+    3014: (900, 1000),  # Synedica Tirzepatida 60mg
+    3392: (900, 1000),  # Oxygen Tirzegen 60mg x 4
+    3271: (900, 1000),  # Oxygen Tirzegen 60mg Polvo
+    2877: (900, 1000),  # Sin Marca Tirzepatida 60mg
+    2765: (900, 1000),  # Gen-Tirz 60mg
+    3186: (900, 1000),  # Veltrane Tirzepatide 60mg
+
+    # Spectrum Mounjaos 60mg (Importado alto custo USD 130 -> Pix R$ 1.467,00 | Cartão R$ 1.567,00)
+    3149: (1467, 1567),
+
+    # Retatrutida 60 mg -> Pix: R$ 1.000,00 | Cartão: R$ 1.100,00
+    3340: (1000, 1100),  # Oxygen Retatrutide 60mg
+    2830: (1000, 1100),  # Gen Retatrutide 60mg
+    2942: (1000, 1100),  # Gen-Health Caneta 60mg
+    3156: (1000, 1100),  # Veltrane Retatrutide 60mg
+    3391: (1000, 1100),  # Synedica Retatrutide 60mg
+    3147: (1000, 1100),  # ZPHC Caneta Retatrutide 60mg
+    2965: (1000, 1100),  # ZPHC Retatrutide 60mg (5x12mg)
+
+    # Ampolas e Frascos avulsos 15 mg
+    3206: (735, 835),   # Pharmacom Jaros 15mg importado
+    2763: (450, 550),   # Gen-Tirz 15mg
+    2875: (250, 300),   # Sin Marca Tirzepatida 15mg
+    3008: (250, 300)    # ZPHC Tirzepatide 15mg
+}
 
 COLECOES_CONFIG = {
     '1_emagrecedores': {
@@ -139,10 +184,17 @@ def classify_product(p):
     return '2_anabolizantes'
 
 def get_product_prices(p, col_id):
+    pid = p.get('id')
+    
+    # 1. Verifica se possui preço fixo acordado oficialmente
+    if pid in SPECIAL_FIXED:
+        pix, cartao = SPECIAL_FIXED[pid]
+        return pix, cartao, True
+        
+    # 2. Caso contrário, aplica a margem máxima da respectiva coleção
     usd = float(p.get('precio', 0) or 0)
     mult_custo = 5.60 * 1.30 # Dólar 5.60 + 30% frete = R$ 7.28
     custo = usd * mult_custo
-    
     cat = (p.get('categoria') or '').lower().strip()
     
     if col_id == '1_emagrecedores':
@@ -164,7 +216,7 @@ def get_product_prices(p, col_id):
             
     preco_pix = math.ceil(custo * (1 + max_pct / 100))
     preco_cartao = preco_pix + 100
-    return preco_pix, preco_cartao
+    return preco_pix, preco_cartao, False
 
 def get_product_image(pid, max_w=95, max_h=95):
     img_path = os.path.join(FOTOS_DIR, f"producto-{pid}.jpg")
@@ -182,7 +234,6 @@ def generate_pdf_for_collection(col_id, prods, cfg):
     pdf_path = os.path.join(BASE_DIR, cfg['pdf_filename'])
     print(f"\n--- Gerando {cfg['nome']} ({len(prods)} SKUs) -> {cfg['pdf_filename']} ---")
     
-    # Agrupa produtos por Marca
     grouped = {}
     for p in prods:
         m = (p.get('marca') or 'SHAPE TOTAL').upper().strip()
@@ -263,7 +314,7 @@ def generate_pdf_for_collection(col_id, prods, cfg):
     topbar_data = [
         [
             Paragraph(f"<b>SHAPE TOTAL · CATÁLOGO OFICIAL 2026</b><br/><font size='8' color='#94a3b8'>{cfg['subtitulo']}</font>", ParagraphStyle('TopL', fontName='Helvetica-Bold', fontSize=11.5, leading=14, textColor=colors.HexColor('#ffffff'))),
-            Paragraph(f"<b>{len(prods)} PRODUTOS EXCLUSIVOS</b><br/><font size='8' color='{cfg['topbar_badge']}'>Preços Máximos Tabelados · 100% Originais</font>", ParagraphStyle('TopR', fontName='Helvetica-Bold', fontSize=10, leading=13, textColor=colors.HexColor(cfg['topbar_badge']), alignment=TA_RIGHT))
+            Paragraph(f"<b>{len(prods)} PRODUTOS EXCLUSIVOS</b><br/><font size='8' color='{cfg['topbar_badge']}'>Preços Oficiais Tabelados · 100% Originais</font>", ParagraphStyle('TopR', fontName='Helvetica-Bold', fontSize=10, leading=13, textColor=colors.HexColor(cfg['topbar_badge']), alignment=TA_RIGHT))
         ]
     ]
     t_topbar = Table(topbar_data, colWidths=[340, 203])
@@ -294,7 +345,6 @@ def generate_pdf_for_collection(col_id, prods, cfg):
     story.append(t_notice)
     story.append(Spacer(1, 12))
     
-    # Ordenação de marcas: maiores primeiro
     sorted_brands = sorted(grouped.keys(), key=lambda b: -len(grouped[b]))
     
     for brand in sorted_brands:
@@ -316,7 +366,7 @@ def generate_pdf_for_collection(col_id, prods, cfg):
         brand_flow = [b_bar, Spacer(1, 5)]
         
         for p in b_prods:
-            pix, cartao = get_product_prices(p, col_id)
+            pix, cartao, is_fixed = get_product_prices(p, col_id)
             parc = round(cartao / 6, 2)
             
             nome = p.get('nombre') or 'Produto sem nome'
@@ -334,13 +384,14 @@ def generate_pdf_for_collection(col_id, prods, cfg):
             
             stock_cde = int(p.get('stock_cde', 0) or 0)
             stock_badge = f"<font color='{cfg['price_pix_color']}'><b>● DISPONÍVEL</b></font>" if stock_cde > 0 else "<font color='#64748b'>● SOB ENCOMENDA</font>"
+            fixed_tag = " &nbsp;|&nbsp; <font color='#047857'><b>VALOR FIXO OFICIAL</b></font>" if is_fixed else ""
             
             details_cell = [
                 Paragraph(f"<b>{nome}</b>", prod_name_style),
                 Spacer(1, 3),
                 Paragraph(sub_text, prod_sub_style),
                 Spacer(1, 2),
-                Paragraph(f"{stock_badge} &nbsp;|&nbsp; <font color='#0f172a'>Cód #{p.get('id')}</font>", prod_sub_style)
+                Paragraph(f"{stock_badge}{fixed_tag} &nbsp;|&nbsp; <font color='#0f172a'>Cód #{p.get('id')}</font>", prod_sub_style)
             ]
             
             price_cell = [
@@ -391,7 +442,7 @@ def main():
     prods = data.get('productos', [])
     print(f"Total de produtos no CRM: {len(prods)}")
     
-    # Classificação canônica de todos os produtos
+    # Classificação canônica
     collections = {k: [] for k in COLECOES_CONFIG}
     for p in prods:
         col_id = classify_product(p)
@@ -405,7 +456,7 @@ def main():
     total_classificados = sum(len(cp) for cp in collections.values())
     assert total_classificados == len(prods), f"Erro de partição: {total_classificados} != {len(prods)}"
     
-    # Salva catalogo_dados.json atualizado com a taxonomia canônica
+    # Atualiza JSON e JS do site
     with open(JSON_PATH, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
         
@@ -437,14 +488,34 @@ def main():
     except Exception as e:
         print(f"Aviso ao gerar mobile bundle: {e}")
 
-    # Gera os 5 PDFs
+    # Limpeza preventiva de PDFs antigos
+    for d in [BASE_DIR, DOWNLOADS_DIR, DESKTOP_DIR]:
+        for old_f in glob.glob(os.path.join(d, "Catalogo_*.pdf")):
+            try:
+                os.remove(old_f)
+            except Exception:
+                pass
+
+    # Gera os 5 novos PDFs
     pdf_paths = []
     for col_id, col_prods in collections.items():
         cfg = COLECOES_CONFIG[col_id]
         p_path = generate_pdf_for_collection(col_id, col_prods, cfg)
         pdf_paths.append(p_path)
         
-    print("\nTodos os 5 PDFs foram gerados no diretório do CRM.")
+    # Copia os 5 novos PDFs para Downloads e Desktop (sobrescrevendo com os mais recentes)
+    for p_path in pdf_paths:
+        fname = os.path.basename(p_path)
+        try:
+            shutil.copy2(p_path, os.path.join(DOWNLOADS_DIR, fname))
+        except Exception as e:
+            pass
+        try:
+            shutil.copy2(p_path, os.path.join(DESKTOP_DIR, fname))
+        except Exception as e:
+            pass
+            
+    print("\nTodos os 5 PDFs oficiais foram compilados e atualizados em ShapeTotalCRM, Downloads e Desktop.")
     return pdf_paths
 
 if __name__ == '__main__':
