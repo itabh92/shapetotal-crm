@@ -94,6 +94,13 @@ def main():
         log(f"Aviso ao atualizar bundle mobile: {e}")
 
     log(f"Sincronização concluída com sucesso: {len(raw_data.get('productos', []))} SKUs | {novas_fotos} novas fotos.")
+    if novas_fotos > 0:
+        import subprocess
+        subprocess.run(
+            ["/usr/bin/python3", "/Users/italosouza/bin/avisar_italo.py", "--rotinas",
+             f"💊 Shape Total CRM: catálogo sincronizado ({len(raw_data.get('productos', []))} SKUs, {novas_fotos} novas fotos)."],
+            capture_output=True, check=False, timeout=30
+        )
 
 if __name__ == '__main__':
     main()
