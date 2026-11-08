@@ -4,649 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Shape Total CRM — Catálogo & Precificação Inteligente</title>
-  <style>
-:root {
-  --bg: #0b0e14;
-  --bg-card: #131822;
-  --bg-hover: #1a2130;
-  --bg-panel: #0f131c;
-  --border: #232c3d;
-  --text: #f1f5f9;
-  --text-muted: #94a3b8;
-  --accent: #10b981;
-  --accent-hover: #059669;
-  --blue: #3b82f6;
-  --amber: #f59e0b;
-  --purple: #8b5cf6;
-  --danger: #ef4444;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.45;
-  padding-bottom: 80px;
-}
-
-/* Header & Topbar */
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(11, 14, 20, 0.94);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  padding: 12px 20px;
-}
-.topbar-inner {
-  max-width: 1600px;
-  margin: 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.brand-logo {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #10b981, #047857);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  font-size: 18px;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-.brand-title { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
-.brand-sub { font-size: 11px; color: var(--text-muted); }
-
-.global-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  background: var(--bg-card);
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-}
-.ctrl-group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-.ctrl-group label { font-weight: 600; color: #cbd5e1; }
-.ctrl-input {
-  width: 72px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: #fff;
-  padding: 5px 8px;
-  border-radius: 6px;
-  font-weight: 700;
-  font-size: 13px;
-  text-align: right;
-}
-.ctrl-input:focus { outline: none; border-color: var(--accent); }
-
-.tier-switch {
-  display: flex;
-  background: var(--bg);
-  border-radius: 8px;
-  padding: 3px;
-  border: 1px solid var(--border);
-}
-.tier-btn {
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  padding: 5px 10px;
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.15s;
-}
-.tier-btn.active-min { background: #0284c7; color: #fff; }
-.tier-btn.active-rec { background: var(--accent); color: #fff; }
-.tier-btn.active-max { background: #d97706; color: #fff; }
-
-.btn {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 7px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: 0.15s;
-}
-.btn:hover { background: var(--bg-hover); border-color: #3b4963; }
-.btn-primary { background: var(--accent); border-color: var(--accent); color: #052e16; font-weight: 800; }
-.btn-primary:hover { background: var(--accent-hover); color: #fff; }
-.btn-blue { background: var(--blue); border-color: var(--blue); color: #fff; }
-.btn-amber { background: var(--amber); border-color: var(--amber); color: #000; font-weight: 700; }
-
-/* Main container */
-.container {
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 16px 20px;
-}
-
-/* KPI Strip */
-.kpi-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.kpi-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px 14px;
-}
-.kpi-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
-.kpi-value { font-size: 20px; font-weight: 800; margin-top: 2px; }
-.kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-/* Collapsible Margin Config Drawer */
-.config-panel {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
-  display: none;
-}
-.config-panel.open { display: block; }
-.config-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-  gap: 12px;
-  margin-top: 12px;
-}
-.group-margin-card {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 12px;
-}
-.group-margin-title {
-  font-size: 13px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.margin-inputs {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-}
-.m-field label {
-  display: block;
-  font-size: 10px;
-  color: var(--text-muted);
-  margin-bottom: 3px;
-}
-.m-field input {
-  width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: #fff;
-  padding: 5px 6px;
-  border-radius: 5px;
-  font-weight: 700;
-  font-size: 12px;
-  text-align: center;
-}
-
-/* Group Tabs */
-.group-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-.group-tab {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: 0.15s;
-}
-.group-tab:hover { background: var(--bg-hover); }
-.group-tab.active {
-  background: linear-gradient(135deg, #10b981, #059669);
-  border-color: #10b981;
-  color: #052e16;
-}
-.tab-count {
-  background: rgba(255,255,255,0.12);
-  padding: 2px 7px;
-  border-radius: 99px;
-  font-size: 11px;
-}
-.group-tab.active .tab-count {
-  background: rgba(0,0,0,0.22);
-  color: #fff;
-}
-
-/* Search & Filter Bar */
-.filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  padding: 12px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-}
-.search-box {
-  flex: 1;
-  min-width: 260px;
-  position: relative;
-}
-.search-box input {
-  width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: #fff;
-  padding: 10px 14px 10px 36px;
-  border-radius: 8px;
-  font-size: 14px;
-}
-.search-box input:focus { outline: none; border-color: var(--accent); }
-.search-icon {
-  position: absolute;
-  left: 11px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-}
-.filter-select {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-/* Product Grid (Store Clone) */
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-  gap: 16px;
-}
-.p-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.15s, border-color 0.15s;
-}
-.p-card:hover { border-color: #38465e; transform: translateY(-2px); }
-.p-card.no-stock { opacity: 0.65; }
-
-.p-media {
-  position: relative;
-  height: 185px;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  cursor: pointer;
-}
-.p-media img {
-  max-width: 92%;
-  max-height: 92%;
-  object-fit: contain;
-  transition: transform 0.2s;
-}
-.p-media:hover img { transform: scale(1.06); }
-.p-placeholder {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #161f30, #0d121c);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  padding: 16px;
-  text-align: center;
-}
-.p-badges {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  right: 8px;
-  display: flex;
-  justify-content: space-between;
-  pointer-events: none;
-}
-.badge {
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-.badge-cat { background: rgba(15, 23, 42, 0.85); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); }
-.badge-stock-ok { background: rgba(6, 78, 59, 0.92); color: #34d399; }
-.badge-stock-zero { background: rgba(127, 29, 29, 0.92); color: #fca5a5; }
-
-.p-body {
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
-}
-.p-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--text-muted);
-}
-.p-sku { font-family: monospace; color: #94a3b8; }
-.p-brand { font-weight: 700; color: #cbd5e1; text-transform: uppercase; }
-.p-title {
-  font-size: 14px;
-  font-weight: 800;
-  color: #fff;
-  line-height: 1.3;
-}
-.p-comp {
-  font-size: 11px;
-  color: #38bdf8;
-  font-weight: 500;
-}
-.p-desc {
-  font-size: 11.5px;
-  color: var(--text-muted);
-  background: rgba(255,255,255,0.03);
-  padding: 6px 8px;
-  border-radius: 6px;
-  border-left: 2px solid var(--accent);
-}
-.p-stock-branches {
-  display: flex;
-  gap: 6px;
-  font-size: 10.5px;
-  color: var(--text-muted);
-}
-.branch-pill {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-/* Cost & 3 Profit Tiers Box */
-.p-cost-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--bg-panel);
-  padding: 6px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  border: 1px solid var(--border);
-}
-.tiers-box {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 6px;
-  margin-top: 2px;
-}
-.tier-pill {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 6px 4px;
-  text-align: center;
-  cursor: pointer;
-  transition: 0.15s;
-}
-.tier-pill:hover { border-color: #64748b; }
-.tier-pill.selected-min { border-color: #0284c7; background: rgba(2, 132, 199, 0.15); }
-.tier-pill.selected-rec { border-color: var(--accent); background: rgba(16, 185, 129, 0.16); }
-.tier-pill.selected-max { border-color: #d97706; background: rgba(217, 119, 6, 0.16); }
-.t-name { font-size: 9.5px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
-.t-price { font-size: 13px; font-weight: 800; color: #fff; margin-top: 1px; }
-.t-profit { font-size: 9.5px; color: #34d399; }
-
-.p-price-hero {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding-top: 6px;
-  border-top: 1px solid var(--border);
-  margin-top: auto;
-}
-.final-label { font-size: 11px; color: var(--text-muted); }
-.final-val { font-size: 20px; font-weight: 900; color: var(--accent); }
-.card-val { font-size: 10.5px; color: var(--text-muted); }
-
-.p-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-/* Table View */
-.table-wrap {
-  overflow-x: auto;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-.crm-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12.5px;
-}
-.crm-table th, .crm-table td {
-  padding: 9px 10px;
-  border-bottom: 1px solid var(--border);
-  text-align: left;
-}
-.crm-table th {
-  background: var(--bg-panel);
-  color: var(--text-muted);
-  font-size: 11px;
-  text-transform: uppercase;
-  position: sticky;
-  top: 0;
-}
-.crm-table tr:hover { background: var(--bg-hover); }
-.tbl-thumb {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-  background: #fff;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-/* Client Mode hides internal costs */
-body.client-mode .internal-only { display: none !important; }
-
-/* Modals */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.78);
-  z-index: 300;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-.modal-backdrop.open { display: flex; }
-.modal-box {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  max-width: 720px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: 20px;
-}
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
-}
-.wa-textarea {
-  width: 100%;
-  height: 360px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: #e2e8f0;
-  padding: 12px;
-  border-radius: 8px;
-  font-family: monospace;
-  font-size: 12.5px;
-  resize: vertical;
-}
-
-/* Floating Quote Cart Bar */
-.cart-bar {
-  position: fixed;
-  bottom: 16px;
-  right: 20px;
-  z-index: 200;
-  background: linear-gradient(135deg, #059669, #047857);
-  color: #fff;
-  padding: 12px 20px;
-  border-radius: 99px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-  display: none;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  font-weight: 800;
-}
-.cart-bar.has-items { display: flex; }
-
-
-/* Password Lock Screen */
-.auth-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(11, 14, 20, 0.98);
-  backdrop-filter: blur(16px);
-  z-index: 99999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-.auth-box {
-  background: #131822;
-  border: 1px solid #232c3d;
-  border-radius: 18px;
-  padding: 36px 28px;
-  max-width: 380px;
-  width: 100%;
-  text-align: center;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.8);
-}
-.auth-icon {
-  font-size: 42px;
-  margin-bottom: 12px;
-}
-.auth-title {
-  font-size: 19px;
-  font-weight: 800;
-  color: #fff;
-  margin-bottom: 6px;
-}
-.auth-sub {
-  font-size: 12.5px;
-  color: #94a3b8;
-  margin-bottom: 22px;
-}
-.auth-input {
-  width: 100%;
-  background: #0b0e14;
-  border: 1px solid #334155;
-  color: #fff;
-  padding: 13px 16px;
-  border-radius: 10px;
-  font-size: 16px;
-  text-align: center;
-  letter-spacing: 2px;
-  margin-bottom: 14px;
-}
-.auth-input:focus {
-  outline: none;
-  border-color: #10b981;
-}
-.auth-btn {
-  width: 100%;
-  background: #10b981;
-  border: none;
-  color: #052e16;
-  font-weight: 800;
-  padding: 13px;
-  border-radius: 10px;
-  font-size: 15px;
-  cursor: pointer;
-  transition: 0.15s;
-}
-.auth-btn:hover {
-  background: #059669;
-  color: #fff;
-}
-.auth-err {
-  font-size: 12px;
-  color: #f87171;
-  margin-top: 10px;
-  display: none;
-}
-
-</style>
+  <meta name="theme-color" content="#0b1120" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ShapeTotal" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="icon" type="image/png" href="icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <!-- Password Lock Screen -->
@@ -761,7 +126,8 @@ body.client-mode .internal-only { display: none !important; }
     <section class="filter-bar">
       <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input id="searchInput" type="text" placeholder="Pesquisar por produto, princípio ativo (ex: tirzepatida, retatrutide, bpc, enantato), marca ou código SHAPE..." />
+        <input id="searchInput" type="text" placeholder="Pesquisar por produto, apelido (ex: dura, trembo, deca, enan, mounjaro), marca..." />
+        <button id="btnClearSearch" class="search-clear-btn" title="Limpar busca" style="display:none;" onclick="window.CRM.clearSearch()">✕</button>
       </div>
 
       <select id="subCatSelect" class="filter-select"></select>
@@ -842,9 +208,12 @@ body.client-mode .internal-only { display: none !important; }
         <button class="btn" onclick="document.getElementById('waCatalogModal').classList.remove('open')">✖ Fechar</button>
       </div>
       <textarea id="waCatalogText" class="wa-textarea"></textarea>
-      <div style="display:flex; justify-content:space-between; margin-top:12px;">
+      <div style="display:flex; justify-content:space-between; gap:8px; margin-top:12px; flex-wrap:wrap;">
         <button class="btn" onclick="window.CRM.clearCart()">🗑️ Limpar Orçamento</button>
-        <button id="btnCopyWaModal" class="btn btn-primary">📋 Copiar Tudo para o WhatsApp</button>
+        <div style="display:flex; gap:8px;">
+          <button id="btnOpenWaModal" class="btn btn-green" onclick="window.CRM.openWhatsAppDirect()">📲 Abrir no WhatsApp</button>
+          <button id="btnCopyWaModal" class="btn btn-primary">📋 Copiar Tudo</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1096,6 +465,46 @@ window.SHAPETOTAL_RAW = {"productos": [{"id": 1396, "nombre": "ACNECUR X 20 MG X
     return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
+  const GYM_SYNONYMS = {
+    'dura': ['dura', 'durateston', 'sustanon', 'sustan', 'testoviron'],
+    'durateston': ['dura', 'durateston', 'sustanon', 'sustan'],
+    'deca': ['deca', 'durabolin', 'nandrolona', 'nandrolone'],
+    'enan': ['enan', 'enantato', 'enanthate', 'testoviron'],
+    'enantato': ['enan', 'enantato', 'enanthate'],
+    'cipio': ['cipio', 'cipionato', 'cypionate'],
+    'cipionato': ['cipio', 'cipionato', 'cypionate'],
+    'propi': ['propi', 'propionato', 'propionate'],
+    'propionato': ['propi', 'propionato', 'propionate'],
+    'stano': ['stano', 'stanozolol', 'stanazol', 'winstrol', 'rexogin', 'stromba'],
+    'winstrol': ['stano', 'stanozolol', 'stanazol', 'winstrol', 'rexogin'],
+    'trembo': ['trembo', 'trembolona', 'trenbolone', 'tri-tren', 'parabolan', 'tren'],
+    'tren': ['trembo', 'trembolona', 'trenbolone', 'tri-tren', 'parabolan', 'tren'],
+    'trembolona': ['trembo', 'trembolona', 'trenbolone', 'parabolan'],
+    'diana': ['diana', 'dianabol', 'metandienona', 'methandienone', 'metandrostenolona'],
+    'dianabol': ['diana', 'dianabol', 'metandienona'],
+    'hemo': ['hemo', 'hemogenin', 'oximetolona', 'oxymetholone', 'anadrol'],
+    'hemogenin': ['hemo', 'hemogenin', 'oximetolona', 'anadrol'],
+    'oxan': ['oxan', 'oxandrolona', 'oxandrolone', 'anavar'],
+    'oxandrolona': ['oxan', 'oxandrolona', 'oxandrolone', 'anavar'],
+    'primo': ['primo', 'primobolan', 'metenolona', 'methenolone'],
+    'primobolan': ['primo', 'primobolan', 'metenolona'],
+    'mast': ['mast', 'masteron', 'drostanolona', 'drostanolone'],
+    'masteron': ['mast', 'masteron', 'drostanolona'],
+    'clembu': ['clembu', 'clembuterol', 'clenbuterol', 'lavizoo', 'pulmonil'],
+    'clenbuterol': ['clembu', 'clembuterol', 'clenbuterol'],
+    'mounjaro': ['mounjaro', 'tirzepatida', 'tirzepatide', 'tirzec', 'lipoless', 'lipoland'],
+    'tirzepatida': ['mounjaro', 'tirzepatida', 'tirzepatide', 'tirzec', 'lipoless'],
+    'ozempic': ['ozempic', 'semaglutida', 'semaglutide', 'wegovy'],
+    'wegovy': ['ozempic', 'semaglutida', 'semaglutide', 'wegovy'],
+    'semaglutida': ['ozempic', 'semaglutida', 'semaglutide'],
+    'reta': ['reta', 'retatrutida', 'retatrutide'],
+    'retatrutida': ['reta', 'retatrutida', 'retatrutide'],
+    'gh': ['gh', 'hgh', 'somatropina', 'somatropin', 'norditropin'],
+    'bpc': ['bpc', 'bpc-157', 'bpc157'],
+    'tadalafila': ['tadalafila', 'tadalafil', 'cialis'],
+    'cialis': ['tadalafila', 'tadalafil', 'cialis']
+  };
+
   function getFilteredProducts() {
     const q = state.search.trim().toLowerCase();
     let list = rawCatalog.map(computeProduct);
@@ -1123,9 +532,11 @@ window.SHAPETOTAL_RAW = {"productos": [{"id": 1396, "nombre": "ACNECUR X 20 MG X
 
       if (q) {
         const hay = `${p.id} shape-${p.id} ${p.nombre || ''} ${p.marca || ''} ${p.composicion || ''} ${p.categoria || ''} ${p.desc || ''}`.toLowerCase();
-        const tokens = q.split(/\s+/);
+        const tokens = q.split(/\s+/).filter(Boolean);
         for (const t of tokens) {
-          if (!hay.includes(t)) return false;
+          const syns = GYM_SYNONYMS[t] || [t];
+          const matched = syns.some(s => hay.includes(s));
+          if (!matched) return false;
         }
       }
       return true;
@@ -1547,19 +958,61 @@ window.SHAPETOTAL_RAW = {"productos": [{"id": 1396, "nombre": "ACNECUR X 20 MG X
         const filtered = getFilteredProducts();
         const lines = [
           `*CATÁLOGO ATUALIZADO — ${state.mainGroup.toUpperCase()} (${filtered.length} produtos)*`,
-          `_Valores à vista no PIX_`,
+          `_Valores à vista no PIX | Cartão em até 6x_`,
           ``
         ];
+        // Organiza por Marca mantendo 100% dos produtos filtrados
+        const byBrand = {};
         filtered.forEach(p => {
-          if (p.desc) {
-            lines.push(`•  *${p.nombre}*: ${p.desc} ➔ *${formatBRLInt(p.precoFinal)}*`);
-          } else {
-            lines.push(`•  *${p.nombre}* (${(p.marca || '').toUpperCase()})${p.composicion ? ' — ' + p.composicion : ''} ➔ *${formatBRLInt(p.precoFinal)}*`);
-          }
+          const b = (p.marca || 'OUTRAS MARCAS').toUpperCase().trim();
+          if (!byBrand[b]) byBrand[b] = [];
+          byBrand[b].push(p);
+        });
+        Object.keys(byBrand).sort().forEach(brand => {
+          lines.push(`*━━━ 🏷️ ${brand} (${byBrand[brand].length}) ━━━*`);
+          byBrand[brand].forEach(p => {
+            if (p.desc) {
+              lines.push(`•  *${p.nombre}*: ${p.desc} ➔ *${formatBRLInt(p.precoFinal)}*`);
+            } else {
+              lines.push(`•  *${p.nombre}*${p.composicion ? ' — ' + p.composicion : ''} ➔ *${formatBRLInt(p.precoFinal)}*`);
+            }
+          });
+          lines.push(``);
         });
         textarea.value = lines.join('\n');
       }
       modal.classList.add('open');
+    },
+
+    openWhatsAppDirect() {
+      const textarea = document.getElementById('waCatalogText');
+      const text = textarea ? textarea.value : '';
+      if (!text) {
+        showToast('Nada para enviar!');
+        return;
+      }
+      navigator.clipboard.writeText(text);
+      if (text.length < 2500) {
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+        showToast('Abrindo WhatsApp com texto pronto...');
+      } else {
+        const url = `https://api.whatsapp.com/send`;
+        window.open(url, '_blank');
+        showToast('Texto copiado! Cole na conversa do WhatsApp.');
+      }
+    },
+
+    clearSearch() {
+      const inp = document.getElementById('searchInput');
+      const btn = document.getElementById('btnClearSearch');
+      if (inp) {
+        inp.value = '';
+        state.search = '';
+      }
+      if (btn) btn.style.display = 'none';
+      renderAll();
+      showToast('Busca limpa!');
     },
 
     openCartModal() {
@@ -1739,8 +1192,13 @@ window.SHAPETOTAL_RAW = {"productos": [{"id": 1396, "nombre": "ACNECUR X 20 MG X
       });
     });
 
-    document.getElementById('searchInput').addEventListener('input', e => {
+    const searchInp = document.getElementById('searchInput');
+    const searchClearBtn = document.getElementById('btnClearSearch');
+    searchInp.addEventListener('input', e => {
       state.search = e.target.value;
+      if (searchClearBtn) {
+        searchClearBtn.style.display = state.search ? 'flex' : 'none';
+      }
       renderAll();
     });
 

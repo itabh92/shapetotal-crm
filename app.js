@@ -239,6 +239,46 @@
     return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
+  const GYM_SYNONYMS = {
+    'dura': ['dura', 'durateston', 'sustanon', 'sustan', 'testoviron'],
+    'durateston': ['dura', 'durateston', 'sustanon', 'sustan'],
+    'deca': ['deca', 'durabolin', 'nandrolona', 'nandrolone'],
+    'enan': ['enan', 'enantato', 'enanthate', 'testoviron'],
+    'enantato': ['enan', 'enantato', 'enanthate'],
+    'cipio': ['cipio', 'cipionato', 'cypionate'],
+    'cipionato': ['cipio', 'cipionato', 'cypionate'],
+    'propi': ['propi', 'propionato', 'propionate'],
+    'propionato': ['propi', 'propionato', 'propionate'],
+    'stano': ['stano', 'stanozolol', 'stanazol', 'winstrol', 'rexogin', 'stromba'],
+    'winstrol': ['stano', 'stanozolol', 'stanazol', 'winstrol', 'rexogin'],
+    'trembo': ['trembo', 'trembolona', 'trenbolone', 'tri-tren', 'parabolan', 'tren'],
+    'tren': ['trembo', 'trembolona', 'trenbolone', 'tri-tren', 'parabolan', 'tren'],
+    'trembolona': ['trembo', 'trembolona', 'trenbolone', 'parabolan'],
+    'diana': ['diana', 'dianabol', 'metandienona', 'methandienone', 'metandrostenolona'],
+    'dianabol': ['diana', 'dianabol', 'metandienona'],
+    'hemo': ['hemo', 'hemogenin', 'oximetolona', 'oxymetholone', 'anadrol'],
+    'hemogenin': ['hemo', 'hemogenin', 'oximetolona', 'anadrol'],
+    'oxan': ['oxan', 'oxandrolona', 'oxandrolone', 'anavar'],
+    'oxandrolona': ['oxan', 'oxandrolona', 'oxandrolone', 'anavar'],
+    'primo': ['primo', 'primobolan', 'metenolona', 'methenolone'],
+    'primobolan': ['primo', 'primobolan', 'metenolona'],
+    'mast': ['mast', 'masteron', 'drostanolona', 'drostanolone'],
+    'masteron': ['mast', 'masteron', 'drostanolona'],
+    'clembu': ['clembu', 'clembuterol', 'clenbuterol', 'lavizoo', 'pulmonil'],
+    'clenbuterol': ['clembu', 'clembuterol', 'clenbuterol'],
+    'mounjaro': ['mounjaro', 'tirzepatida', 'tirzepatide', 'tirzec', 'lipoless', 'lipoland'],
+    'tirzepatida': ['mounjaro', 'tirzepatida', 'tirzepatide', 'tirzec', 'lipoless'],
+    'ozempic': ['ozempic', 'semaglutida', 'semaglutide', 'wegovy'],
+    'wegovy': ['ozempic', 'semaglutida', 'semaglutide', 'wegovy'],
+    'semaglutida': ['ozempic', 'semaglutida', 'semaglutide'],
+    'reta': ['reta', 'retatrutida', 'retatrutide'],
+    'retatrutida': ['reta', 'retatrutida', 'retatrutide'],
+    'gh': ['gh', 'hgh', 'somatropina', 'somatropin', 'norditropin'],
+    'bpc': ['bpc', 'bpc-157', 'bpc157'],
+    'tadalafila': ['tadalafila', 'tadalafil', 'cialis'],
+    'cialis': ['tadalafila', 'tadalafil', 'cialis']
+  };
+
   function getFilteredProducts() {
     const q = state.search.trim().toLowerCase();
     let list = rawCatalog.map(computeProduct);
@@ -266,9 +306,11 @@
 
       if (q) {
         const hay = `${p.id} shape-${p.id} ${p.nombre || ''} ${p.marca || ''} ${p.composicion || ''} ${p.categoria || ''} ${p.desc || ''}`.toLowerCase();
-        const tokens = q.split(/\s+/);
+        const tokens = q.split(/\s+/).filter(Boolean);
         for (const t of tokens) {
-          if (!hay.includes(t)) return false;
+          const syns = GYM_SYNONYMS[t] || [t];
+          const matched = syns.some(s => hay.includes(s));
+          if (!matched) return false;
         }
       }
       return true;
@@ -690,19 +732,61 @@
         const filtered = getFilteredProducts();
         const lines = [
           `*CATÁLOGO ATUALIZADO — ${state.mainGroup.toUpperCase()} (${filtered.length} produtos)*`,
-          `_Valores à vista no PIX_`,
+          `_Valores à vista no PIX | Cartão em até 6x_`,
           ``
         ];
+        // Organiza por Marca mantendo 100% dos produtos filtrados
+        const byBrand = {};
         filtered.forEach(p => {
-          if (p.desc) {
-            lines.push(`•  *${p.nombre}*: ${p.desc} ➔ *${formatBRLInt(p.precoFinal)}*`);
-          } else {
-            lines.push(`•  *${p.nombre}* (${(p.marca || '').toUpperCase()})${p.composicion ? ' — ' + p.composicion : ''} ➔ *${formatBRLInt(p.precoFinal)}*`);
-          }
+          const b = (p.marca || 'OUTRAS MARCAS').toUpperCase().trim();
+          if (!byBrand[b]) byBrand[b] = [];
+          byBrand[b].push(p);
+        });
+        Object.keys(byBrand).sort().forEach(brand => {
+          lines.push(`*━━━ 🏷️ ${brand} (${byBrand[brand].length}) ━━━*`);
+          byBrand[brand].forEach(p => {
+            if (p.desc) {
+              lines.push(`•  *${p.nombre}*: ${p.desc} ➔ *${formatBRLInt(p.precoFinal)}*`);
+            } else {
+              lines.push(`•  *${p.nombre}*${p.composicion ? ' — ' + p.composicion : ''} ➔ *${formatBRLInt(p.precoFinal)}*`);
+            }
+          });
+          lines.push(``);
         });
         textarea.value = lines.join('\n');
       }
       modal.classList.add('open');
+    },
+
+    openWhatsAppDirect() {
+      const textarea = document.getElementById('waCatalogText');
+      const text = textarea ? textarea.value : '';
+      if (!text) {
+        showToast('Nada para enviar!');
+        return;
+      }
+      navigator.clipboard.writeText(text);
+      if (text.length < 2500) {
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+        showToast('Abrindo WhatsApp com texto pronto...');
+      } else {
+        const url = `https://api.whatsapp.com/send`;
+        window.open(url, '_blank');
+        showToast('Texto copiado! Cole na conversa do WhatsApp.');
+      }
+    },
+
+    clearSearch() {
+      const inp = document.getElementById('searchInput');
+      const btn = document.getElementById('btnClearSearch');
+      if (inp) {
+        inp.value = '';
+        state.search = '';
+      }
+      if (btn) btn.style.display = 'none';
+      renderAll();
+      showToast('Busca limpa!');
     },
 
     openCartModal() {
@@ -882,8 +966,13 @@
       });
     });
 
-    document.getElementById('searchInput').addEventListener('input', e => {
+    const searchInp = document.getElementById('searchInput');
+    const searchClearBtn = document.getElementById('btnClearSearch');
+    searchInp.addEventListener('input', e => {
       state.search = e.target.value;
+      if (searchClearBtn) {
+        searchClearBtn.style.display = state.search ? 'flex' : 'none';
+      }
       renderAll();
     });
 

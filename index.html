@@ -4,6 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Shape Total CRM — Catálogo & Precificação Inteligente</title>
+  <meta name="theme-color" content="#0b1120" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ShapeTotal" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="icon" type="image/png" href="icon-192.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -119,7 +126,8 @@
     <section class="filter-bar">
       <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input id="searchInput" type="text" placeholder="Pesquisar por produto, princípio ativo (ex: tirzepatida, retatrutide, bpc, enantato), marca ou código SHAPE..." />
+        <input id="searchInput" type="text" placeholder="Pesquisar por produto, apelido (ex: dura, trembo, deca, enan, mounjaro), marca..." />
+        <button id="btnClearSearch" class="search-clear-btn" title="Limpar busca" style="display:none;" onclick="window.CRM.clearSearch()">✕</button>
       </div>
 
       <select id="subCatSelect" class="filter-select"></select>
@@ -200,9 +208,12 @@
         <button class="btn" onclick="document.getElementById('waCatalogModal').classList.remove('open')">✖ Fechar</button>
       </div>
       <textarea id="waCatalogText" class="wa-textarea"></textarea>
-      <div style="display:flex; justify-content:space-between; margin-top:12px;">
+      <div style="display:flex; justify-content:space-between; gap:8px; margin-top:12px; flex-wrap:wrap;">
         <button class="btn" onclick="window.CRM.clearCart()">🗑️ Limpar Orçamento</button>
-        <button id="btnCopyWaModal" class="btn btn-primary">📋 Copiar Tudo para o WhatsApp</button>
+        <div style="display:flex; gap:8px;">
+          <button id="btnOpenWaModal" class="btn btn-green" onclick="window.CRM.openWhatsAppDirect()">📲 Abrir no WhatsApp</button>
+          <button id="btnCopyWaModal" class="btn btn-primary">📋 Copiar Tudo</button>
+        </div>
       </div>
     </div>
   </div>
