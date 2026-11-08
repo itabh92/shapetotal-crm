@@ -280,7 +280,7 @@
       "qty": "10 ml",
       "mg": "76,5 mg",
       "precio": 68,
-      "stock_cde": 151,
+      "stock_cde": 152,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "/api/foto/producto-79.jpg?v=1791124421145"
@@ -1975,7 +1975,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 30,
-      "stock_cde": 911,
+      "stock_cde": 915,
       "stock_pj": 13,
       "stock_sg": 0,
       "foto": "/api/foto/producto-252.jpg?v=1791291295613"
@@ -4555,7 +4555,7 @@
       "qty": "10 ml",
       "mg": "200 mg",
       "precio": 16,
-      "stock_cde": 2813,
+      "stock_cde": 2815,
       "stock_pj": 197,
       "stock_sg": 287,
       "foto": "/api/foto/producto-1943.jpg?v=1790967210272"
@@ -4570,7 +4570,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 32,
-      "stock_cde": 8123,
+      "stock_cde": 8124,
       "stock_pj": 325,
       "stock_sg": 406,
       "foto": "/api/foto/producto-659.jpg?v=1789079019414"
@@ -4660,7 +4660,7 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 15.5,
-      "stock_cde": 2530,
+      "stock_cde": 2536,
       "stock_pj": 255,
       "stock_sg": 313,
       "foto": "/api/foto/producto-663.jpg?v=1790967189270"
@@ -4690,7 +4690,7 @@
       "qty": "10 ml",
       "mg": "",
       "precio": 13,
-      "stock_cde": 246,
+      "stock_cde": 247,
       "stock_pj": 104,
       "stock_sg": 120,
       "foto": "/api/foto/producto-2490.jpg?v=1791127270391"
@@ -4705,7 +4705,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 21,
-      "stock_cde": 968,
+      "stock_cde": 974,
       "stock_pj": 161,
       "stock_sg": 117,
       "foto": "/api/foto/producto-664.jpg?v=1791127585419"
@@ -4825,7 +4825,7 @@
       "qty": "",
       "mg": "60",
       "precio": 85,
-      "stock_cde": 2819,
+      "stock_cde": 2820,
       "stock_pj": 204,
       "stock_sg": 543,
       "foto": "/api/foto/producto-2848.jpg?v=1789074235151"
@@ -7630,7 +7630,7 @@
       "qty": "2",
       "mg": "60",
       "precio": 80,
-      "stock_cde": 305,
+      "stock_cde": 306,
       "stock_pj": 25,
       "stock_sg": 9,
       "foto": "/api/foto/producto-3394.jpg?v=1793877372430"
@@ -11125,7 +11125,7 @@
       "qty": "",
       "mg": "",
       "precio": 74,
-      "stock_cde": 2689,
+      "stock_cde": 2690,
       "stock_pj": 288,
       "stock_sg": 13,
       "foto": "/api/foto/producto-3207.jpg?v=1789074208135"
@@ -11350,7 +11350,7 @@
       "qty": "30 ml",
       "mg": "100 mg",
       "precio": 85,
-      "stock_cde": 0,
+      "stock_cde": 2,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": ""
@@ -12250,7 +12250,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 115,
-      "stock_cde": 8584,
+      "stock_cde": 8589,
       "stock_pj": 16,
       "stock_sg": 10,
       "foto": "/api/foto/producto-2158.jpg?v=1793877183512"
@@ -12430,7 +12430,7 @@
       "qty": "",
       "mg": "",
       "precio": 220,
-      "stock_cde": 25,
+      "stock_cde": 26,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": ""
@@ -12970,7 +12970,7 @@
       "qty": "100",
       "mg": "10 mg",
       "precio": 48,
-      "stock_cde": 1,
+      "stock_cde": 2,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "/api/foto/producto-2491.jpg?v=1791841874519"
@@ -13119,7 +13119,7 @@
       "presentacion": "liofilizado",
       "qty": "",
       "mg": "16 ui",
-      "precio": 25,
+      "precio": 20,
       "stock_cde": 1238,
       "stock_pj": 0,
       "stock_sg": 5,
@@ -13134,7 +13134,7 @@
       "presentacion": "liofilizado",
       "qty": "",
       "mg": "32 ui",
-      "precio": 40,
+      "precio": 35,
       "stock_cde": 6861,
       "stock_pj": 0,
       "stock_sg": 0,
@@ -13283,18 +13283,18 @@
   "masPedidos": [
     {
       "id": 663,
-      "pedidos": 150
+      "pedidos": 148
     },
     {
       "id": 2848,
-      "pedidos": 127
-    },
-    {
-      "id": 659,
-      "pedidos": 95
+      "pedidos": 126
     },
     {
       "id": 660,
+      "pedidos": 94
+    },
+    {
+      "id": 659,
       "pedidos": 94
     },
     {
