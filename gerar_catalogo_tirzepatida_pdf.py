@@ -24,17 +24,22 @@ FOTOS_DIR = os.path.join(BASE_DIR, 'fotos')
 JSON_PATH = os.path.join(BASE_DIR, 'catalogo_dados.json')
 PDF_OUT = os.path.join(BASE_DIR, 'Catalogo_Tirzepatida_ShapeTotal.pdf')
 
-# Tabela Oficial de Preços Fixos
+# Tabela Oficial de Preços Fixos e Ajustes de Margem
 SPECIAL_FIXED = {
     # Linha 60 mg / 4 vias x 15 mg / MD 15 mg -> Pix: 900, Cartão: 1000
     2848: (900, 1000), 3207: (900, 1000), 2889: (900, 1000), 2988: (900, 1000),
     3072: (900, 1000), 2997: (900, 1000), 2996: (900, 1000), 3308: (900, 1000),
     3381: (900, 1000), 3039: (900, 1000), 3136: (900, 1000), 3203: (900, 1000),
     446:  (900, 1000), 3389: (900, 1000), 3014: (900, 1000), 3392: (900, 1000),
-    3271: (900, 1000), 2877: (900, 1000), 3149: (900, 1000), 2765: (900, 1000),
-    3186: (900, 1000),
-    # Ampolas avulsas 15 mg -> Pix: 250, Cartão: 300
-    3206: (250, 300), 2763: (250, 300), 2875: (250, 300), 3008: (250, 300)
+    3271: (900, 1000), 2877: (900, 1000), 2765: (900, 1000), 3186: (900, 1000),
+    
+    # Spectrum 60mg (Importado alto custo USD 130 -> Margem 55%)
+    3149: (1467, 1567),
+    
+    # Ampolas avulsas 15 mg
+    2875: (250, 300), 3008: (250, 300),
+    2763: (450, 550), # Gen-Tirz 15mg ajustado
+    3206: (735, 835)  # Pharmacom Jaros 15mg importado ajustado
 }
 
 # Nomes comerciais mais limpos e elegantes das marcas
