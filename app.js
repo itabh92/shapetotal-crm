@@ -1547,14 +1547,23 @@
       if (vIdx === -1) return;
       const v = state.vendas[vIdx];
 
-      if (confirm(`Estornar a venda de ${v.qtd}x "${v.produtoNome}" para ${v.cliente}? O item voltará ao seu estoque físico.`)) {
-        if (!state.meuEstoque) state.meuEstoque = {};
-        state.meuEstoque[v.produtoId] = (Number(state.meuEstoque[v.produtoId]) || 0) + v.qtd;
+      const descItem = v.isDose ? `Dose Avulsa (${v.doseMg} mg)` : `${v.qtd}x`;
+      if (confirm(`Estornar a venda de ${descItem} "${v.produtoNome}" para ${v.cliente}?\n\nO item ou os miligramas voltarão automaticamente para o seu estoque.`)) {
+        if (v.isDose) {
+          if (!state.frascosDoses) state.frascosDoses = {};
+          if (!state.frascosDoses[v.produtoId]) state.frascosDoses[v.produtoId] = { mgRestante: 120, totalAplicadasMg: 0 };
+          state.frascosDoses[v.produtoId].mgRestante = Math.min(120, (Number(state.frascosDoses[v.produtoId].mgRestante) || 0) + Number(v.doseMg || 0));
+          state.frascosDoses[v.produtoId].totalAplicadasMg = Math.max(0, (Number(state.frascosDoses[v.produtoId].totalAplicadasMg) || 0) - Number(v.doseMg || 0));
+        } else {
+          if (!state.meuEstoque) state.meuEstoque = {};
+          state.meuEstoque[v.produtoId] = (Number(state.meuEstoque[v.produtoId]) || 0) + v.qtd;
+        }
+
         state.vendas.splice(vIdx, 1);
         saveState();
         renderAll();
         window.CRM.openSalesHistoryModal();
-        showToast('Venda estornada! Item devolvido ao estoque.');
+        showToast(v.isDose ? `Venda estornada! +${v.doseMg} mg devolvidos ao frasco.` : `Venda estornada! ${v.qtd} un devolvida ao Estoque BH.`);
       }
     },
 
