@@ -68,6 +68,7 @@
     search: '',
     groupMargins: JSON.parse(JSON.stringify(DEFAULT_GROUP_MARGINS)),
     overrides: {}, // { [id]: { usd, tier, customPrice, customMargin, desc, fav } }
+    meuEstoque: {}, // { [id]: qty }
     cart: {} // { [id]: qty }
   };
 
@@ -88,6 +89,7 @@
           }
         }
         state.overrides = parsed.overrides || {};
+        state.meuEstoque = parsed.meuEstoque || {};
       }
     } catch (e) {
       console.error('Erro ao carregar estado:', e);
@@ -102,7 +104,8 @@
         taxaCartaoFixa: state.taxaCartaoFixa,
         activeTier: state.activeTier,
         groupMargins: state.groupMargins,
-        overrides: state.overrides
+        overrides: state.overrides,
+        meuEstoque: state.meuEstoque
       }));
     } catch (e) {
       console.error('Erro ao salvar estado:', e);
@@ -285,24 +288,37 @@
 
     list = list.filter(p => {
       if (state.mainGroup !== 'todas') {
-        const c = (p.categoria || '').toLowerCase();
-        const txt = ((p.nombre || '') + ' ' + (p.composicion || '')).toLowerCase();
-        if (state.mainGroup === 'anabolizantes' && !(c === 'anabolizante' || c === 'sarms' || c === 'post ciclo' || c === 'hcg')) return false;
-        if (state.mainGroup === 'emagrecedores' && !(c === 'emagrecedores' || c === 'queimador')) return false;
-        if (state.mainGroup === 'saude_mental' && !(c === 'saude mental' || txt.includes('semax') || txt.includes('selank') || txt.includes('cbl') || txt.includes('dsip'))) return false;
-        if (state.mainGroup === 'peptideos' && !(c === 'peptideo' || c === 'hgh' || Boolean(p.desc_comercial))) return false;
-        if (state.mainGroup === 'estetico_outros' && (c === 'anabolizante' || c === 'emagrecedores' || c === 'peptideo' || c === 'hgh' || c === 'saude mental')) return false;
+        if (state.mainGroup === 'meu_estoque') {
+          const meuQtd = (state.meuEstoque || {})[p.id] || 0;
+          if (meuQtd <= 0) return false;
+        } else if (p.colecao_id) {
+          if (state.mainGroup === 'anabolizantes' && p.colecao_id !== '2_anabolizantes') return false;
+          if (state.mainGroup === 'emagrecedores' && p.colecao_id !== '1_emagrecedores') return false;
+          if (state.mainGroup === 'peptideos' && p.colecao_id !== '3_hgh_peptideos') return false;
+          if (state.mainGroup === 'estetico_outros' && p.colecao_id !== '4_estetica') return false;
+          if (state.mainGroup === 'saude_mental' && p.colecao_id !== '5_saude_mental_suporte') return false;
+        } else {
+          const c = (p.categoria || '').toLowerCase();
+          const txt = ((p.nombre || '') + ' ' + (p.composicion || '')).toLowerCase();
+          if (state.mainGroup === 'anabolizantes' && !(c === 'anabolizante' || c === 'sarms' || c === 'post ciclo' || c === 'hcg')) return false;
+          if (state.mainGroup === 'emagrecedores' && !(c === 'emagrecedores' || c === 'queimador')) return false;
+          if (state.mainGroup === 'saude_mental' && !(c === 'saude mental' || txt.includes('semax') || txt.includes('selank') || txt.includes('cbl') || txt.includes('dsip'))) return false;
+          if (state.mainGroup === 'peptideos' && !(c === 'peptideo' || c === 'hgh' || Boolean(p.desc_comercial))) return false;
+          if (state.mainGroup === 'estetico_outros' && (c === 'anabolizante' || c === 'emagrecedores' || c === 'peptideo' || c === 'hgh' || c === 'saude mental')) return false;
+        }
       }
 
       if (state.subCat !== 'todas' && (p.categoria || 'sem_categoria') !== state.subCat) return false;
       if (state.brand !== 'todas' && (p.marca || 'sem_marca') !== state.brand) return false;
 
-      if (state.stockFilter === 'com_estoque' && p.stockTotal <= 0) return false;
-      if (state.stockFilter === 'sem_estoque' && p.stockTotal > 0) return false;
+      if (state.mainGroup !== 'meu_estoque') {
+        if (state.stockFilter === 'com_estoque' && p.stockTotal <= 0) return false;
+        if (state.stockFilter === 'sem_estoque' && p.stockTotal > 0) return false;
 
-      if (state.branchFilter === 'cde' && p.cde <= 0) return false;
-      if (state.branchFilter === 'pj' && p.pj <= 0) return false;
-      if (state.branchFilter === 'sg' && p.sg <= 0) return false;
+        if (state.branchFilter === 'cde' && p.cde <= 0) return false;
+        if (state.branchFilter === 'pj' && p.pj <= 0) return false;
+        if (state.branchFilter === 'sg' && p.sg <= 0) return false;
+      }
 
       if (q) {
         const hay = `${p.id} shape-${p.id} ${p.nombre || ''} ${p.marca || ''} ${p.composicion || ''} ${p.categoria || ''} ${p.desc || ''}`.toLowerCase();
@@ -388,6 +404,27 @@
   }
 
   function renderKPIs(filtered) {
+    const totalMeuEstoqueCount = Object.values(state.meuEstoque || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+    const badgeMeuEstoque = document.getElementById('countMeuEstoque');
+    if (badgeMeuEstoque) badgeMeuEstoque.textContent = totalMeuEstoqueCount;
+
+    if (state.mainGroup === 'meu_estoque') {
+      const totalItens = filtered.reduce((s, p) => s + ((state.meuEstoque || {})[p.id] || 0), 0);
+      const totalCusto = filtered.reduce((s, p) => s + (p.custo * ((state.meuEstoque || {})[p.id] || 0)), 0);
+      const totalVenda = filtered.reduce((s, p) => s + (p.precoFinal * ((state.meuEstoque || {})[p.id] || 0)), 0);
+      const totalLucro = filtered.reduce((s, p) => s + (p.lucroFinal * ((state.meuEstoque || {})[p.id] || 0)), 0);
+
+      document.getElementById('kpiCount').textContent = `${totalItens} unidades`;
+      document.getElementById('kpiCountSub').textContent = `${filtered.length} SKUs em mãos (Pronta Entrega)`;
+      document.getElementById('kpiMult').textContent = formatBRL(totalCusto);
+      document.getElementById('kpiMultSub').textContent = `Capital Investido no Estoque`;
+      document.getElementById('kpiAvgPrice').textContent = formatBRL(totalVenda);
+      document.getElementById('kpiAvgCost').textContent = `Faturamento Previsto (PIX)`;
+      document.getElementById('kpiAvgProfit').textContent = formatBRL(totalLucro);
+      document.getElementById('kpiAvgProfitSub').textContent = `Lucro Líquido Projetado no Bolso`;
+      return;
+    }
+
     const withStock = filtered.filter(p => p.stockTotal > 0);
     const avgCost = withStock.length ? withStock.reduce((s, p) => s + p.custo, 0) / withStock.length : 0;
     const avgPrice = withStock.length ? withStock.reduce((s, p) => s + p.precoFinal, 0) / withStock.length : 0;
@@ -478,6 +515,15 @@
                 </div>
               </div>
 
+              <div class="meu-estoque-box internal-only" style="margin:8px 0; padding:6px 10px; background:#0f172a; border-radius:8px; border:1px solid ${((state.meuEstoque || {})[p.id] || 0) > 0 ? '#10b981' : '#334155'}; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; font-weight:700; color:${((state.meuEstoque || {})[p.id] || 0) > 0 ? '#34d399' : '#94a3b8'};">📦 Meu Estoque BH:</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <button class="btn" style="padding:2px 8px; font-size:12px; height:24px; min-width:24px;" onclick="window.CRM.changeMeuEstoque(${p.id}, -1)">-</button>
+                  <b style="font-size:13px; color:${((state.meuEstoque || {})[p.id] || 0) > 0 ? '#34d399' : '#ffffff'}; min-width:24px; text-align:center;">${((state.meuEstoque || {})[p.id] || 0)}</b>
+                  <button class="btn" style="padding:2px 8px; font-size:12px; height:24px; min-width:24px;" onclick="window.CRM.changeMeuEstoque(${p.id}, 1)">+</button>
+                </div>
+              </div>
+
               <div class="p-actions">
                 <button class="btn btn-primary" onclick="window.CRM.addToCart(${p.id})">➕ Orçamento</button>
                 <button class="btn" onclick="window.CRM.copySingleWhatsApp(${p.id})">📲 Copiar Linha</button>
@@ -497,7 +543,8 @@
               <th>SKU</th>
               <th>Produto / Composição</th>
               <th>Marca / Cat</th>
-              <th>Estoque</th>
+              <th>Estoque Fornecedor</th>
+              <th class="internal-only">Meu Estoque BH</th>
               <th class="internal-only">USD</th>
               <th class="internal-only">Custo R$</th>
               <th class="internal-only">Mínimo</th>
@@ -527,6 +574,13 @@
                 <td>
                   <b style="color:${p.stockTotal > 0 ? '#34d399' : '#f87171'}">${p.stockTotal}</b>
                   <div style="font-size:10px;color:var(--text-muted)">${p.cde}/${p.pj}/${p.sg}</div>
+                </td>
+                <td class="internal-only" style="text-align:center;">
+                  <div style="display:inline-flex; align-items:center; gap:4px;">
+                    <button class="btn" style="padding:1px 6px; font-size:11px; height:22px;" onclick="window.CRM.changeMeuEstoque(${p.id}, -1)">-</button>
+                    <b style="color:${((state.meuEstoque || {})[p.id] || 0) > 0 ? '#34d399' : '#94a3b8'}; min-width:20px;">${((state.meuEstoque || {})[p.id] || 0)}</b>
+                    <button class="btn" style="padding:1px 6px; font-size:11px; height:22px;" onclick="window.CRM.changeMeuEstoque(${p.id}, 1)">+</button>
+                  </div>
                 </td>
                 <td class="internal-only">$${p.usd.toFixed(2)}</td>
                 <td class="internal-only">${formatBRL(p.custo)}</td>
@@ -700,10 +754,45 @@
       showToast('Restaurado para a regra do grupo!');
     },
 
+    changeMeuEstoque(id, delta) {
+      if (!state.meuEstoque) state.meuEstoque = {};
+      const current = Number(state.meuEstoque[id] || 0);
+      const next = Math.max(0, current + delta);
+      if (next === 0) {
+        delete state.meuEstoque[id];
+      } else {
+        state.meuEstoque[id] = next;
+      }
+      saveState();
+      renderAll();
+      showToast(next > 0 ? `Estoque BH: ${next} un` : `Removido do estoque BH`);
+    },
+
     openWhatsAppCatalogModal(mode) {
       const modal = document.getElementById('waCatalogModal');
       const textarea = document.getElementById('waCatalogText');
-      if (mode === 'tabela_especial') {
+      if (mode === 'meu_estoque') {
+        const inStock = rawCatalog.map(computeProduct).filter(p => ((state.meuEstoque || {})[p.id] || 0) > 0);
+        if (!inStock.length) {
+          textarea.value = `📦 *PRONTA ENTREGA EM BELO HORIZONTE — SHAPE TOTAL*\n\n(Nenhum produto cadastrado no seu estoque físico ainda. No CRM, use o botão "+" no campo "Meu Estoque BH" do produto para adicionar suas caixas.)`;
+        } else {
+          const lines = [
+            `📦 *PRONTA ENTREGA EM BELO HORIZONTE — SHAPE TOTAL*`,
+            `_Disponível para retirada imediata ou entrega via motoboy hoje:_`,
+            ``
+          ];
+          inStock.forEach(p => {
+            const qtd = (state.meuEstoque || {})[p.id];
+            lines.push(`• *${p.nombre}* (${qtd}x un em mãos)`);
+            lines.push(`  💠 *À vista no PIX: ${formatBRLInt(p.precoFinal)}*`);
+            lines.push(`  💳 *No Cartão: ${formatBRLInt(p.precoCartao)}* (em até 6x s/ juros)`);
+            lines.push(``);
+          });
+          lines.push(`🚀 Entrega expressa para Belo Horizonte e região.`);
+          lines.push(`🔒 Produtos 100% originais com QR Code.`);
+          textarea.value = lines.join('\n');
+        }
+      } else if (mode === 'tabela_especial') {
         textarea.value = `📋 TABELA DE PREÇOS
 
 📦 Linha 60 mg — duração de até 6 meses
