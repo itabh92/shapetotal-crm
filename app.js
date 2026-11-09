@@ -460,11 +460,46 @@
     const badgeTransito = document.getElementById('countTransitoBadge');
     if (badgeTransito) badgeTransito.textContent = totalItensTransito;
 
+    const bhPanel = document.getElementById('bhExecutivePanel');
+    const pyFilters = ['subCatSelect', 'brandSelect', 'stockSelect', 'branchSelect'];
+
     if (state.mainGroup === 'meu_estoque') {
+      if (bhPanel) bhPanel.style.display = 'block';
+      pyFilters.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+
       const totalItens = filtered.reduce((s, p) => s + ((state.meuEstoque || {})[p.id] || 0), 0);
       const totalCusto = filtered.reduce((s, p) => s + (p.custo * ((state.meuEstoque || {})[p.id] || 0)), 0);
       const totalVenda = filtered.reduce((s, p) => s + (p.precoFinal * ((state.meuEstoque || {})[p.id] || 0)), 0);
+      const totalCartao = filtered.reduce((s, p) => s + (p.precoCartao * ((state.meuEstoque || {})[p.id] || 0)), 0);
       const totalLucro = filtered.reduce((s, p) => s + (p.lucroFinal * ((state.meuEstoque || {})[p.id] || 0)), 0);
+
+      let transitoInvestido = 0;
+      let transitoVendaPix = 0;
+      pedidosTransito.forEach(ped => {
+        transitoInvestido += Number(ped.custo_total_reais || 0);
+        (ped.itens || []).forEach(it => {
+          transitoVendaPix += Number(it.preco_venda_pix || 900) * Number(it.qtd || 0);
+        });
+      });
+      const transitoLucro = transitoVendaPix - transitoInvestido;
+
+      const vendas = state.vendas || [];
+      const vendasFaturado = vendas.reduce((s, v) => s + (Number(v.valorTotal) || 0), 0);
+      const vendasLucro = vendas.reduce((s, v) => s + (Number(v.lucro) || 0), 0);
+
+      if (document.getElementById('bhPanelEmMaosValor')) {
+        document.getElementById('bhPanelEmMaosValor').textContent = `${formatBRL(totalVenda)} (PIX)`;
+        document.getElementById('bhPanelEmMaosSub').textContent = `${totalItens} un · Cartão: ${formatBRL(totalCartao)}`;
+        document.getElementById('bhPanelTransitoValor').textContent = `${formatBRL(transitoVendaPix)} (PIX)`;
+        document.getElementById('bhPanelTransitoSub').textContent = `${totalItensTransito} un · Pago: ${formatBRL(transitoInvestido)}`;
+        document.getElementById('bhPanelVendasValor').textContent = formatBRL(vendasFaturado);
+        document.getElementById('bhPanelVendasSub').textContent = `${vendas.length} vendas · Lucro: +${formatBRL(vendasLucro)}`;
+        document.getElementById('bhPanelTotalPotencial').textContent = formatBRL(totalVenda + transitoVendaPix);
+        document.getElementById('bhPanelTotalLucro').textContent = `${totalItens + totalItensTransito} unidades · Lucro Previsto: +${formatBRL(totalLucro + transitoLucro)}`;
+      }
 
       document.getElementById('kpiCount').textContent = `${totalItens} unidades`;
       document.getElementById('kpiCountSub').textContent = `${filtered.length} SKUs em mãos (Pronta Entrega)`;
@@ -476,6 +511,12 @@
       document.getElementById('kpiAvgProfitSub').textContent = `Lucro Líquido Projetado no Bolso`;
       return;
     }
+
+    if (bhPanel) bhPanel.style.display = 'none';
+    pyFilters.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = '';
+    });
 
     const withStock = filtered.filter(p => p.stockTotal > 0);
     const avgCost = withStock.length ? withStock.reduce((s, p) => s + p.custo, 0) / withStock.length : 0;
@@ -1221,13 +1262,16 @@
                 <span style="font-size:11px; color:${isEntregue ? '#34d399' : '#fbbf24'};">
                   ● Status: <b>${isEntregue ? 'Entregue no Estoque BH' : 'Pago • Aguardando Entrega'}</b>
                 </span>
-                ${!isEntregue ? `
-                  <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; padding:6px 14px; font-size:12px;" onclick="window.CRM.confirmarChegadaPedido('${ped.id}')">
-                    📦 Confirmar Chegada em BH
-                  </button>
-                ` : `
-                  <span style="font-size:11px; color:#94a3b8;">Estoque atualizado</span>
-                `}
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <button class="btn" style="padding:4px 8px; font-size:11px; color:#f87171;" title="Excluir registro de pedido" onclick="window.CRM.deletePurchase('${ped.id}')">🗑️</button>
+                  ${!isEntregue ? `
+                    <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; padding:6px 14px; font-size:12px;" onclick="window.CRM.confirmarChegadaPedido('${ped.id}')">
+                      📦 Confirmar Chegada em BH
+                    </button>
+                  ` : `
+                    <span style="font-size:11px; color:#94a3b8;">Estoque atualizado</span>
+                  `}
+                </div>
               </div>
             </div>
           `;
@@ -1258,6 +1302,125 @@
         window.CRM.openTransitoModal();
         showToast(`Pedido recebido! ${totalItens} unidades somadas ao Estoque BH.`);
       }
+    },
+
+    deletePurchase(pedidoId) {
+      const idx = (state.pedidosTransito || []).findIndex(p => p.id === pedidoId);
+      if (idx === -1) return;
+      if (confirm(`Deseja remover este registro de pedido (#${pedidoId}) da lista de trânsito?`)) {
+        state.pedidosTransito.splice(idx, 1);
+        saveState();
+        renderAll();
+        window.CRM.openTransitoModal();
+        showToast('Pedido removido.');
+      }
+    },
+
+    toggleNewPurchaseForm() {
+      const box = document.getElementById('newPurchaseBox');
+      if (!box) return;
+      const isVisible = box.style.display === 'block';
+      box.style.display = isVisible ? 'none' : 'block';
+      if (!isVisible) {
+        window._tempPurchaseItems = [];
+        document.getElementById('npDate').value = new Date().toLocaleDateString('pt-BR');
+        document.getElementById('npTotalCost').value = '';
+        document.getElementById('npItemsList').innerHTML = '<span style="color:#64748b;">Nenhum item adicionado ainda. Selecione acima e clique em "+ Incluir Item".</span>';
+        const sel = document.getElementById('npProdSelect');
+        const sorted = [...rawCatalog].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+        sel.innerHTML = sorted.map(p => `<option value="${p.id}">${p.nombre} (${(p.marca || '').toUpperCase()})</option>`).join('');
+      }
+    },
+
+    addNewPurchaseItem() {
+      if (!window._tempPurchaseItems) window._tempPurchaseItems = [];
+      const sel = document.getElementById('npProdSelect');
+      const pid = Number(sel.value);
+      const qty = Math.max(1, Number(document.getElementById('npProdQty').value) || 1);
+      const raw = rawCatalog.find(x => x.id === pid);
+      if (!raw) return;
+      const p = computeProduct(raw);
+
+      window._tempPurchaseItems.push({
+        id_catalogo: p.id,
+        nome: p.nombre,
+        qtd: qty,
+        preco_venda_pix: p.precoFinal,
+        preco_venda_cartao: p.precoCartao
+      });
+
+      const listEl = document.getElementById('npItemsList');
+      listEl.innerHTML = window._tempPurchaseItems.map((it, i) => `
+        <div style="display:flex; justify-content:space-between; padding:4px 8px; background:#0f172a; margin-bottom:4px; border-radius:4px;">
+          <span><b>${it.qtd}x</b> ${it.nome}</span>
+          <span style="color:#34d399;">Venda PIX: ${formatBRL(it.preco_venda_pix * it.qtd)}</span>
+        </div>
+      `).join('');
+    },
+
+    saveNewPurchase() {
+      const items = window._tempPurchaseItems || [];
+      if (!items.length) {
+        alert('Adicione pelo menos 1 medicamento na compra clicando em "+ Incluir Item"!');
+        return;
+      }
+      const cost = Number(document.getElementById('npTotalCost').value) || 0;
+      if (cost <= 0) {
+        alert('Informe o Custo Total Pago (R$) pela encomenda!');
+        return;
+      }
+      const dateStr = document.getElementById('npDate').value.trim() || new Date().toLocaleDateString('pt-BR');
+      const newPed = {
+        id: 'PED-' + Date.now().toString().slice(-6),
+        data_compra: dateStr,
+        fornecedor: 'Shape Total / Importação',
+        status: 'em_transito',
+        custo_total_reais: cost,
+        itens: items
+      };
+
+      if (!state.pedidosTransito) state.pedidosTransito = [];
+      state.pedidosTransito.unshift(newPed);
+      saveState();
+      document.getElementById('newPurchaseBox').style.display = 'none';
+      renderAll();
+      window.CRM.openTransitoModal();
+      showToast('Nova compra em trânsito registrada com sucesso!');
+    },
+
+    openAddStockModal() {
+      const modal = document.getElementById('addStockModal');
+      document.getElementById('addStockSearch').value = '';
+      document.getElementById('addStockQty').value = 1;
+      window.CRM.filterAddStockSelect('');
+      modal.classList.add('open');
+    },
+
+    filterAddStockSelect(query) {
+      const q = (query || '').toLowerCase().trim();
+      const sel = document.getElementById('addStockSelect');
+      const filtered = rawCatalog.filter(p => {
+        if (!q) return true;
+        const txt = `${p.id} ${p.nombre || ''} ${p.marca || ''} ${p.composicion || ''}`.toLowerCase();
+        return txt.includes(q);
+      }).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+
+      sel.innerHTML = filtered.slice(0, 150).map(p => {
+        const cur = (state.meuEstoque || {})[p.id] || 0;
+        return `<option value="${p.id}">${p.nombre} — ${(p.marca || '').toUpperCase()} ${cur > 0 ? `(Em mãos: ${cur} un)` : ''}</option>`;
+      }).join('');
+    },
+
+    confirmAddStock() {
+      const pid = Number(document.getElementById('addStockSelect').value);
+      const qty = Math.max(1, Number(document.getElementById('addStockQty').value) || 1);
+      if (!pid) return;
+      if (!state.meuEstoque) state.meuEstoque = {};
+      state.meuEstoque[pid] = (Number(state.meuEstoque[pid]) || 0) + qty;
+      saveState();
+      document.getElementById('addStockModal').classList.remove('open');
+      renderAll();
+      showToast(`+${qty} un adicionadas ao seu Estoque BH!`);
     },
 
     openWhatsAppCatalogModal(mode) {

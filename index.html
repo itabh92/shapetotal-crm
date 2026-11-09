@@ -35,8 +35,8 @@
       <div class="brand">
         <div class="brand-logo">ST</div>
         <div>
-          <div class="brand-title">SHAPE TOTAL · CRM EDITÁVEL</div>
-          <div class="brand-sub">884 SKUs Oficiais · Fotos Importadas · Cálculo Mín / Ideal / Máx em Tempo Real</div>
+          <div class="brand-title">SHAPE TOTAL · CRM & ESTOQUE BH</div>
+          <div class="brand-sub">890 SKUs Oficiais · Gestão de Pronta Entrega BH, Compras em Trânsito & Baixa de Vendas</div>
         </div>
       </div>
 
@@ -119,14 +119,57 @@
 
     <!-- Main Category Tabs requested by User -->
     <nav class="group-tabs">
-      <button class="group-tab active" data-group="todas">🌐 Todas <span class="tab-count">884</span></button>
+      <button class="group-tab active" data-group="todas">🌐 Todas <span class="tab-count">890</span></button>
       <button class="group-tab" data-group="anabolizantes">💪 Anabolizantes <span class="tab-count">456</span></button>
-      <button class="group-tab" data-group="emagrecedores">🔥 Emagrecedores <span class="tab-count">166</span></button>
+      <button class="group-tab" data-group="emagrecedores">🔥 Emagrecedores <span class="tab-count">172</span></button>
       <button class="group-tab" data-group="peptideos">🧬 Peptídeos & HGH <span class="tab-count">176</span></button>
       <button class="group-tab" data-group="estetico_outros">✨ Estética & Beleza <span class="tab-count">36</span></button>
       <button class="group-tab" data-group="saude_mental">🧠 Saúde Mental & Suporte <span class="tab-count">50</span></button>
-      <button class="group-tab tab-meu-estoque" data-group="meu_estoque" style="background:#064e3b; color:#34d399; font-weight:800; border:1px solid #10b981;">📍 Meu Estoque BH <span class="tab-count" id="countMeuEstoque">0</span></button>
+      <button class="group-tab tab-meu-estoque" data-group="meu_estoque" style="background:#064e3b; color:#34d399; font-weight:800; border:1px solid #10b981;">📍 Meu Estoque BH <span class="tab-count" id="countMeuEstoque">27</span></button>
     </nav>
+
+    <!-- Painel Executivo Exclusivo da Operação BH (visível na aba Meu Estoque BH) -->
+    <section id="bhExecutivePanel" class="internal-only" style="display:none; background:linear-gradient(135deg, #064e3b 0%, #0f172a 100%); border:1px solid #10b981; border-radius:12px; padding:16px; margin-bottom:16px; box-shadow:0 8px 24px rgba(0,0,0,0.35);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; border-bottom:1px solid rgba(16,185,129,0.25); padding-bottom:10px;">
+        <div>
+          <h3 style="font-size:16px; font-weight:800; color:#34d399; margin:0; display:flex; align-items:center; gap:8px;">
+            📍 Central de Controle — Estoque Físico & Vendas (Belo Horizonte)
+          </h3>
+          <p style="font-size:12px; color:#cbd5e1; margin:2px 0 0 0;">
+            Visão consolidada do que você tem em mãos hoje, do que está pago a caminho e do caixa já realizado.
+          </p>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-green" style="background:#10b981; color:#052e16; font-weight:800;" onclick="window.CRM.openSaleModal()">💰 Dar Baixa / Registrar Venda</button>
+          <button class="btn" style="background:#0f172a; color:#38bdf8; border:1px solid #38bdf8; font-weight:700;" onclick="window.CRM.openAddStockModal()">➕ Incluir Produto no Estoque BH</button>
+          <button class="btn" style="background:#0f172a; color:#fbbf24; border:1px solid #fbbf24; font-weight:700;" onclick="window.CRM.openTransitoModal()">🚚 Pedidos a Chegar</button>
+          <button class="btn" style="background:#0f172a; color:#e2e8f0; border:1px solid #475569; font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">📋 Histórico de Vendas</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:12px;">
+        <div style="background:rgba(15,23,42,0.85); padding:12px 14px; border-radius:8px; border:1px solid #1e293b;">
+          <div style="font-size:11px; color:#94a3b8; font-weight:700; text-transform:uppercase;">📦 Em Mãos Hoje (Pronta Entrega)</div>
+          <div id="bhPanelEmMaosValor" style="font-size:19px; font-weight:800; color:#34d399; margin-top:4px;">R$ 22.350,00 (PIX)</div>
+          <div id="bhPanelEmMaosSub" style="font-size:11px; color:#cbd5e1; margin-top:2px;">27 un · Cartão: R$ 25.000,00</div>
+        </div>
+        <div style="background:rgba(15,23,42,0.85); padding:12px 14px; border-radius:8px; border:1px solid #1e293b;">
+          <div style="font-size:11px; color:#94a3b8; font-weight:700; text-transform:uppercase;">🚚 Em Trânsito (Pago / A Chegar)</div>
+          <div id="bhPanelTransitoValor" style="font-size:19px; font-weight:800; color:#fbbf24; margin-top:4px;">R$ 15.030,00 (PIX)</div>
+          <div id="bhPanelTransitoSub" style="font-size:11px; color:#cbd5e1; margin-top:2px;">17 un · Investido: R$ 8.747,61</div>
+        </div>
+        <div style="background:rgba(15,23,42,0.85); padding:12px 14px; border-radius:8px; border:1px solid #1e293b;">
+          <div style="font-size:11px; color:#94a3b8; font-weight:700; text-transform:uppercase;">💵 Vendas Realizadas (Caixa)</div>
+          <div id="bhPanelVendasValor" style="font-size:19px; font-weight:800; color:#38bdf8; margin-top:4px;">R$ 0,00</div>
+          <div id="bhPanelVendasSub" style="font-size:11px; color:#cbd5e1; margin-top:2px;">0 vendas · Lucro: R$ 0,00</div>
+        </div>
+        <div style="background:rgba(15,23,42,0.85); padding:12px 14px; border-radius:8px; border:1px solid #10b981;">
+          <div style="font-size:11px; color:#34d399; font-weight:800; text-transform:uppercase;">🏆 Potencial Total (Mãos + Trânsito)</div>
+          <div id="bhPanelTotalPotencial" style="font-size:19px; font-weight:800; color:#ffffff; margin-top:4px;">R$ 37.380,00</div>
+          <div id="bhPanelTotalLucro" style="font-size:11px; color:#34d399; font-weight:700; margin-top:2px;">44 unidades · Lucro Previsto: +R$ 16.956,23</div>
+        </div>
+      </div>
+    </section>
 
     <!-- Search & Filter Bar -->
     <section class="filter-bar">
@@ -263,14 +306,79 @@
         </div>
       </div>
 
+      <!-- Formulário Expansível: Lançar Nova Compra em Trânsito -->
+      <div id="newPurchaseBox" style="display:none; background:#0b1120; border:1px solid #fbbf24; border-radius:8px; padding:14px; margin-bottom:14px;">
+        <h4 style="font-size:14px; font-weight:800; color:#fbbf24; margin:0 0 10px 0;">➕ Registrar Nova Compra / Encomenda Paga</h4>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+          <div class="m-field">
+            <label>Data da Compra</label>
+            <input id="npDate" type="text" placeholder="Ex: 10/11/2026" style="text-align:left;" />
+          </div>
+          <div class="m-field">
+            <label>Custo Total Pago (R$)</label>
+            <input id="npTotalCost" type="number" step="0.01" placeholder="Ex: 3500.00" style="text-align:right; color:#f87171; font-weight:800;" />
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:2fr 1fr auto; gap:8px; align-items:end; margin-bottom:10px;">
+          <div class="m-field">
+            <label>Selecionar Medicamento Comprado</label>
+            <select id="npProdSelect" class="filter-select" style="width:100%; font-size:12px;"></select>
+          </div>
+          <div class="m-field">
+            <label>Quantidade</label>
+            <input id="npProdQty" type="number" min="1" value="1" style="text-align:center; font-weight:700;" />
+          </div>
+          <button class="btn btn-amber" style="height:36px;" onclick="window.CRM.addNewPurchaseItem()">+ Incluir Item</button>
+        </div>
+        <div id="npItemsList" style="font-size:12px; color:#cbd5e1; margin-bottom:10px;"></div>
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+          <button class="btn" onclick="document.getElementById('newPurchaseBox').style.display='none'">Cancelar</button>
+          <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800;" onclick="window.CRM.saveNewPurchase()">💾 Salvar Compra em Trânsito</button>
+        </div>
+      </div>
+
       <!-- Lista de Pedidos em Trânsito -->
-      <div id="transitoPedidosContainer" style="display:flex; flex-direction:column; gap:12px; max-height:400px; overflow-y:auto; padding-right:4px;">
+      <div id="transitoPedidosContainer" style="display:flex; flex-direction:column; gap:12px; max-height:380px; overflow-y:auto; padding-right:4px;">
         <!-- Renderizado dinamicamente pelo JS -->
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top:1px solid #1e293b; padding-top:12px;">
-        <span style="font-size:11px; color:#94a3b8;">📦 Ao clicar em "Confirmar Chegada", as quantidades entram automaticamente no Estoque BH.</span>
-        <button class="btn" onclick="document.getElementById('transitoModal').classList.remove('open')">Fechar</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top:1px solid #1e293b; padding-top:12px; flex-wrap:wrap; gap:8px;">
+        <button class="btn btn-amber" style="font-weight:800;" onclick="window.CRM.toggleNewPurchaseForm()">➕ Lançar Nova Compra Paga</button>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:11px; color:#94a3b8;">📦 Ao clicar em "Confirmar Chegada", os itens somam no Estoque BH.</span>
+          <button class="btn" onclick="document.getElementById('transitoModal').classList.remove('open')">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Incluir Produto no Estoque BH -->
+  <div id="addStockModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:520px;">
+      <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:12px; margin-bottom:14px;">
+        <div>
+          <h3 style="font-size:17px; font-weight:800; color:#38bdf8;">➕ Incluir Produto no Estoque BH</h3>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">
+            Adicione qualquer medicamento dos 890 SKUs diretamente à sua pronta entrega em Belo Horizonte.
+          </p>
+        </div>
+        <button class="btn" onclick="document.getElementById('addStockModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+      <div class="m-field" style="margin-bottom:12px;">
+        <label>Pesquisar Medicamento (Nome, Marca ou Substância)</label>
+        <input id="addStockSearch" type="text" placeholder="Digite ex: lipoland, tirzec, durateston, gh..." style="text-align:left;" oninput="window.CRM.filterAddStockSelect(this.value)" />
+      </div>
+      <div class="m-field" style="margin-bottom:14px;">
+        <label>Selecionar Produto</label>
+        <select id="addStockSelect" class="filter-select" style="width:100%; font-size:13px;"></select>
+      </div>
+      <div class="m-field" style="margin-bottom:18px;">
+        <label>Quantidade a Adicionar em Mãos (Unidades)</label>
+        <input id="addStockQty" type="number" min="1" value="1" style="font-size:16px; font-weight:800; color:#34d399; text-align:center;" />
+      </div>
+      <div style="display:flex; justify-content:space-between;">
+        <button class="btn" onclick="document.getElementById('addStockModal').classList.remove('open')">Cancelar</button>
+        <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; padding:10px 20px;" onclick="window.CRM.confirmAddStock()">✅ Adicionar ao Estoque BH</button>
       </div>
     </div>
   </div>

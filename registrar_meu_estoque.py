@@ -219,8 +219,21 @@ def main():
     with open(JSON_PATH, 'w', encoding='utf-8') as f:
         json.dump(cat_data, f, ensure_ascii=False, indent=2)
 
-    # 3. Atualiza dados_catalogo.js
-    js_content = "window.SHAPETOTAL_RAW = " + json.dumps(cat_data, ensure_ascii=False) + ";\n"
+    # 3. Atualiza dados_catalogo.js preservando ESTOQUE_BH_CANONICO e PEDIDOS_TRANSITO_INICIAIS
+    compras_path = os.path.join(BASE_DIR, 'compras_transito_dados.json')
+    pedidos_transito = []
+    if os.path.exists(compras_path):
+        try:
+            with open(compras_path, 'r', encoding='utf-8') as fc:
+                pedidos_transito = json.load(fc).get('pedidos', [])
+        except Exception:
+            pass
+
+    js_content = (
+        "window.SHAPETOTAL_RAW = " + json.dumps(cat_data, ensure_ascii=False) + ";\n"
+        "window.ESTOQUE_BH_CANONICO = " + json.dumps(qtd_map, ensure_ascii=False) + ";\n"
+        "window.PEDIDOS_TRANSITO_INICIAIS = " + json.dumps(pedidos_transito, ensure_ascii=False) + ";\n"
+    )
     with open(DADOS_JS_PATH, 'w', encoding='utf-8') as f:
         f.write(js_content)
 
