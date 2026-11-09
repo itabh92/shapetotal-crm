@@ -344,8 +344,8 @@
 
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top:1px solid #1e293b; padding-top:12px; flex-wrap:wrap; gap:8px;">
         <button class="btn btn-amber" style="font-weight:800;" onclick="window.CRM.toggleNewPurchaseForm()">➕ Lançar Nova Compra Paga</button>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:11px; color:#94a3b8;">📦 Ao clicar em "Confirmar Chegada", os itens somam no Estoque BH.</span>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <button class="btn" style="background:#1e293b; color:#fbbf24; font-size:11px; font-weight:700;" onclick="window.CRM.resetPedidosTransito()">🔄 Recarregar Pedidos Pagos (17 un)</button>
           <button class="btn" onclick="document.getElementById('transitoModal').classList.remove('open')">Fechar</button>
         </div>
       </div>

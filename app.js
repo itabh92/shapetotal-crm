@@ -63,6 +63,34 @@
     9006: 1  // Tirzepatida 120mg frasco doses
   };
 
+  const PEDIDOS_TRANSITO_CANONICOS = [
+    {
+      id: "PED-20261109-01",
+      data_compra: "09/11/2026",
+      fornecedor: "Shape Total / Importação",
+      status: "em_transito",
+      custo_total_reais: 2644.20,
+      itens: [
+        { id_catalogo: 3207, nome: "TIRZEC X 15 MG. X 4 AMPOLLAS (60 MG)", qtd: 3, preco_venda_pix: 900, preco_venda_cartao: 1000 },
+        { id_catalogo: 2848, nome: "INDUFAR T.G. TIRZEPATIDA X 15 MG. X 4 AMP. (60 MG)", qtd: 3, preco_venda_pix: 900, preco_venda_cartao: 1000 }
+      ]
+    },
+    {
+      id: "PED-20261106-01",
+      data_compra: "06/11/2026",
+      fornecedor: "Shape Total / Importação",
+      status: "em_transito",
+      custo_total_reais: 6103.41,
+      itens: [
+        { id_catalogo: 3072, nome: "LIPOLAND MULTIDOSIS X 15 MG", qtd: 1, preco_venda_pix: 900, preco_venda_cartao: 1000 },
+        { id_catalogo: 2848, nome: "INDUFAR T.G. TIRZEPATIDA X 15 MG. X 4 AMP. (60 MG)", qtd: 3, preco_venda_pix: 900, preco_venda_cartao: 1000 },
+        { id_catalogo: 2889, nome: "LIPOLESS X 15 MG. X 4 AMPOLLAS (60 MG)", qtd: 1, preco_venda_pix: 900, preco_venda_cartao: 1000 },
+        { id_catalogo: 3207, nome: "TIRZEC X 15 MG. X 4 AMPOLLAS (60 MG)", qtd: 5, preco_venda_pix: 900, preco_venda_cartao: 1000 },
+        { id_catalogo: 3230, nome: "OXYGEN CJC 1295 + IPAMORELIN X 10 MG.", qtd: 1, preco_venda_pix: 630, preco_venda_cartao: 730 }
+      ]
+    }
+  ];
+
 (function () {
   const STORAGE_KEY = 'SHAPETOTAL_CRM_STATE_V1';
 
@@ -117,16 +145,19 @@
         state.overrides = parsed.overrides || {};
         state.meuEstoque = parsed.meuEstoque || {};
         state.vendas = Array.isArray(parsed.vendas) ? parsed.vendas : [];
-        state.pedidosTransito = Array.isArray(parsed.pedidosTransito) ? parsed.pedidosTransito : (window.PEDIDOS_TRANSITO_INICIAIS || []);
+        state.pedidosTransito = Array.isArray(parsed.pedidosTransito) && parsed.pedidosTransito.length > 0
+          ? parsed.pedidosTransito
+          : JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
       } else {
-        state.pedidosTransito = window.PEDIDOS_TRANSITO_INICIAIS || [];
+        state.pedidosTransito = JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
       }
     } catch (e) {
       console.error('Erro ao carregar estado:', e);
     }
 
     if (!state.pedidosTransito || state.pedidosTransito.length === 0) {
-      state.pedidosTransito = window.PEDIDOS_TRANSITO_INICIAIS || [];
+      state.pedidosTransito = JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
+      saveState();
     }
 
     // Auto-recuperação: se meuEstoque estiver vazio ou zerado, carrega o estoque físico de BH
@@ -1200,6 +1231,10 @@
 
     openTransitoModal() {
       const modal = document.getElementById('transitoModal');
+      if (!state.pedidosTransito || state.pedidosTransito.length === 0) {
+        state.pedidosTransito = JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
+        saveState();
+      }
       const pedidos = state.pedidosTransito || [];
       const emTransito = pedidos.filter(p => p.status === 'em_transito');
 
@@ -1313,6 +1348,16 @@
         renderAll();
         window.CRM.openTransitoModal();
         showToast('Pedido removido.');
+      }
+    },
+
+    resetPedidosTransito() {
+      if (confirm('Restaurar os 2 pedidos pagos de 06/11 e 09/11 (17 unidades a chegar)?')) {
+        state.pedidosTransito = JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
+        saveState();
+        renderAll();
+        window.CRM.openTransitoModal();
+        showToast('Pedidos em trânsito restaurados com sucesso (17 un)!');
       }
     },
 
