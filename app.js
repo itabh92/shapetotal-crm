@@ -94,7 +94,8 @@
     overrides: {}, // { [id]: { usd, tier, customPrice, customMargin, desc, fav } }
     meuEstoque: {}, // { [id]: qty }
     cart: {}, // { [id]: qty }
-    vendas: [] // [ { id, data, produtoId, produtoNome, qtd, valorTotal, pagamento, cliente, telefone, obs, lucro } ]
+    vendas: [], // [ { id, data, produtoId, produtoNome, qtd, valorUnitario, valorTotal, pagamento, cliente, telefone, obs, lucro } ]
+    pedidosTransito: [] // [ { id, data_compra, status, custo_total_reais, itens: [ { id_catalogo, nome, qtd, ... } ] } ]
   };
 
   function loadState() {
@@ -116,9 +117,16 @@
         state.overrides = parsed.overrides || {};
         state.meuEstoque = parsed.meuEstoque || {};
         state.vendas = Array.isArray(parsed.vendas) ? parsed.vendas : [];
+        state.pedidosTransito = Array.isArray(parsed.pedidosTransito) ? parsed.pedidosTransito : (window.PEDIDOS_TRANSITO_INICIAIS || []);
+      } else {
+        state.pedidosTransito = window.PEDIDOS_TRANSITO_INICIAIS || [];
       }
     } catch (e) {
       console.error('Erro ao carregar estado:', e);
+    }
+
+    if (!state.pedidosTransito || state.pedidosTransito.length === 0) {
+      state.pedidosTransito = window.PEDIDOS_TRANSITO_INICIAIS || [];
     }
 
     // Auto-recuperação: se meuEstoque estiver vazio ou zerado, carrega o estoque físico de BH
@@ -139,7 +147,8 @@
         groupMargins: state.groupMargins,
         overrides: state.overrides,
         meuEstoque: state.meuEstoque,
-        vendas: state.vendas || []
+        vendas: state.vendas || [],
+        pedidosTransito: state.pedidosTransito || []
       }));
     } catch (e) {
       console.error('Erro ao salvar estado:', e);
@@ -443,6 +452,13 @@
 
     const badgeVendas = document.getElementById('countVendasBadge');
     if (badgeVendas) badgeVendas.textContent = (state.vendas || []).length;
+
+    const pedidosTransito = (state.pedidosTransito || []).filter(p => p.status === 'em_transito');
+    const totalItensTransito = pedidosTransito.reduce((acc, ped) => {
+      return acc + (ped.itens || []).reduce((s, it) => s + (Number(it.qtd) || 0), 0);
+    }, 0);
+    const badgeTransito = document.getElementById('countTransitoBadge');
+    if (badgeTransito) badgeTransito.textContent = totalItensTransito;
 
     if (state.mainGroup === 'meu_estoque') {
       const totalItens = filtered.reduce((s, p) => s + ((state.meuEstoque || {})[p.id] || 0), 0);
@@ -1139,6 +1155,109 @@
       a.href = URL.createObjectURL(blob);
       a.download = `relatorio_vendas_shapetotal_${new Date().toISOString().slice(0,10)}.csv`;
       a.click();
+    },
+
+    openTransitoModal() {
+      const modal = document.getElementById('transitoModal');
+      const pedidos = state.pedidosTransito || [];
+      const emTransito = pedidos.filter(p => p.status === 'em_transito');
+
+      let totalInvestido = 0;
+      let totalVendaPix = 0;
+      let totalVendaCartao = 0;
+      let totalQtd = 0;
+
+      emTransito.forEach(ped => {
+        totalInvestido += Number(ped.custo_total_reais || 0);
+        (ped.itens || []).forEach(it => {
+          totalQtd += Number(it.qtd || 0);
+          totalVendaPix += (Number(it.preco_venda_pix || 900) * Number(it.qtd || 0));
+          totalVendaCartao += (Number(it.preco_venda_cartao || 1000) * Number(it.qtd || 0));
+        });
+      });
+
+      const totalLucro = totalVendaPix - totalInvestido;
+
+      document.getElementById('kpiTransitoInvestido').textContent = formatBRL(totalInvestido);
+      document.getElementById('kpiTransitoFaturamento').textContent = formatBRL(totalVendaPix);
+      document.getElementById('kpiTransitoLucro').textContent = `+${formatBRL(totalLucro)}`;
+      document.getElementById('kpiTransitoQtd').textContent = `${totalQtd} unidades`;
+
+      const container = document.getElementById('transitoPedidosContainer');
+      if (!pedidos.length) {
+        container.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-muted);">Nenhum pedido registrado.</div>`;
+      } else {
+        container.innerHTML = pedidos.map(ped => {
+          const isEntregue = ped.status === 'entregue';
+          const totalItensPed = (ped.itens || []).reduce((s, it) => s + Number(it.qtd || 0), 0);
+          return `
+            <div style="background:#0f172a; border-radius:8px; border:1px solid ${isEntregue ? '#334155' : '#fbbf24'}; padding:14px; position:relative;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #1e293b; padding-bottom:8px;">
+                <div>
+                  <span style="font-weight:800; font-size:14px; color:${isEntregue ? '#94a3b8' : '#fbbf24'};">
+                    ${isEntregue ? '✅ PEDIDO ENTREGUE' : '🚚 PEDIDO EM TRÂNSITO'} #${ped.id}
+                  </span>
+                  <span style="font-size:12px; color:#94a3b8; margin-left:8px;">Data: ${ped.data_compra}</span>
+                </div>
+                <div style="text-align:right;">
+                  <span style="font-size:11px; color:#94a3b8;">Investido:</span>
+                  <b style="font-size:14px; color:#f87171; margin-left:4px;">${formatBRL(ped.custo_total_reais)}</b>
+                </div>
+              </div>
+
+              <div style="font-size:12px; margin-bottom:12px;">
+                <b style="color:#e2e8f0;">Itens Comprados (${totalItensPed} un):</b>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:6px; margin-top:6px;">
+                  ${(ped.itens || []).map(it => `
+                    <div style="background:#0b1120; padding:6px 10px; border-radius:6px; border:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center;">
+                      <span style="color:#f8fafc; font-weight:700;">${it.qtd}x ${it.nome}</span>
+                      <span style="color:#34d399; font-weight:800; font-size:11px;">PIX ${formatBRLInt(it.preco_venda_pix || 900)}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; color:${isEntregue ? '#34d399' : '#fbbf24'};">
+                  ● Status: <b>${isEntregue ? 'Entregue no Estoque BH' : 'Pago • Aguardando Entrega'}</b>
+                </span>
+                ${!isEntregue ? `
+                  <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; padding:6px 14px; font-size:12px;" onclick="window.CRM.confirmarChegadaPedido('${ped.id}')">
+                    📦 Confirmar Chegada em BH
+                  </button>
+                ` : `
+                  <span style="font-size:11px; color:#94a3b8;">Estoque atualizado</span>
+                `}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      modal.classList.add('open');
+    },
+
+    confirmarChegadaPedido(pedidoId) {
+      const ped = (state.pedidosTransito || []).find(p => p.id === pedidoId);
+      if (!ped) return;
+
+      const totalItens = (ped.itens || []).reduce((s, it) => s + Number(it.qtd || 0), 0);
+      if (confirm(`Confirmar o recebimento físico do pedido #${ped.id}? ${totalItens} unidades serão adicionadas automaticamente ao seu Estoque de Pronta Entrega em BH.`)) {
+        if (!state.meuEstoque) state.meuEstoque = {};
+
+        (ped.itens || []).forEach(it => {
+          const pid = it.id_catalogo;
+          state.meuEstoque[pid] = (Number(state.meuEstoque[pid]) || 0) + Number(it.qtd || 0);
+        });
+
+        ped.status = 'entregue';
+        ped.data_entrega = new Date().toISOString();
+
+        saveState();
+        renderAll();
+        window.CRM.openTransitoModal();
+        showToast(`Pedido recebido! ${totalItens} unidades somadas ao Estoque BH.`);
+      }
     },
 
     openWhatsAppCatalogModal(mode) {
