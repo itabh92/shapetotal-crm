@@ -260,7 +260,7 @@
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
         <div class="m-field">
           <label>Quantidade Vendida</label>
-          <input id="saleQty" type="number" min="1" value="1" style="font-size:15px; font-weight:700; text-align:center;" oninput="window.CRM.updateSaleTotalPreview()" />
+          <input id="saleQty" type="number" min="1" value="1" style="font-size:15px; font-weight:700; text-align:center;" oninput="window.CRM.onSaleQtyChange()" />
         </div>
         <div class="m-field">
           <label>Forma de Pagamento</label>
@@ -273,16 +273,21 @@
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:6px;">
         <div class="m-field">
-          <label>Valor Total Cobrado (R$)</label>
-          <input id="saleTotalValue" type="number" step="1" style="font-size:16px; font-weight:800; color:#34d399; text-align:right;" />
-          <div style="font-size:10px; color:#94a3b8; margin-top:2px;" id="salePriceHint">Sugestão de tabela: R$ 900,00</div>
+          <label>💵 Valor de Cada Item (R$ / un)</label>
+          <input id="saleUnitPrice" type="number" step="1" style="font-size:16px; font-weight:800; color:#38bdf8; text-align:right;" oninput="window.CRM.onSaleUnitPriceChange()" />
         </div>
         <div class="m-field">
-          <label>Data & Hora da Venda</label>
-          <input id="saleDate" type="datetime-local" style="font-size:12px;" />
+          <label>💰 Valor Total Cobrado (R$)</label>
+          <input id="saleTotalValue" type="number" step="1" style="font-size:16px; font-weight:800; color:#34d399; text-align:right;" oninput="window.CRM.onSaleTotalValueChange()" />
         </div>
+      </div>
+      <div style="font-size:11px; color:#94a3b8; margin-bottom:14px; text-align:right;" id="salePriceHint">Sugestão de tabela: R$ 900,00 cada un</div>
+
+      <div class="m-field" style="margin-bottom:14px;">
+        <label>Data & Hora da Venda</label>
+        <input id="saleDate" type="datetime-local" style="font-size:12px;" />
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
@@ -352,11 +357,12 @@
             <tr>
               <th>Data/Hora</th>
               <th>Medicamento</th>
-              <th>Qtd</th>
-              <th>Cliente</th>
-              <th>Pagamento</th>
+              <th style="text-align:center;">Qtd</th>
+              <th>Valor Unit. (cada)</th>
               <th>Valor Total</th>
               <th>Lucro Est.</th>
+              <th>Cliente</th>
+              <th>Pagamento</th>
               <th style="text-align:center;">Ações</th>
             </tr>
           </thead>

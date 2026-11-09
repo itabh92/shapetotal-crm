@@ -894,12 +894,37 @@
         unitPrice = p.precoCartao;
       }
       const total = unitPrice * qty;
+      document.getElementById('saleUnitPrice').value = unitPrice;
       document.getElementById('saleTotalValue').value = total;
-      document.getElementById('salePriceHint').textContent = `Sugestão (${pay === 'cartao_6x' ? 'Cartão' : 'PIX'}): ${formatBRL(unitPrice)} un × ${qty} = ${formatBRL(total)}`;
+      document.getElementById('salePriceHint').textContent = `Sugestão (${pay === 'cartao_6x' ? 'Cartão' : 'PIX'}): ${formatBRL(unitPrice)} cada un × ${qty} = ${formatBRL(total)}`;
+    },
+
+    onSaleUnitPriceChange() {
+      const unitVal = Number(document.getElementById('saleUnitPrice').value) || 0;
+      const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
+      const total = unitVal * qty;
+      document.getElementById('saleTotalValue').value = total;
+      document.getElementById('salePriceHint').textContent = `Valor: ${formatBRL(unitVal)} cada un × ${qty} = ${formatBRL(total)}`;
+    },
+
+    onSaleQtyChange() {
+      const unitVal = Number(document.getElementById('saleUnitPrice').value) || 0;
+      const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
+      const total = unitVal * qty;
+      document.getElementById('saleTotalValue').value = total;
+      document.getElementById('salePriceHint').textContent = `Valor: ${formatBRL(unitVal)} cada un × ${qty} = ${formatBRL(total)}`;
+    },
+
+    onSaleTotalValueChange() {
+      const totalVal = Number(document.getElementById('saleTotalValue').value) || 0;
+      const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
+      const unitVal = Math.round(totalVal / qty);
+      document.getElementById('saleUnitPrice').value = unitVal;
+      document.getElementById('salePriceHint').textContent = `Total: ${formatBRL(totalVal)} ➔ ${formatBRL(unitVal)} por cada unidade`;
     },
 
     updateSaleTotalPreview() {
-      window.CRM.onSalePaymentChange();
+      window.CRM.onSaleQtyChange();
     },
 
     confirmSale() {
@@ -918,7 +943,8 @@
         return;
       }
 
-      const totalVal = Number(document.getElementById('saleTotalValue').value) || (p.precoFinal * qty);
+      const unitVal = Number(document.getElementById('saleUnitPrice').value) || p.precoFinal;
+      const totalVal = Number(document.getElementById('saleTotalValue').value) || (unitVal * qty);
       const pay = document.getElementById('salePayment').value;
       const payLabelMap = {
         'pix': '💠 À vista no PIX',
@@ -940,7 +966,7 @@
         state.meuEstoque[pid] = nextStock;
       }
 
-      // Registro de Venda
+      // Registro de Venda com Valor Unitário explícito
       const lucroEst = totalVal - (p.custo * qty);
       const venda = {
         id: Date.now(),
@@ -949,6 +975,7 @@
         produtoNome: p.nombre,
         marca: p.marca || '',
         qtd: qty,
+        valorUnitario: unitVal,
         valorTotal: totalVal,
         formaPagamento: payLabel,
         cliente: client,
@@ -964,7 +991,7 @@
 
       document.getElementById('saleModal').classList.remove('open');
       renderAll();
-      showToast(`Venda registrada com sucesso! Baixa de ${qty} un efetuada.`);
+      showToast(`Venda registrada! Baixa de ${qty} un efetuada.`);
 
       // Abre comprovante / recibo
       window.CRM.showSaleReceipt(venda, p);
@@ -980,7 +1007,8 @@
         `━━━━━━━━━━━━━━━━━━━━━━━━━`,
         `👤 *Cliente:* ${venda.cliente}`,
         `📦 *Item:* ${venda.qtd}x *${venda.produtoNome}*`,
-        `💰 *Valor Total:* ${formatBRL(venda.valorTotal)}`,
+        `💵 *Valor Unitário:* ${formatBRL(venda.valorUnitario)} cada`,
+        `💰 *Valor Total Cobrado:* ${formatBRL(venda.valorTotal)}`,
         `💳 *Forma de Pagamento:* ${venda.formaPagamento}`,
         `📅 *Data da Operação:* ${dataFmt}`,
         `🚚 *Entrega:* Pronta Entrega Belo Horizonte (Retirada ou Motoboy)`,
@@ -1028,19 +1056,21 @@
 
       const tbody = document.getElementById('historyTableBody');
       if (!vendas.length) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px; color:var(--text-muted);">Nenhuma venda registrada ainda. Use o botão "+ Nova Venda" para dar baixa.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:24px; color:var(--text-muted);">Nenhuma venda registrada ainda. Use o botão "+ Nova Venda" para dar baixa.</td></tr>`;
       } else {
         tbody.innerHTML = vendas.map(v => {
           const d = new Date(v.data).toLocaleString('pt-BR');
+          const unitVal = v.valorUnitario || (v.qtd > 0 ? Math.round(v.valorTotal / v.qtd) : v.valorTotal);
           return `
             <tr>
               <td style="white-space:nowrap; font-size:11px; color:#94a3b8;">${d}</td>
               <td><b>${v.produtoNome}</b></td>
               <td style="text-align:center;"><b style="color:#34d399;">${v.qtd}</b></td>
+              <td style="color:#38bdf8;">${formatBRL(unitVal)}</td>
+              <td><b style="color:#34d399;">${formatBRL(v.valorTotal)}</b></td>
+              <td style="color:#fbbf24;">+${formatBRL(v.lucro)}</td>
               <td>${v.cliente}</td>
               <td style="font-size:11px;">${v.formaPagamento}</td>
-              <td><b style="color:#34d399;">${formatBRL(v.valorTotal)}</b></td>
-              <td style="color:#38bdf8;">+${formatBRL(v.lucro)}</td>
               <td style="text-align:center;">
                 <button class="btn" style="padding:2px 8px; font-size:11px; color:#f87171;" title="Estornar venda e devolver item ao estoque" onclick="window.CRM.undoSale(${v.id})">
                   ↩️ Estornar
@@ -1086,19 +1116,23 @@
         showToast('Nenhuma venda para exportar!');
         return;
       }
-      const header = ['ID', 'Data', 'Produto', 'Quantidade', 'Valor_Total_BRL', 'Forma_Pagamento', 'Cliente', 'Telefone', 'Observacao', 'Lucro_Estimado_BRL'];
-      const rows = vendas.map(v => [
-        v.id,
-        `"${new Date(v.data).toLocaleString('pt-BR')}"`,
-        `"${(v.produtoNome || '').replace(/"/g, '""')}"`,
-        v.qtd,
-        v.valorTotal,
-        `"${(v.formaPagamento || '').replace(/"/g, '""')}"`,
-        `"${(v.cliente || '').replace(/"/g, '""')}"`,
-        `"${(v.telefone || '').replace(/"/g, '""')}"`,
-        `"${(v.obs || '').replace(/"/g, '""')}"`,
-        v.lucro
-      ].join(';'));
+      const header = ['ID', 'Data', 'Produto', 'Quantidade', 'Valor_Unitario_BRL', 'Valor_Total_BRL', 'Forma_Pagamento', 'Cliente', 'Telefone', 'Observacao', 'Lucro_Estimado_BRL'];
+      const rows = vendas.map(v => {
+        const unitVal = v.valorUnitario || (v.qtd > 0 ? Math.round(v.valorTotal / v.qtd) : v.valorTotal);
+        return [
+          v.id,
+          `"${new Date(v.data).toLocaleString('pt-BR')}"`,
+          `"${(v.produtoNome || '').replace(/"/g, '""')}"`,
+          v.qtd,
+          unitVal,
+          v.valorTotal,
+          `"${(v.formaPagamento || '').replace(/"/g, '""')}"`,
+          `"${(v.cliente || '').replace(/"/g, '""')}"`,
+          `"${(v.telefone || '').replace(/"/g, '""')}"`,
+          `"${(v.obs || '').replace(/"/g, '""')}"`,
+          v.lucro
+        ].join(';');
+      });
       const csv = '\uFEFF' + [header.join(';'), ...rows].join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const a = document.createElement('a');
