@@ -2038,6 +2038,82 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       a.href = URL.createObjectURL(blob);
       a.download = `catalogo_shapetotal_${state.mainGroup}_cot${state.cotacao}.csv`;
       a.click();
+    },
+
+    openSyncModal() {
+      const modal = document.getElementById('syncModal');
+      const syncData = {
+        cotacao: state.cotacao,
+        fretePct: state.fretePct,
+        taxaCartaoFixa: state.taxaCartaoFixa,
+        activeTier: state.activeTier,
+        meuEstoque: state.meuEstoque,
+        vendas: state.vendas || [],
+        pedidosTransito: state.pedidosTransito || [],
+        frascosDoses: state.frascosDoses || {},
+        overrides: state.overrides || {}
+      };
+
+      const jsonStr = JSON.stringify(syncData);
+      const b64 = btoa(encodeURIComponent(jsonStr));
+      const baseUrl = window.location.origin + window.location.pathname;
+      const syncUrl = `${baseUrl}#sync=${b64}`;
+
+      document.getElementById('syncUrlInput').value = syncUrl;
+
+      const qrImg = document.getElementById('syncQrCodeImg');
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(syncUrl)}`;
+
+      const totalVendas = (state.vendas || []).length;
+      const totalItens = Object.values(state.meuEstoque || {}).reduce((s, v) => s + Number(v || 0), 0);
+      document.getElementById('syncSummaryBadge').textContent = `📦 ${totalItens} unidades no estoque · 📋 ${totalVendas} vendas · 💉 Doses atualizadas`;
+
+      modal.classList.add('open');
+    },
+
+    copySyncUrl() {
+      const input = document.getElementById('syncUrlInput');
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      showToast('Link de sincronização copiado!');
+    },
+
+    shareSyncWhatsApp() {
+      const input = document.getElementById('syncUrlInput');
+      const url = input.value;
+      const msg = `📲 *SINCRONIZAÇÃO SHAPE TOTAL CRM*\nClique no link abaixo para sincronizar seus dados (estoque, vendas e doses) neste aparelho:\n\n${url}`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+    },
+
+    importSyncPayloadManual() {
+      const raw = prompt('Cole aqui o código ou link de sincronização copiado do outro aparelho:');
+      if (!raw) return;
+      try {
+        let b64 = raw.trim();
+        if (b64.includes('#sync=')) {
+          b64 = b64.split('#sync=')[1];
+        }
+        const jsonStr = decodeURIComponent(atob(b64));
+        const imported = JSON.parse(jsonStr);
+
+        if (imported.meuEstoque) state.meuEstoque = imported.meuEstoque;
+        if (Array.isArray(imported.vendas)) state.vendas = imported.vendas;
+        if (imported.frascosDoses) state.frascosDoses = imported.frascosDoses;
+        if (Array.isArray(imported.pedidosTransito)) state.pedidosTransito = imported.pedidosTransito;
+
+        saveState();
+        renderAll();
+        document.getElementById('syncModal').classList.remove('open');
+        alert('✅ Sincronização concluída com sucesso!');
+      } catch (e) {
+        alert('Código de sincronização inválido. Certifique-se de copiar o link completo.');
+      }
+    },
+
+    forceUpdateApp() {
+      if (confirm('Deseja recarregar a versão mais recente do CRM limpando o cache local?')) {
+        window.location.reload(true);
+      }
     }
   };
 
@@ -2217,7 +2293,35 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
     });
   }
 
+  function checkSyncFromUrl() {
+    try {
+      const hash = window.location.hash || '';
+      if (hash.startsWith('#sync=')) {
+        const payload = hash.substring(6);
+        const jsonStr = decodeURIComponent(atob(payload));
+        const imported = JSON.parse(jsonStr);
+
+        if (imported && typeof imported === 'object') {
+          const current = localStorage.getItem(STORAGE_KEY);
+          let currentParsed = {};
+          if (current) try { currentParsed = JSON.parse(current); } catch(e){}
+
+          const nextState = {
+            ...currentParsed,
+            ...imported
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+          history.replaceState(null, null, window.location.pathname + window.location.search);
+          alert('✅ Sincronização Concluída!\nTodos os dados de estoque, vendas e doses foram sincronizados com sucesso neste aparelho.');
+        }
+      }
+    } catch (e) {
+      console.error('Erro na sincronização via URL:', e);
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    checkSyncFromUrl();
     loadState();
     populateDropdowns();
     renderMarginDrawer();

@@ -67,6 +67,7 @@
         <button class="btn btn-green internal-only" style="background:#059669; color:#ffffff; font-weight:800; border:1px solid #34d399;" onclick="window.CRM.openSaleModal()">⚡ Nova Venda / Baixa</button>
         <button class="btn btn-blue internal-only" style="font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">📋 Vendas (<span id="countVendasBadge">0</span>)</button>
         <button class="btn btn-amber internal-only" style="font-weight:800; border:1px solid #fbbf24; background:#b45309; color:#fff;" onclick="window.CRM.openTransitoModal()">🚚 A Chegar (<span id="countTransitoBadge">22</span>)</button>
+        <button class="btn internal-only" style="background:#0284c7; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openSyncModal()" title="Sincronize estoque, vendas e doses entre celular e computador">☁️ Sincronizar (iPhone ⇄ Mac)</button>
         <button class="btn internal-only" style="background:#0891b2; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')">💉 Doses Avulsas WhatsApp</button>
         <button class="btn btn-green internal-only" style="background:#065f46; color:#ffffff; font-weight:700;" onclick="window.CRM.openWhatsAppCatalogModal('meu_estoque')">📍 WhatsApp Pronta Entrega</button>
         <button class="btn btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_especial')">📋 Tabela Tirzepatida & Reta</button>
@@ -614,10 +615,62 @@
     </div>
   </div>
 
+  <!-- Modal: Sincronização entre Aparelhos (iPhone ⇄ Mac) -->
+  <div id="syncModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:560px; text-align:center;">
+      <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:12px; margin-bottom:16px;">
+        <div>
+          <h3 style="font-size:18px; font-weight:800; color:#38bdf8; display:flex; align-items:center; justify-content:center; gap:8px;">
+            ☁️ Sincronizar Aparelhos (iPhone ⇄ Mac)
+          </h3>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">
+            Transfira vendas, estoque e saldo de doses em 1 segundo entre o seu celular e o computador.
+          </p>
+        </div>
+        <button class="btn" onclick="document.getElementById('syncModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+
+      <div style="background:#0f172a; border:1px solid #1e293b; border-radius:8px; padding:12px; margin-bottom:16px;">
+        <span id="syncSummaryBadge" style="font-size:12px; font-weight:700; color:#34d399;">
+          27 unidades no estoque · 0 vendas · Doses sincronizadas
+        </span>
+      </div>
+
+      <!-- Opção 1: Câmera do iPhone (QR Code) -->
+      <div style="margin-bottom:18px;">
+        <b style="font-size:13px; color:#f8fafc; display:block; margin-bottom:6px;">Opção 1: Aponte a câmera do iPhone para a tela</b>
+        <div style="display:inline-block; padding:10px; background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.4);">
+          <img id="syncQrCodeImg" src="" style="width:200px; height:200px; display:block;" alt="QR Code de Sincronização" />
+        </div>
+        <p style="font-size:11px; color:#94a3b8; margin-top:6px;">
+          Basta apontar a câmera do iPhone. Ao tocar no link amarelo, o app abre e sincroniza tudo na hora.
+        </p>
+      </div>
+
+      <!-- Opção 2: Enviar Link via WhatsApp -->
+      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+        <b style="font-size:13px; color:#f8fafc;">Opção 2: Enviar link para si mesmo no WhatsApp</b>
+        <div style="display:flex; gap:8px;">
+          <input id="syncUrlInput" type="text" readonly style="font-size:11px; color:#94a3b8; background:#0b1120; border:1px solid #334155; padding:8px 10px; border-radius:6px; flex:1;" />
+          <button class="btn btn-primary" onclick="window.CRM.copySyncUrl()">📋 Copiar</button>
+        </div>
+        <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; padding:10px;" onclick="window.CRM.shareSyncWhatsApp()">
+          📲 Abrir no WhatsApp para Enviar ao Celular
+        </button>
+      </div>
+
+      <!-- Opção 3: Importar código manual -->
+      <div style="border-top:1px solid #1e293b; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:11px; color:#94a3b8;">Tem um código copiado de outro aparelho?</span>
+        <button class="btn" style="font-size:11px; color:#38bdf8;" onclick="window.CRM.importSyncPayloadManual()">📥 Colar Código Manual</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script src="dados_catalogo.js"></script>
-  <script src="app.js"></script>
+  <script src="dados_catalogo.js?v=20261109_1655"></script>
+  <script src="app.js?v=20261109_1655"></script>
 </body>
 </html>
