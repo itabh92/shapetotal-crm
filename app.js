@@ -31,12 +31,36 @@
     3391: { rec: 1000, cartao: 1100, label: 'Synedica Retatrutide 60mg' },
     3147: { rec: 1000, cartao: 1100, label: 'ZPHC Caneta Retatrutide 60mg' },
     2965: { rec: 1000, cartao: 1100, label: 'ZPHC Retatrutide 60mg (5x12mg)' },
+    3370: { rec: 3800, cartao: 4200, label: 'Kit Retatrutida Gen-Health (4x60mg)' },
 
     // Ampolas / Frascos avulsos 15 mg
     3206: { rec: 735, cartao: 835, label: 'Pharmacom Jaros Tirzepatida 15mg (Importado)' },
     2763: { rec: 450, cartao: 550, label: 'Gen-Tirz 15mg' },
     2875: { rec: 250, cartao: 300, label: 'Sin Marca Tirzepatida 15mg' },
-    3008: { rec: 250, cartao: 300, label: 'ZPHC Tirzepatide 15mg' }
+    3008: { rec: 250, cartao: 300, label: 'ZPHC Tirzepatide 15mg' },
+
+    // Itens Exclusivos Pronta Entrega BH (Ampolas avulsas e frascos)
+    9001: { rec: 250, cartao: 300, label: 'Lipoland 15mg (Ampola Avulsa)' },
+    9002: { rec: 250, cartao: 300, label: 'Tirzec 15mg (Ampola Avulsa)' },
+    9003: { rec: 250, cartao: 300, label: 'TG 15mg (Ampola Avulsa)' },
+    9004: { rec: 250, cartao: 300, label: 'Lipoless 15mg (Ampola Avulsa)' },
+    9005: { rec: 2000, cartao: 2200, label: 'Retatrutida Gen 120mg (Doses)' },
+    9006: { rec: 1800, cartao: 2000, label: 'Tirzepatida Gen-Tirz 120mg (Doses)' }
+  };
+
+  const ESTOQUE_CANONICO_BH = {
+    2848: 4, // TG 60mg (Caixa 4x15mg)
+    2889: 4, // Lipoless 60mg (Caixa 4x15mg)
+    3207: 1, // Tirzec 60mg (Caixa 4x15mg)
+    3136: 1, // Tirzedral 60mg (Caixa 4x15mg)
+    3370: 1, // Kit Retatrutida 4x60mg + Água
+    2830: 3, // Retatrutida 60mg ampolas fechadas
+    9001: 3, // Ampola avulsa Lipoland 15mg
+    9002: 3, // Ampola avulsa Tirzec 15mg
+    9003: 3, // Ampola avulsa TG 15mg
+    9004: 2, // Ampola avulsa Lipoless 15mg
+    9005: 1, // Retatrutida 120mg frasco doses
+    9006: 1  // Tirzepatida 120mg frasco doses
   };
 
 (function () {
@@ -69,7 +93,8 @@
     groupMargins: JSON.parse(JSON.stringify(DEFAULT_GROUP_MARGINS)),
     overrides: {}, // { [id]: { usd, tier, customPrice, customMargin, desc, fav } }
     meuEstoque: {}, // { [id]: qty }
-    cart: {} // { [id]: qty }
+    cart: {}, // { [id]: qty }
+    vendas: [] // [ { id, data, produtoId, produtoNome, qtd, valorTotal, pagamento, cliente, telefone, obs, lucro } ]
   };
 
   function loadState() {
@@ -90,9 +115,17 @@
         }
         state.overrides = parsed.overrides || {};
         state.meuEstoque = parsed.meuEstoque || {};
+        state.vendas = Array.isArray(parsed.vendas) ? parsed.vendas : [];
       }
     } catch (e) {
       console.error('Erro ao carregar estado:', e);
+    }
+
+    // Auto-recuperação: se meuEstoque estiver vazio ou zerado, carrega o estoque físico de BH
+    const totalItens = Object.values(state.meuEstoque || {}).reduce((s, v) => s + (Number(v) || 0), 0);
+    if (!state.meuEstoque || Object.keys(state.meuEstoque).length === 0 || totalItens === 0) {
+      state.meuEstoque = JSON.parse(JSON.stringify(ESTOQUE_CANONICO_BH));
+      saveState();
     }
   }
 
@@ -105,7 +138,8 @@
         activeTier: state.activeTier,
         groupMargins: state.groupMargins,
         overrides: state.overrides,
-        meuEstoque: state.meuEstoque
+        meuEstoque: state.meuEstoque,
+        vendas: state.vendas || []
       }));
     } catch (e) {
       console.error('Erro ao salvar estado:', e);
@@ -308,10 +342,9 @@
         }
       }
 
-      if (state.subCat !== 'todas' && (p.categoria || 'sem_categoria') !== state.subCat) return false;
-      if (state.brand !== 'todas' && (p.marca || 'sem_marca') !== state.brand) return false;
-
       if (state.mainGroup !== 'meu_estoque') {
+        if (state.subCat !== 'todas' && (p.categoria || 'sem_categoria') !== state.subCat) return false;
+        if (state.brand !== 'todas' && (p.marca || 'sem_marca') !== state.brand) return false;
         if (state.stockFilter === 'com_estoque' && p.stockTotal <= 0) return false;
         if (state.stockFilter === 'sem_estoque' && p.stockTotal > 0) return false;
 
@@ -407,6 +440,9 @@
     const totalMeuEstoqueCount = Object.values(state.meuEstoque || {}).reduce((a, b) => a + (Number(b) || 0), 0);
     const badgeMeuEstoque = document.getElementById('countMeuEstoque');
     if (badgeMeuEstoque) badgeMeuEstoque.textContent = totalMeuEstoqueCount;
+
+    const badgeVendas = document.getElementById('countVendasBadge');
+    if (badgeVendas) badgeVendas.textContent = (state.vendas || []).length;
 
     if (state.mainGroup === 'meu_estoque') {
       const totalItens = filtered.reduce((s, p) => s + ((state.meuEstoque || {})[p.id] || 0), 0);
@@ -524,6 +560,12 @@
                 </div>
               </div>
 
+              ${((state.meuEstoque || {})[p.id] || 0) > 0 ? `
+                <button class="btn btn-green internal-only" style="width:100%; margin:4px 0 8px 0; background:#059669; color:#fff; font-weight:800; padding:7px 10px; border-radius:6px; font-size:12px; display:flex; align-items:center; justify-content:center; gap:6px; border:1px solid #34d399;" onclick="window.CRM.openSaleModal(${p.id})">
+                  💰 Dar Baixa / Registrar Venda
+                </button>
+              ` : ''}
+
               <div class="p-actions">
                 <button class="btn btn-primary" onclick="window.CRM.addToCart(${p.id})">➕ Orçamento</button>
                 <button class="btn" onclick="window.CRM.copySingleWhatsApp(${p.id})">📲 Copiar Linha</button>
@@ -600,6 +642,7 @@
                 <td class="internal-only" style="color:#34d399;font-weight:700">${formatBRL(p.lucroFinal)} (${p.margemAplicada}%)</td>
                 <td>
                   <div style="display:flex;gap:4px">
+                    ${((state.meuEstoque || {})[p.id] || 0) > 0 ? `<button class="btn btn-green internal-only" style="background:#059669; color:#fff; font-weight:800;" title="Dar Baixa / Registrar Venda" onclick="window.CRM.openSaleModal(${p.id})">💰</button>` : ''}
                     <button class="btn btn-primary" onclick="window.CRM.addToCart(${p.id})">➕</button>
                     <button class="btn" onclick="window.CRM.copySingleWhatsApp(${p.id})">📲</button>
                     <button class="btn internal-only" onclick="window.CRM.openEditModal(${p.id})">✏️</button>
@@ -766,6 +809,302 @@
       saveState();
       renderAll();
       showToast(next > 0 ? `Estoque BH: ${next} un` : `Removido do estoque BH`);
+    },
+
+    resetEstoqueBase() {
+      if (confirm('Deseja restaurar o estoque físico para a contagem canônica de 27 itens em BH?')) {
+        state.meuEstoque = JSON.parse(JSON.stringify(ESTOQUE_CANONICO_BH));
+        saveState();
+        renderAll();
+        showToast('Estoque BH restaurado para 27 unidades!');
+      }
+    },
+
+    openSaleModal(productId) {
+      const modal = document.getElementById('saleModal');
+      const selectContainer = document.getElementById('saleProdSelectContainer');
+      const select = document.getElementById('saleProdSelect');
+      const inStockProds = rawCatalog.map(computeProduct).filter(p => ((state.meuEstoque || {})[p.id] || 0) > 0);
+
+      if (!inStockProds.length) {
+        showToast('Nenhum produto com estoque em BH no momento!');
+        return;
+      }
+
+      let targetId = productId;
+      if (!targetId || !inStockProds.some(p => p.id === targetId)) {
+        targetId = inStockProds[0].id;
+        selectContainer.style.display = 'block';
+        select.innerHTML = inStockProds.map(p => `
+          <option value="${p.id}" ${p.id === targetId ? 'selected' : ''}>
+            ${p.nombre} (Disponível: ${state.meuEstoque[p.id]} un)
+          </option>
+        `).join('');
+      } else {
+        selectContainer.style.display = 'none';
+      }
+
+      window.CRM.setSaleModalData(targetId);
+      modal.classList.add('open');
+    },
+
+    onSaleProductSelect(val) {
+      window.CRM.setSaleModalData(Number(val));
+    },
+
+    setSaleModalData(productId) {
+      const raw = rawCatalog.find(x => x.id === productId);
+      if (!raw) return;
+      const p = computeProduct(raw);
+      const stock = (state.meuEstoque || {})[p.id] || 0;
+
+      document.getElementById('saleProdId').value = p.id;
+      document.getElementById('saleProdTitle').textContent = p.nombre;
+      document.getElementById('saleProdSub').textContent = `${(p.marca || '').toUpperCase()} · ${p.presentacion || p.categoria || ''}`;
+      document.getElementById('saleProdStockBadge').textContent = `📦 Em estoque agora: ${stock} unidades`;
+      document.getElementById('saleProdImg').src = p.localFoto || p.remoteFoto || '';
+
+      const qtyInput = document.getElementById('saleQty');
+      qtyInput.value = 1;
+      qtyInput.max = stock;
+
+      const dateInput = document.getElementById('saleDate');
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      dateInput.value = now.toISOString().slice(0, 16);
+
+      document.getElementById('saleClientName').value = '';
+      document.getElementById('saleClientPhone').value = '';
+      document.getElementById('saleNotes').value = '';
+      document.getElementById('salePayment').value = 'pix';
+
+      window.CRM.onSalePaymentChange();
+    },
+
+    onSalePaymentChange() {
+      const pid = Number(document.getElementById('saleProdId').value);
+      const raw = rawCatalog.find(x => x.id === pid);
+      if (!raw) return;
+      const p = computeProduct(raw);
+      const pay = document.getElementById('salePayment').value;
+      const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
+
+      let unitPrice = p.precoFinal;
+      if (pay === 'cartao_6x') {
+        unitPrice = p.precoCartao;
+      }
+      const total = unitPrice * qty;
+      document.getElementById('saleTotalValue').value = total;
+      document.getElementById('salePriceHint').textContent = `Sugestão (${pay === 'cartao_6x' ? 'Cartão' : 'PIX'}): ${formatBRL(unitPrice)} un × ${qty} = ${formatBRL(total)}`;
+    },
+
+    updateSaleTotalPreview() {
+      window.CRM.onSalePaymentChange();
+    },
+
+    confirmSale() {
+      const pid = Number(document.getElementById('saleProdId').value);
+      const raw = rawCatalog.find(x => x.id === pid);
+      if (!raw) {
+        showToast('Selecione um produto!');
+        return;
+      }
+      const p = computeProduct(raw);
+      const currentStock = Number((state.meuEstoque || {})[pid] || 0);
+      const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
+
+      if (qty > currentStock) {
+        alert(`Quantidade solicitada (${qty}) é maior do que o estoque disponível em BH (${currentStock} un)!`);
+        return;
+      }
+
+      const totalVal = Number(document.getElementById('saleTotalValue').value) || (p.precoFinal * qty);
+      const pay = document.getElementById('salePayment').value;
+      const payLabelMap = {
+        'pix': '💠 À vista no PIX',
+        'cartao_6x': '💳 Cartão de Crédito (até 6x)',
+        'cartao_debito': '💳 Cartão Débito',
+        'dinheiro': '💵 Dinheiro em Espécie'
+      };
+      const payLabel = payLabelMap[pay] || pay;
+      const client = document.getElementById('saleClientName').value.trim() || 'Cliente';
+      const phone = document.getElementById('saleClientPhone').value.trim();
+      const notes = document.getElementById('saleNotes').value.trim();
+      const dateVal = document.getElementById('saleDate').value || new Date().toISOString();
+
+      // Baixa no estoque
+      const nextStock = currentStock - qty;
+      if (nextStock <= 0) {
+        delete state.meuEstoque[pid];
+      } else {
+        state.meuEstoque[pid] = nextStock;
+      }
+
+      // Registro de Venda
+      const lucroEst = totalVal - (p.custo * qty);
+      const venda = {
+        id: Date.now(),
+        data: dateVal,
+        produtoId: p.id,
+        produtoNome: p.nombre,
+        marca: p.marca || '',
+        qtd: qty,
+        valorTotal: totalVal,
+        formaPagamento: payLabel,
+        cliente: client,
+        telefone: phone,
+        obs: notes,
+        custoTotal: p.custo * qty,
+        lucro: lucroEst
+      };
+
+      if (!state.vendas) state.vendas = [];
+      state.vendas.unshift(venda);
+      saveState();
+
+      document.getElementById('saleModal').classList.remove('open');
+      renderAll();
+      showToast(`Venda registrada com sucesso! Baixa de ${qty} un efetuada.`);
+
+      // Abre comprovante / recibo
+      window.CRM.showSaleReceipt(venda, p);
+    },
+
+    showSaleReceipt(venda, p) {
+      const modal = document.getElementById('saleReceiptModal');
+      const textarea = document.getElementById('saleReceiptText');
+      const dataFmt = new Date(venda.data).toLocaleString('pt-BR');
+
+      const lines = [
+        `✅ *COMPROVANTE DE PEDIDO — SHAPE TOTAL*`,
+        `━━━━━━━━━━━━━━━━━━━━━━━━━`,
+        `👤 *Cliente:* ${venda.cliente}`,
+        `📦 *Item:* ${venda.qtd}x *${venda.produtoNome}*`,
+        `💰 *Valor Total:* ${formatBRL(venda.valorTotal)}`,
+        `💳 *Forma de Pagamento:* ${venda.formaPagamento}`,
+        `📅 *Data da Operação:* ${dataFmt}`,
+        `🚚 *Entrega:* Pronta Entrega Belo Horizonte (Retirada ou Motoboy)`,
+        venda.obs ? `📝 *Observação:* ${venda.obs}` : ``,
+        `━━━━━━━━━━━━━━━━━━━━━━━━━`,
+        `🔒 *Garantia:* Medicamentos 100% originais com lacre e rastreio.`,
+        `Agradecemos a confiança e preferência! 🚀💪`
+      ].filter(Boolean);
+
+      textarea.value = lines.join('\n');
+      window._lastReceiptPhone = venda.telefone;
+      modal.classList.add('open');
+    },
+
+    openReceiptWhatsApp() {
+      const text = document.getElementById('saleReceiptText').value;
+      const phone = (window._lastReceiptPhone || '').replace(/\D/g, '');
+      if (phone) {
+        const fullPhone = phone.startsWith('55') ? phone : `55${phone}`;
+        window.open(`https://api.whatsapp.com/send?phone=${fullPhone}&text=${encodeURIComponent(text)}`, '_blank');
+      } else {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+      }
+      showToast('Abrindo WhatsApp com o comprovante...');
+    },
+
+    copyReceiptText() {
+      const text = document.getElementById('saleReceiptText').value;
+      navigator.clipboard.writeText(text);
+      showToast('Comprovante copiado para a área de transferência!');
+    },
+
+    openSalesHistoryModal() {
+      const modal = document.getElementById('salesHistoryModal');
+      const vendas = state.vendas || [];
+
+      const totalFat = vendas.reduce((s, v) => s + (Number(v.valorTotal) || 0), 0);
+      const totalLucro = vendas.reduce((s, v) => s + (Number(v.lucro) || 0), 0);
+      const totalQtd = vendas.reduce((s, v) => s + (Number(v.qtd) || 0), 0);
+
+      document.getElementById('historyTotalFaturado').textContent = formatBRL(totalFat);
+      document.getElementById('historyTotalLucro').textContent = formatBRL(totalLucro);
+      document.getElementById('historyTotalQtd').textContent = `${totalQtd} unidades`;
+      document.getElementById('historyTotalVendasCount').textContent = `${vendas.length} vendas`;
+
+      const tbody = document.getElementById('historyTableBody');
+      if (!vendas.length) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px; color:var(--text-muted);">Nenhuma venda registrada ainda. Use o botão "+ Nova Venda" para dar baixa.</td></tr>`;
+      } else {
+        tbody.innerHTML = vendas.map(v => {
+          const d = new Date(v.data).toLocaleString('pt-BR');
+          return `
+            <tr>
+              <td style="white-space:nowrap; font-size:11px; color:#94a3b8;">${d}</td>
+              <td><b>${v.produtoNome}</b></td>
+              <td style="text-align:center;"><b style="color:#34d399;">${v.qtd}</b></td>
+              <td>${v.cliente}</td>
+              <td style="font-size:11px;">${v.formaPagamento}</td>
+              <td><b style="color:#34d399;">${formatBRL(v.valorTotal)}</b></td>
+              <td style="color:#38bdf8;">+${formatBRL(v.lucro)}</td>
+              <td style="text-align:center;">
+                <button class="btn" style="padding:2px 8px; font-size:11px; color:#f87171;" title="Estornar venda e devolver item ao estoque" onclick="window.CRM.undoSale(${v.id})">
+                  ↩️ Estornar
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      modal.classList.add('open');
+    },
+
+    undoSale(saleId) {
+      const vIdx = (state.vendas || []).findIndex(v => v.id === saleId);
+      if (vIdx === -1) return;
+      const v = state.vendas[vIdx];
+
+      if (confirm(`Estornar a venda de ${v.qtd}x "${v.produtoNome}" para ${v.cliente}? O item voltará ao seu estoque físico.`)) {
+        if (!state.meuEstoque) state.meuEstoque = {};
+        state.meuEstoque[v.produtoId] = (Number(state.meuEstoque[v.produtoId]) || 0) + v.qtd;
+        state.vendas.splice(vIdx, 1);
+        saveState();
+        renderAll();
+        window.CRM.openSalesHistoryModal();
+        showToast('Venda estornada! Item devolvido ao estoque.');
+      }
+    },
+
+    clearSalesHistory() {
+      if (confirm('Tem certeza que deseja limpar todo o histórico de vendas? Esta ação não pode ser desfeita.')) {
+        state.vendas = [];
+        saveState();
+        renderAll();
+        window.CRM.openSalesHistoryModal();
+        showToast('Histórico de vendas limpo.');
+      }
+    },
+
+    exportSalesCSV() {
+      const vendas = state.vendas || [];
+      if (!vendas.length) {
+        showToast('Nenhuma venda para exportar!');
+        return;
+      }
+      const header = ['ID', 'Data', 'Produto', 'Quantidade', 'Valor_Total_BRL', 'Forma_Pagamento', 'Cliente', 'Telefone', 'Observacao', 'Lucro_Estimado_BRL'];
+      const rows = vendas.map(v => [
+        v.id,
+        `"${new Date(v.data).toLocaleString('pt-BR')}"`,
+        `"${(v.produtoNome || '').replace(/"/g, '""')}"`,
+        v.qtd,
+        v.valorTotal,
+        `"${(v.formaPagamento || '').replace(/"/g, '""')}"`,
+        `"${(v.cliente || '').replace(/"/g, '""')}"`,
+        `"${(v.telefone || '').replace(/"/g, '""')}"`,
+        `"${(v.obs || '').replace(/"/g, '""')}"`,
+        v.lucro
+      ].join(';'));
+      const csv = '\uFEFF' + [header.join(';'), ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `relatorio_vendas_shapetotal_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
     },
 
     openWhatsAppCatalogModal(mode) {

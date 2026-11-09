@@ -4084,7 +4084,7 @@
       "foto": "/fotos/producto-2819.jpg",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
-      "meu_estoque_qtd": 1
+      "meu_estoque_qtd": 0
     },
     {
       "id": 3370,
@@ -4570,7 +4570,7 @@
       "foto": "/fotos/producto-3038.jpg",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
-      "meu_estoque_qtd": 1
+      "meu_estoque_qtd": 0
     },
     {
       "id": 2763,
@@ -5794,7 +5794,7 @@
       "foto": "/fotos/producto-2848.jpg",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
-      "meu_estoque_qtd": 7
+      "meu_estoque_qtd": 4
     },
     {
       "id": 2810,
@@ -7396,7 +7396,7 @@
       "foto": "/fotos/producto-2988.jpg",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
-      "meu_estoque_qtd": 3
+      "meu_estoque_qtd": 0
     },
     {
       "id": 2804,
@@ -7648,7 +7648,7 @@
       "foto": "/fotos/producto-2889.jpg",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
-      "meu_estoque_qtd": 6
+      "meu_estoque_qtd": 4
     },
     {
       "id": 2857,
@@ -13354,7 +13354,7 @@
       "foto": "/fotos/producto-3207.jpg",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
-      "meu_estoque_qtd": 4
+      "meu_estoque_qtd": 1
     },
     {
       "id": 3046,
@@ -15911,6 +15911,126 @@
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
       "meu_estoque_qtd": 1
+    },
+    {
+      "id": 9001,
+      "nombre": "LIPOLAND TIRZEPATIDA X 15 MG (AMPOLA AVULSA)",
+      "marca": "landerlan",
+      "composicion": "tirzepatida 15 mg",
+      "categoria": "emagrecedores",
+      "presentacion": "ampola liofilizada avulsa 15 mg",
+      "qty": "1 amp",
+      "mg": "15 mg",
+      "precio": 22,
+      "stock_cde": 100,
+      "stock_pj": 10,
+      "stock_sg": 10,
+      "foto": "/fotos/producto-9001.jpg",
+      "colecao_id": "1_emagrecedores",
+      "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
+      "preco_pix_fixo": 250.0,
+      "preco_cartao_fixo": 300.0,
+      "meu_estoque_qtd": 3
+    },
+    {
+      "id": 9002,
+      "nombre": "QUIMFA TIRZEC X 15 MG (AMPOLA AVULSA)",
+      "marca": "quimfa",
+      "composicion": "tirzepatida 15 mg",
+      "categoria": "emagrecedores",
+      "presentacion": "ampola liofilizada avulsa 15 mg",
+      "qty": "1 amp",
+      "mg": "15 mg",
+      "precio": 22,
+      "stock_cde": 100,
+      "stock_pj": 10,
+      "stock_sg": 10,
+      "foto": "/fotos/producto-9002.jpg",
+      "colecao_id": "1_emagrecedores",
+      "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
+      "preco_pix_fixo": 250.0,
+      "preco_cartao_fixo": 300.0,
+      "meu_estoque_qtd": 3
+    },
+    {
+      "id": 9003,
+      "nombre": "INDUFAR T.G. TIRZEPATIDA X 15 MG (AMPOLA AVULSA)",
+      "marca": "indufar",
+      "composicion": "tirzepatida 15 mg",
+      "categoria": "emagrecedores",
+      "presentacion": "ampola liofilizada avulsa 15 mg",
+      "qty": "1 amp",
+      "mg": "15 mg",
+      "precio": 22,
+      "stock_cde": 100,
+      "stock_pj": 10,
+      "stock_sg": 10,
+      "foto": "/fotos/producto-9003.jpg",
+      "colecao_id": "1_emagrecedores",
+      "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
+      "preco_pix_fixo": 250.0,
+      "preco_cartao_fixo": 300.0,
+      "meu_estoque_qtd": 3
+    },
+    {
+      "id": 9004,
+      "nombre": "LIPOLESS X 15 MG (AMPOLA AVULSA)",
+      "marca": "eticos",
+      "composicion": "tirzepatida 15 mg",
+      "categoria": "emagrecedores",
+      "presentacion": "ampola liofilizada avulsa 15 mg",
+      "qty": "1 amp",
+      "mg": "15 mg",
+      "precio": 22,
+      "stock_cde": 100,
+      "stock_pj": 10,
+      "stock_sg": 10,
+      "foto": "/fotos/producto-9004.jpg",
+      "colecao_id": "1_emagrecedores",
+      "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
+      "preco_pix_fixo": 250.0,
+      "preco_cartao_fixo": 300.0,
+      "meu_estoque_qtd": 2
+    },
+    {
+      "id": 9005,
+      "nombre": "GEN RETATRUTIDE X 120 MG (FRASCO P/ DOSES)",
+      "marca": "gen health",
+      "composicion": "retatrutida 120 mg",
+      "categoria": "emagrecedores",
+      "presentacion": "frasco multidose 120 mg",
+      "qty": "1 vial",
+      "mg": "120 mg",
+      "precio": 110,
+      "stock_cde": 50,
+      "stock_pj": 5,
+      "stock_sg": 5,
+      "foto": "/fotos/producto-9005.jpg",
+      "colecao_id": "1_emagrecedores",
+      "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
+      "preco_pix_fixo": 2000.0,
+      "preco_cartao_fixo": 2200.0,
+      "meu_estoque_qtd": 1
+    },
+    {
+      "id": 9006,
+      "nombre": "GEN-TIRZ TIRZEPATIDA X 120 MG (FRASCO P/ DOSES)",
+      "marca": "gen health",
+      "composicion": "tirzepatida 120 mg",
+      "categoria": "emagrecedores",
+      "presentacion": "frasco multidose 120 mg",
+      "qty": "1 vial",
+      "mg": "120 mg",
+      "precio": 110,
+      "stock_cde": 50,
+      "stock_pj": 5,
+      "stock_sg": 5,
+      "foto": "/fotos/producto-9006.jpg",
+      "colecao_id": "1_emagrecedores",
+      "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
+      "preco_pix_fixo": 1800.0,
+      "preco_cartao_fixo": 2000.0,
+      "meu_estoque_qtd": 1
     }
   ],
   "principales": [
@@ -16142,14 +16262,17 @@
     "faturamento_potencial_cartao": 25000.0
   },
   "meu_estoque_qtds": {
-    "2848": 7,
-    "2889": 6,
-    "3207": 4,
+    "2848": 4,
+    "2889": 4,
+    "3207": 1,
     "3136": 1,
     "3370": 1,
     "2830": 3,
-    "2988": 3,
-    "2819": 1,
-    "3038": 1
+    "9001": 3,
+    "9002": 3,
+    "9003": 3,
+    "9004": 2,
+    "9005": 1,
+    "9006": 1
   }
 }

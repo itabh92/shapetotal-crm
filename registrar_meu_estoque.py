@@ -101,7 +101,7 @@ ESTOQUE_LOCAL = [
     # 3. AMPOLAS AVULSAS DE 15 MG
     # -------------------------------------------------------------
     {
-        'id_catalogo': 2988,
+        'id_catalogo': 9001,
         'nome': 'Lipoland 15 mg (Ampola Avulsa)',
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Landerlan)',
@@ -111,7 +111,7 @@ ESTOQUE_LOCAL = [
         'obs': 'Ampola avulsa oficial Landerlan'
     },
     {
-        'id_catalogo': 3207,
+        'id_catalogo': 9002,
         'nome': 'Tirzec 15 mg (Ampola Avulsa)',
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Quimfa)',
@@ -121,7 +121,7 @@ ESTOQUE_LOCAL = [
         'obs': 'Ampola avulsa oficial Quimfa'
     },
     {
-        'id_catalogo': 2848,
+        'id_catalogo': 9003,
         'nome': 'TG 15 mg (Ampola Avulsa)',
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Indufar)',
@@ -131,7 +131,7 @@ ESTOQUE_LOCAL = [
         'obs': 'Ampola avulsa oficial Indufar'
     },
     {
-        'id_catalogo': 2889,
+        'id_catalogo': 9004,
         'nome': 'Lipoless 15 mg (Ampola Avulsa)',
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Eticos)',
@@ -145,7 +145,7 @@ ESTOQUE_LOCAL = [
     # 4. FRASCOS ABERTOS PARA FRACIONAMENTO DE DOSES
     # -------------------------------------------------------------
     {
-        'id_catalogo': 2819,
+        'id_catalogo': 9005,
         'nome': 'Retatrutida Gen-Health 120 mg (Frasco para Doses)',
         'tipo': 'frasco_doses',
         'apresentacao': 'Frasco de 120 mg aberto reservado para aplicação fracionada',
@@ -155,7 +155,7 @@ ESTOQUE_LOCAL = [
         'obs': 'Frasco aberto exclusivo para doses locais'
     },
     {
-        'id_catalogo': 3038,
+        'id_catalogo': 9006,
         'nome': 'Tirzepatida Gen-Tirz 120 mg (Frasco para Doses)',
         'tipo': 'frasco_doses',
         'apresentacao': 'Frasco de 120 mg aberto reservado para aplicação fracionada',

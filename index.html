@@ -64,12 +64,15 @@
       </div>
 
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button class="btn btn-green internal-only" style="background:#059669; color:#ffffff; font-weight:700;" onclick="window.CRM.openWhatsAppCatalogModal('meu_estoque')">📍 WhatsApp Pronta Entrega</button>
+        <button class="btn btn-green internal-only" style="background:#059669; color:#ffffff; font-weight:800; border:1px solid #34d399;" onclick="window.CRM.openSaleModal()">⚡ Nova Venda / Baixa</button>
+        <button class="btn btn-blue internal-only" style="font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">📋 Vendas (<span id="countVendasBadge">0</span>)</button>
+        <button class="btn btn-green internal-only" style="background:#065f46; color:#ffffff; font-weight:700;" onclick="window.CRM.openWhatsAppCatalogModal('meu_estoque')">📍 WhatsApp Pronta Entrega</button>
         <button class="btn btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_especial')">📋 Tabela Tirzepatida & Reta</button>
         <button class="btn btn-primary" onclick="window.CRM.openWhatsAppCatalogModal('grok')">🧬 Guia Grok WhatsApp</button>
         <button class="btn btn-blue" onclick="window.CRM.openWhatsAppCatalogModal('filtro')">📲 Lista WhatsApp Atual</button>
         <button id="btnViewMode" class="btn">📊 Ver Planilha</button>
         <button id="btnClientMode" class="btn">👁️ Modo Cliente</button>
+        <button class="btn internal-only" style="background:#1e293b; color:#94a3b8; font-size:11px;" title="Restaura os 27 itens físicos canônicos de BH" onclick="window.CRM.resetEstoqueBase()">🔄 Reset Estoque (27 un)</button>
         <button class="btn" onclick="window.CRM.lockApp()" title="Bloquear tela">🔒 Sair</button>
         <button class="btn internal-only" onclick="window.CRM.exportCSV()">📥 Excel/CSV</button>
       </div>
@@ -216,6 +219,175 @@
           <button id="btnOpenWaModal" class="btn btn-green" onclick="window.CRM.openWhatsAppDirect()">📲 Abrir no WhatsApp</button>
           <button id="btnCopyWaModal" class="btn btn-primary">📋 Copiar Tudo</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Registrar Venda e Dar Baixa -->
+  <div id="saleModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:540px;">
+      <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:12px; margin-bottom:16px;">
+        <div>
+          <h3 style="font-size:17px; font-weight:800; color:#34d399; display:flex; align-items:center; gap:8px;">
+            💰 Registrar Venda & Dar Baixa
+          </h3>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">
+            Abate automaticamente do seu estoque físico em BH e registra no histórico de vendas.
+          </p>
+        </div>
+        <button class="btn" onclick="document.getElementById('saleModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+
+      <div id="saleProdCard" style="display:flex; gap:12px; align-items:center; background:#0f172a; padding:12px; border-radius:8px; border:1px solid #334155; margin-bottom:16px;">
+        <img id="saleProdImg" src="" style="width:54px; height:54px; border-radius:6px; object-fit:cover; border:1px solid #475569;" />
+        <div style="flex:1;">
+          <div id="saleProdTitle" style="font-size:14px; font-weight:800; color:#fff;">Nome do Medicamento</div>
+          <div id="saleProdSub" style="font-size:11px; color:#94a3b8;">Apresentação / Marca</div>
+          <div id="saleProdStockBadge" style="font-size:11px; font-weight:700; color:#34d399; margin-top:3px;">
+            📦 Em estoque agora: 4 unidades
+          </div>
+        </div>
+      </div>
+
+      <!-- Seletor de produto caso abra pelo botão superior -->
+      <div class="m-field" id="saleProdSelectContainer" style="display:none; margin-bottom:14px;">
+        <label>Medicamento do Estoque</label>
+        <select id="saleProdSelect" class="filter-select" style="width:100%; font-size:13px;" onchange="window.CRM.onSaleProductSelect(this.value)"></select>
+      </div>
+
+      <input type="hidden" id="saleProdId" />
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+        <div class="m-field">
+          <label>Quantidade Vendida</label>
+          <input id="saleQty" type="number" min="1" value="1" style="font-size:15px; font-weight:700; text-align:center;" oninput="window.CRM.updateSaleTotalPreview()" />
+        </div>
+        <div class="m-field">
+          <label>Forma de Pagamento</label>
+          <select id="salePayment" class="filter-select" style="width:100%; font-size:13px;" onchange="window.CRM.onSalePaymentChange()">
+            <option value="pix">💠 À vista no PIX</option>
+            <option value="cartao_6x">💳 Cartão (até 6x)</option>
+            <option value="cartao_debito">💳 Cartão Débito</option>
+            <option value="dinheiro">💵 Dinheiro em Espécie</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+        <div class="m-field">
+          <label>Valor Total Cobrado (R$)</label>
+          <input id="saleTotalValue" type="number" step="1" style="font-size:16px; font-weight:800; color:#34d399; text-align:right;" />
+          <div style="font-size:10px; color:#94a3b8; margin-top:2px;" id="salePriceHint">Sugestão de tabela: R$ 900,00</div>
+        </div>
+        <div class="m-field">
+          <label>Data & Hora da Venda</label>
+          <input id="saleDate" type="datetime-local" style="font-size:12px;" />
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+        <div class="m-field">
+          <label>Nome do Cliente / Identificação</label>
+          <input id="saleClientName" type="text" placeholder="Ex: Carlos (Academia) / Dr. Marcos" style="text-align:left;" />
+        </div>
+        <div class="m-field">
+          <label>WhatsApp do Cliente (opcional)</label>
+          <input id="saleClientPhone" type="text" placeholder="(31) 9...." style="text-align:left;" />
+        </div>
+      </div>
+
+      <div class="m-field" style="margin-bottom:18px;">
+        <label>Observação / Forma de Entrega</label>
+        <input id="saleNotes" type="text" placeholder="Ex: Entregue via Uber Flash / Retirada no local" style="text-align:left;" />
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+        <button class="btn" onclick="document.getElementById('saleModal').classList.remove('open')">Cancelar</button>
+        <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; padding:10px 20px; font-size:14px;" onclick="window.CRM.confirmSale()">
+          ✅ Confirmar Venda & Dar Baixa
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Histórico de Vendas -->
+  <div id="salesHistoryModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:880px;">
+      <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:12px; margin-bottom:14px;">
+        <div>
+          <h3 style="font-size:17px; font-weight:800; color:#38bdf8; display:flex; align-items:center; gap:8px;">
+            📋 Histórico de Vendas Realizadas
+          </h3>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">
+            Registro auditável de todas as baixas de estoque, faturamento e lucro líquido em Belo Horizonte.
+          </p>
+        </div>
+        <button class="btn" onclick="document.getElementById('salesHistoryModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+
+      <!-- Resumo KPI de Vendas -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px; margin-bottom:16px;">
+        <div style="background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #1e293b;">
+          <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:700;">Total Faturado</div>
+          <div id="historyTotalFaturado" style="font-size:18px; font-weight:800; color:#34d399;">R$ 0,00</div>
+        </div>
+        <div style="background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #1e293b;">
+          <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:700;">Lucro Líquido Realizado</div>
+          <div id="historyTotalLucro" style="font-size:18px; font-weight:800; color:#38bdf8;">R$ 0,00</div>
+        </div>
+        <div style="background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #1e293b;">
+          <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:700;">Total Itens Vendidos</div>
+          <div id="historyTotalQtd" style="font-size:18px; font-weight:800; color:#f8fafc;">0 unidades</div>
+        </div>
+        <div style="background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #1e293b;">
+          <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:700;">Vendas Registradas</div>
+          <div id="historyTotalVendasCount" style="font-size:18px; font-weight:800; color:#fbbf24;">0 vendas</div>
+        </div>
+      </div>
+
+      <!-- Tabela de Histórico -->
+      <div style="max-height:360px; overflow-y:auto; border:1px solid #1e293b; border-radius:8px; background:#0b1120;">
+        <table class="crm-table" style="font-size:12px; margin:0;">
+          <thead>
+            <tr>
+              <th>Data/Hora</th>
+              <th>Medicamento</th>
+              <th>Qtd</th>
+              <th>Cliente</th>
+              <th>Pagamento</th>
+              <th>Valor Total</th>
+              <th>Lucro Est.</th>
+              <th style="text-align:center;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody"></tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; flex-wrap:wrap; gap:8px;">
+        <button class="btn" style="color:#f87171;" onclick="window.CRM.clearSalesHistory()">🗑️ Limpar Histórico</button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-blue" onclick="window.CRM.exportSalesCSV()">📥 Exportar Vendas (Excel/CSV)</button>
+          <button class="btn btn-green" onclick="window.CRM.openSaleModal()">➕ Nova Venda</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Comprovante de Venda / WhatsApp -->
+  <div id="saleReceiptModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:540px;">
+      <div class="modal-header">
+        <h3 style="font-size:16px;font-weight:800; color:#34d399;">📲 Comprovante da Venda Gerado</h3>
+        <button class="btn" onclick="document.getElementById('saleReceiptModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+        Envie este comprovante para o cliente no WhatsApp com todos os detalhes da entrega:
+      </p>
+      <textarea id="saleReceiptText" class="wa-textarea" style="height:190px;"></textarea>
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+        <button id="btnOpenReceiptWa" class="btn btn-green" onclick="window.CRM.openReceiptWhatsApp()">📲 Abrir WhatsApp do Cliente</button>
+        <button id="btnCopyReceipt" class="btn btn-primary" onclick="window.CRM.copyReceiptText()">📋 Copiar Recibo</button>
       </div>
     </div>
   </div>
