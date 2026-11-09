@@ -66,7 +66,7 @@
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button class="btn btn-green internal-only" style="background:#059669; color:#ffffff; font-weight:800; border:1px solid #34d399;" onclick="window.CRM.openSaleModal()">⚡ Nova Venda / Baixa</button>
         <button class="btn btn-blue internal-only" style="font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">📋 Vendas (<span id="countVendasBadge">0</span>)</button>
-        <button class="btn btn-amber internal-only" style="font-weight:800; border:1px solid #fbbf24; background:#b45309; color:#fff;" onclick="window.CRM.openTransitoModal()">🚚 A Chegar (<span id="countTransitoBadge">17</span>)</button>
+        <button class="btn btn-amber internal-only" style="font-weight:800; border:1px solid #fbbf24; background:#b45309; color:#fff;" onclick="window.CRM.openTransitoModal()">🚚 A Chegar (<span id="countTransitoBadge">22</span>)</button>
         <button class="btn internal-only" style="background:#0891b2; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')">💉 Doses Avulsas WhatsApp</button>
         <button class="btn btn-green internal-only" style="background:#065f46; color:#ffffff; font-weight:700;" onclick="window.CRM.openWhatsAppCatalogModal('meu_estoque')">📍 WhatsApp Pronta Entrega</button>
         <button class="btn btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_especial')">📋 Tabela Tirzepatida & Reta</button>
@@ -156,8 +156,8 @@
         </div>
         <div style="background:rgba(15,23,42,0.85); padding:12px 14px; border-radius:8px; border:1px solid #1e293b;">
           <div style="font-size:11px; color:#94a3b8; font-weight:700; text-transform:uppercase;">🚚 Em Trânsito (Pago / A Chegar)</div>
-          <div id="bhPanelTransitoValor" style="font-size:19px; font-weight:800; color:#fbbf24; margin-top:4px;">R$ 15.030,00 (PIX)</div>
-          <div id="bhPanelTransitoSub" style="font-size:11px; color:#cbd5e1; margin-top:2px;">17 un · Investido: R$ 8.747,61</div>
+          <div id="bhPanelTransitoValor" style="font-size:19px; font-weight:800; color:#fbbf24; margin-top:4px;">R$ 19.530,00 (PIX)</div>
+          <div id="bhPanelTransitoSub" style="font-size:11px; color:#cbd5e1; margin-top:2px;">22 un · Investido: R$ 11.872,61</div>
         </div>
         <div style="background:rgba(15,23,42,0.85); padding:12px 14px; border-radius:8px; border:1px solid #1e293b;">
           <div style="font-size:11px; color:#94a3b8; font-weight:700; text-transform:uppercase;">💵 Vendas Realizadas (Caixa)</div>
@@ -166,8 +166,8 @@
         </div>
         <div style="background:rgba(15,23,42,0.85); padding:12px 14px; border-radius:8px; border:1px solid #10b981;">
           <div style="font-size:11px; color:#34d399; font-weight:800; text-transform:uppercase;">🏆 Potencial Total (Mãos + Trânsito)</div>
-          <div id="bhPanelTotalPotencial" style="font-size:19px; font-weight:800; color:#ffffff; margin-top:4px;">R$ 37.380,00</div>
-          <div id="bhPanelTotalLucro" style="font-size:11px; color:#34d399; font-weight:700; margin-top:2px;">44 unidades · Lucro Previsto: +R$ 16.956,23</div>
+          <div id="bhPanelTotalPotencial" style="font-size:19px; font-weight:800; color:#ffffff; margin-top:4px;">R$ 41.880,00</div>
+          <div id="bhPanelTotalLucro" style="font-size:11px; color:#34d399; font-weight:700; margin-top:2px;">49 unidades · Lucro Previsto: +R$ 18.331,23</div>
         </div>
       </div>
 
@@ -306,22 +306,22 @@
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px; margin-bottom:16px;">
         <div style="background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #1e293b;">
           <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:700;">Capital Investido Pago</div>
-          <div id="kpiTransitoInvestido" style="font-size:18px; font-weight:800; color:#f87171;">R$ 8.747,61</div>
-          <div style="font-size:10px; color:#94a3b8;">2 pedidos pagos</div>
+          <div id="kpiTransitoInvestido" style="font-size:18px; font-weight:800; color:#f87171;">R$ 11.872,61</div>
+          <div style="font-size:10px; color:#94a3b8;">3 pedidos pagos</div>
         </div>
         <div style="background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #1e293b;">
           <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:700;">Faturamento Previsto (PIX)</div>
-          <div id="kpiTransitoFaturamento" style="font-size:18px; font-weight:800; color:#34d399;">R$ 15.030,00</div>
-          <div style="font-size:10px; color:#34d399;">No Cartão: R$ 16.730,00</div>
+          <div id="kpiTransitoFaturamento" style="font-size:18px; font-weight:800; color:#34d399;">R$ 19.530,00</div>
+          <div style="font-size:10px; color:#34d399;">No Cartão: R$ 21.730,00</div>
         </div>
         <div style="background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #1e293b;">
           <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:700;">Lucro Líquido Previsto</div>
-          <div id="kpiTransitoLucro" style="font-size:18px; font-weight:800; color:#38bdf8;">+R$ 6.282,39</div>
-          <div style="font-size:10px; color:#38bdf8;">ROI projetado: +71,8%</div>
+          <div id="kpiTransitoLucro" style="font-size:18px; font-weight:800; color:#38bdf8;">+R$ 7.657,39</div>
+          <div style="font-size:10px; color:#38bdf8;">ROI projetado: +64,5%</div>
         </div>
         <div style="background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #1e293b;">
           <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:700;">Total Peças a Chegar</div>
-          <div id="kpiTransitoQtd" style="font-size:18px; font-weight:800; color:#fbbf24;">17 unidades</div>
+          <div id="kpiTransitoQtd" style="font-size:18px; font-weight:800; color:#fbbf24;">22 unidades</div>
           <div style="font-size:10px; color:#94a3b8;">Linha 60mg + Peptídeo</div>
         </div>
       </div>
@@ -365,7 +365,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top:1px solid #1e293b; padding-top:12px; flex-wrap:wrap; gap:8px;">
         <button class="btn btn-amber" style="font-weight:800;" onclick="window.CRM.toggleNewPurchaseForm()">➕ Lançar Nova Compra Paga</button>
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-          <button class="btn" style="background:#1e293b; color:#fbbf24; font-size:11px; font-weight:700;" onclick="window.CRM.resetPedidosTransito()">🔄 Recarregar Pedidos Pagos (17 un)</button>
+          <button class="btn" style="background:#1e293b; color:#fbbf24; font-size:11px; font-weight:700;" onclick="window.CRM.resetPedidosTransito()">🔄 Recarregar Pedidos Pagos (22 un)</button>
           <button class="btn" onclick="document.getElementById('transitoModal').classList.remove('open')">Fechar</button>
         </div>
       </div>

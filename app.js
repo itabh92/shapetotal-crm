@@ -91,6 +91,18 @@
 
   const PEDIDOS_TRANSITO_CANONICOS = [
     {
+      id: "PED-20261109-02",
+      data_compra: "09/11/2026",
+      fornecedor: "Outro Fornecedor",
+      status: "em_transito",
+      custo_total_reais: 3125.00,
+      itens: [
+        { id_catalogo: 2996, nome: "QUIMFA TIRZEC MULTI DOSIS 60 MG (AMPOLA ÚNICA)", qtd: 2, preco_venda_pix: 900, preco_venda_cartao: 1000 },
+        { id_catalogo: 2848, nome: "INDUFAR T.G. TIRZEPATIDA X 15 MG. X 4 AMP. (60 MG)", qtd: 2, preco_venda_pix: 900, preco_venda_cartao: 1000 },
+        { id_catalogo: 3207, nome: "TIRZEC X 15 MG. X 4 AMPOLLAS (60 MG)", qtd: 1, preco_venda_pix: 900, preco_venda_cartao: 1000 }
+      ]
+    },
+    {
       id: "PED-20261109-01",
       data_compra: "09/11/2026",
       fornecedor: "Shape Total / Importação",
@@ -202,6 +214,17 @@
     if (!state.pedidosTransito || state.pedidosTransito.length === 0) {
       state.pedidosTransito = JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
       saveState();
+    } else {
+      // Auto-merge: se houver novo pedido canônico ainda não presente no storage, inclui automaticamente
+      let changed = false;
+      PEDIDOS_TRANSITO_CANONICOS.forEach(canon => {
+        const exists = state.pedidosTransito.some(p => p.id === canon.id);
+        if (!exists) {
+          state.pedidosTransito.unshift(JSON.parse(JSON.stringify(canon)));
+          changed = true;
+        }
+      });
+      if (changed) saveState();
     }
 
     // Auto-recuperação: se meuEstoque estiver vazio ou zerado, carrega o estoque físico de BH
@@ -1699,12 +1722,12 @@
     },
 
     resetPedidosTransito() {
-      if (confirm('Restaurar os 2 pedidos pagos de 06/11 e 09/11 (17 unidades a chegar)?')) {
+      if (confirm('Restaurar os 3 pedidos pagos em trânsito (22 unidades a chegar — R$ 11.872,61 investidos)?')) {
         state.pedidosTransito = JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
         saveState();
         renderAll();
         window.CRM.openTransitoModal();
-        showToast('Pedidos em trânsito restaurados com sucesso (17 un)!');
+        showToast('Pedidos em trânsito restaurados com sucesso (22 un)!');
       }
     },
 
