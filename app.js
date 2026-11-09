@@ -63,6 +63,32 @@
     9006: 1  // Tirzepatida 120mg frasco doses
   };
 
+  const TABELA_DOSES_OFICIAIS = {
+    9006: {
+      id: 9006,
+      nome: 'Tirzepatide Injection 120mg/4ml (30mg/ml)',
+      marca: 'USA Peptides',
+      totalMg: 120,
+      fotoTabela: 'fotos/tabela_doses_tirzepatida_120mg.jpg',
+      doses: [
+        { mg: 2.5, preco: 65, label: '2,5 mg', fullLabel: '2,5 mg — R$ 65,00' },
+        { mg: 5.0, preco: 130, label: '5,0 mg', fullLabel: '5,0 mg — R$ 130,00' },
+        { mg: 7.5, preco: 185, label: '7,5 mg', fullLabel: '7,5 mg — R$ 185,00' }
+      ]
+    },
+    9005: {
+      id: 9005,
+      nome: 'Retatrutide 120 mg (GLP-1, GIP, Glucagon)',
+      marca: 'GEN-HEALTH',
+      totalMg: 120,
+      fotoTabela: 'fotos/tabela_doses_retatrutida_120mg.jpg',
+      doses: [
+        { mg: 2.5, preco: 80, label: '2,5 mg', fullLabel: '2,5 mg — R$ 80,00' },
+        { mg: 5.0, preco: 150, label: '5,0 mg', fullLabel: '5,0 mg — R$ 150,00' }
+      ]
+    }
+  };
+
   const PEDIDOS_TRANSITO_CANONICOS = [
     {
       id: "PED-20261109-01",
@@ -123,7 +149,11 @@
     meuEstoque: {}, // { [id]: qty }
     cart: {}, // { [id]: qty }
     vendas: [], // [ { id, data, produtoId, produtoNome, qtd, valorUnitario, valorTotal, pagamento, cliente, telefone, obs, lucro } ]
-    pedidosTransito: [] // [ { id, data_compra, status, custo_total_reais, itens: [ { id_catalogo, nome, qtd, ... } ] } ]
+    pedidosTransito: [], // [ { id, data_compra, status, custo_total_reais, itens: [ { id_catalogo, nome, qtd, ... } ] } ]
+    frascosDoses: {
+      9006: { mgRestante: 120, totalAplicadasMg: 0 },
+      9005: { mgRestante: 120, totalAplicadasMg: 0 }
+    }
   };
 
   function loadState() {
@@ -148,12 +178,26 @@
         state.pedidosTransito = Array.isArray(parsed.pedidosTransito) && parsed.pedidosTransito.length > 0
           ? parsed.pedidosTransito
           : JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
+        state.frascosDoses = parsed.frascosDoses || {
+          9006: { mgRestante: 120, totalAplicadasMg: 0 },
+          9005: { mgRestante: 120, totalAplicadasMg: 0 }
+        };
       } else {
         state.pedidosTransito = JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
+        state.frascosDoses = {
+          9006: { mgRestante: 120, totalAplicadasMg: 0 },
+          9005: { mgRestante: 120, totalAplicadasMg: 0 }
+        };
       }
     } catch (e) {
       console.error('Erro ao carregar estado:', e);
     }
+
+    if (!state.frascosDoses) {
+      state.frascosDoses = {};
+    }
+    if (!state.frascosDoses[9006]) state.frascosDoses[9006] = { mgRestante: 120, totalAplicadasMg: 0 };
+    if (!state.frascosDoses[9005]) state.frascosDoses[9005] = { mgRestante: 120, totalAplicadasMg: 0 };
 
     if (!state.pedidosTransito || state.pedidosTransito.length === 0) {
       state.pedidosTransito = JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
@@ -179,7 +223,8 @@
         overrides: state.overrides,
         meuEstoque: state.meuEstoque,
         vendas: state.vendas || [],
-        pedidosTransito: state.pedidosTransito || []
+        pedidosTransito: state.pedidosTransito || [],
+        frascosDoses: state.frascosDoses || {}
       }));
     } catch (e) {
       console.error('Erro ao salvar estado:', e);
@@ -532,6 +577,8 @@
         document.getElementById('bhPanelTotalLucro').textContent = `${totalItens + totalItensTransito} unidades · Lucro Previsto: +${formatBRL(totalLucro + transitoLucro)}`;
       }
 
+      renderDosesFrascos();
+
       document.getElementById('kpiCount').textContent = `${totalItens} unidades`;
       document.getElementById('kpiCountSub').textContent = `${filtered.length} SKUs em mãos (Pronta Entrega)`;
       document.getElementById('kpiMult').textContent = formatBRL(totalCusto);
@@ -767,6 +814,85 @@
     bar.innerHTML = `🛒 Orçamento: ${totalItems} iten(s) | Total PIX: ${formatBRLInt(totalVenda)} <span class="internal-only" style="font-size:11px;background:rgba(0,0,0,0.25);padding:3px 8px;border-radius:99px;">Lucro: ${formatBRL(totalLucro)}</span>`;
   }
 
+  function renderDosesFrascos() {
+    const container = document.getElementById('dosesFrascosContainer');
+    if (!container) return;
+
+    const ids = [9006, 9005];
+    container.innerHTML = ids.map(id => {
+      const conf = TABELA_DOSES_OFICIAIS[id];
+      if (!conf) return '';
+      const doseState = (state.frascosDoses && state.frascosDoses[id]) || { mgRestante: 120, totalAplicadasMg: 0 };
+      const mgRest = Math.max(0, Number(doseState.mgRestante || 0));
+      const totalMg = conf.totalMg || 120;
+      const pct = Math.min(100, Math.max(0, Math.round((mgRest / totalMg) * 100)));
+      const estoqueFechados = Number((state.meuEstoque || {})[id] || 0);
+
+      // Cor da barra de progresso
+      let barColor = '#10b981';
+      if (pct <= 20) barColor = '#ef4444';
+      else if (pct <= 50) barColor = '#f59e0b';
+
+      return `
+        <div style="background:#090d16; border:1px solid #1e293b; border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:8px;">
+              <div style="display:flex; gap:10px; align-items:center;">
+                <img src="${conf.fotoTabela}" style="width:48px; height:48px; object-fit:cover; border-radius:6px; border:1px solid #38bdf8; cursor:pointer;" title="Clique para ver a tabela oficial ampliada" onclick="window.CRM.openDoseImageModal(${id})" />
+                <div>
+                  <div style="font-size:13px; font-weight:800; color:#f8fafc;">${conf.nome}</div>
+                  <div style="font-size:11px; color:#38bdf8; font-weight:700;">${conf.marca} · Solução Injetável em Frasco 120 mg</div>
+                </div>
+              </div>
+              <span style="font-size:10px; background:#1e293b; color:#94a3b8; padding:3px 6px; border-radius:4px; font-weight:700; white-space:nowrap;">
+                ${estoqueFechados} frasco(s) reserva
+              </span>
+            </div>
+
+            <!-- Barra de Progresso do Frasco em Uso -->
+            <div style="background:#0f172a; border-radius:6px; padding:8px 10px; border:1px solid #1e293b; margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+                <span style="color:#94a3b8; font-weight:700;">🧪 Frasco em Uso:</span>
+                <b style="color:${barColor}; font-weight:800;">${mgRest} mg restantes (${pct}%)</b>
+              </div>
+              <div style="width:100%; height:7px; background:#1e293b; border-radius:4px; overflow:hidden;">
+                <div style="width:${pct}%; height:100%; background:${barColor}; transition:width 0.3s;"></div>
+              </div>
+            </div>
+
+            <!-- Botões de Aplicação / Venda de Dose Rápida -->
+            <div style="font-size:11px; color:#cbd5e1; font-weight:700; margin-bottom:6px;">💉 Baixa Rápida de Dose Aplicada:</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+              ${conf.doses.map(d => `
+                <button class="btn btn-green" style="background:#065f46; color:#fff; font-size:11px; font-weight:800; padding:6px 10px; border:1px solid #10b981;" onclick="window.CRM.openDoseSaleModal(${id}, ${d.mg}, ${d.preco})">
+                  💉 ${d.label} (R$ ${d.preco})
+                </button>
+              `).join('')}
+              <button class="btn" style="background:#1e293b; font-size:11px; color:#38bdf8; padding:6px 10px;" onclick="window.CRM.openDoseSaleModal(${id}, 'custom')">
+                ⚙️ Outra Dose
+              </button>
+            </div>
+          </div>
+
+          <!-- Ações do Frasco -->
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #1e293b; padding-top:8px; margin-top:4px;">
+            <button class="btn" style="font-size:11px; color:#38bdf8; padding:4px 8px;" onclick="window.CRM.openDoseImageModal(${id})">
+              🔍 Ver Tabela Oficial
+            </button>
+            <div style="display:flex; gap:6px;">
+              <button class="btn" style="font-size:10px; color:#fbbf24; background:#1e293b; padding:4px 8px;" title="Resetar ou abrir outro frasco de 120mg" onclick="window.CRM.abrirNovoFrascoDose(${id})">
+                🔄 Abrir Novo Frasco
+              </button>
+              <button class="btn btn-amber" style="font-size:10px; font-weight:700; padding:4px 8px;" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')">
+                📲 Tabela WhatsApp
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
   function renderAll() {
     const filtered = getFilteredProducts();
     renderKPIs(filtered);
@@ -908,6 +1034,97 @@
       }
     },
 
+    openDoseSaleModal(productId, doseMg, dosePreco) {
+      const modal = document.getElementById('saleModal');
+      const selectContainer = document.getElementById('saleProdSelectContainer');
+      selectContainer.style.display = 'none';
+
+      window.CRM.setSaleModalData(productId);
+
+      const isDoseInput = document.getElementById('saleIsDose');
+      const doseMgInput = document.getElementById('saleDoseMg');
+
+      if (doseMg === 'custom') {
+        window.CRM.selectSaleMode('custom', productId);
+      } else {
+        window.CRM.selectSaleDose(productId, doseMg, dosePreco);
+      }
+
+      modal.classList.add('open');
+    },
+
+    openDoseImageModal(productId) {
+      const conf = TABELA_DOSES_OFICIAIS[productId];
+      if (!conf) return;
+      const modal = document.getElementById('doseImageModal');
+      document.getElementById('doseImageModalTitle').textContent = `Tabela Oficial: ${conf.nome}`;
+      document.getElementById('doseImageModalImg').src = conf.fotoTabela;
+      modal.classList.add('open');
+    },
+
+    abrirNovoFrascoDose(productId) {
+      const conf = TABELA_DOSES_OFICIAIS[productId];
+      const doseState = (state.frascosDoses && state.frascosDoses[productId]) || { mgRestante: 120 };
+      const estoqueFechados = Number((state.meuEstoque || {})[productId] || 0);
+
+      const msg = `Frasco em uso atual possui ${doseState.mgRestante} mg restantes.\nVocê possui ${estoqueFechados} frascos fechados no Estoque Reserva de BH.\n\nDeseja abrir um novo frasco de 120mg e dar baixa de 1 unidade do seu estoque reserva?`;
+      if (confirm(msg)) {
+        if (estoqueFechados > 0) {
+          state.meuEstoque[productId] = estoqueFechados - 1;
+        }
+        if (!state.frascosDoses) state.frascosDoses = {};
+        state.frascosDoses[productId] = { mgRestante: 120, totalAplicadasMg: 0 };
+        saveState();
+        renderAll();
+        showToast(`Novo frasco de ${conf.nome} aberto com sucesso (120 mg disponíveis)!`);
+      }
+    },
+
+    selectSaleMode(mode, productId) {
+      const raw = rawCatalog.find(x => x.id === productId);
+      if (!raw) return;
+      const p = computeProduct(raw);
+      const pay = document.getElementById('salePayment').value;
+      const isCartao = pay === 'cartao_6x';
+
+      if (mode === 'frasco_inteiro') {
+        document.getElementById('saleIsDose').value = '0';
+        document.getElementById('saleDoseMg').value = '0';
+        document.getElementById('saleDoseCustomContainer').style.display = 'none';
+        const unitVal = isCartao ? p.precoCartao : p.precoFinal;
+        document.getElementById('saleUnitPrice').value = unitVal;
+        document.getElementById('saleTotalValue').value = unitVal;
+        document.getElementById('saleQty').value = 1;
+        document.getElementById('salePriceHint').textContent = `Frasco Fechado 120mg (${isCartao ? 'Cartão' : 'PIX'}): ${formatBRL(unitVal)}`;
+      } else if (mode === 'custom') {
+        document.getElementById('saleIsDose').value = '1';
+        document.getElementById('saleDoseCustomContainer').style.display = 'grid';
+        document.getElementById('saleCustomDoseMg').focus();
+      }
+    },
+
+    selectSaleDose(productId, doseMg, dosePreco) {
+      document.getElementById('saleIsDose').value = '1';
+      document.getElementById('saleDoseMg').value = doseMg;
+      document.getElementById('saleDoseCustomContainer').style.display = 'none';
+      document.getElementById('saleUnitPrice').value = dosePreco;
+      document.getElementById('saleTotalValue').value = dosePreco;
+      document.getElementById('saleQty').value = 1;
+      document.getElementById('salePriceHint').textContent = `Dose Individual Oficial: ${doseMg} mg ➔ ${formatBRL(dosePreco)}`;
+    },
+
+    onCustomDoseChange() {
+      const mg = Number(document.getElementById('saleCustomDoseMg').value) || 0;
+      document.getElementById('saleDoseMg').value = mg;
+    },
+
+    onCustomDosePriceChange() {
+      const preco = Number(document.getElementById('saleCustomDosePrice').value) || 0;
+      document.getElementById('saleUnitPrice').value = preco;
+      document.getElementById('saleTotalValue').value = preco;
+      document.getElementById('salePriceHint').textContent = `Dose Personalizada: ${document.getElementById('saleDoseMg').value} mg ➔ ${formatBRL(preco)}`;
+    },
+
     openSaleModal(productId) {
       const modal = document.getElementById('saleModal');
       const selectContainer = document.getElementById('saleProdSelectContainer');
@@ -954,7 +1171,7 @@
 
       const qtyInput = document.getElementById('saleQty');
       qtyInput.value = 1;
-      qtyInput.max = stock;
+      qtyInput.max = Math.max(1, stock);
 
       const dateInput = document.getElementById('saleDate');
       const now = new Date();
@@ -966,6 +1183,39 @@
       document.getElementById('saleNotes').value = '';
       document.getElementById('salePayment').value = 'pix';
 
+      // Configuração de doses fracionadas se for 9005 ou 9006
+      const doseBox = document.getElementById('saleDoseSelectorBox');
+      const doseButtonsContainer = document.getElementById('saleDoseButtons');
+      const confDose = TABELA_DOSES_OFICIAIS[productId];
+
+      if (confDose && doseBox && doseButtonsContainer) {
+        doseBox.style.display = 'block';
+        const doseState = (state.frascosDoses && state.frascosDoses[productId]) || { mgRestante: 120 };
+        document.getElementById('saleDoseFrascoSaldoBadge').textContent = `Frasco em uso: ${doseState.mgRestante} mg disponíveis`;
+
+        doseButtonsContainer.innerHTML = `
+          <button type="button" class="btn" style="font-size:11px; padding:5px 9px; background:#1e293b; color:#fff;" onclick="window.CRM.selectSaleMode('frasco_inteiro', ${productId})">
+            📦 Frasco Fechado (120mg)
+          </button>
+          ${confDose.doses.map(d => `
+            <button type="button" class="btn btn-green" style="font-size:11px; padding:5px 9px; background:#065f46; color:#fff; font-weight:700;" onclick="window.CRM.selectSaleDose(${productId}, ${d.mg}, ${d.preco})">
+              💉 ${d.label} (R$ ${d.preco})
+            </button>
+          `).join('')}
+          <button type="button" class="btn" style="font-size:11px; padding:5px 9px; background:#1e293b; color:#38bdf8;" onclick="window.CRM.selectSaleMode('custom', ${productId})">
+            ⚙️ Outra Dose
+          </button>
+        `;
+        document.getElementById('saleIsDose').value = '0';
+        document.getElementById('saleDoseMg').value = '0';
+        document.getElementById('saleDoseCustomContainer').style.display = 'none';
+      } else if (doseBox) {
+        doseBox.style.display = 'none';
+        document.getElementById('saleIsDose').value = '0';
+        document.getElementById('saleDoseMg').value = '0';
+        document.getElementById('saleDoseCustomContainer').style.display = 'none';
+      }
+
       window.CRM.onSalePaymentChange();
     },
 
@@ -976,6 +1226,12 @@
       const p = computeProduct(raw);
       const pay = document.getElementById('salePayment').value;
       const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
+      const isDose = document.getElementById('saleIsDose') && document.getElementById('saleIsDose').value === '1';
+
+      if (isDose) {
+        // Se for dose, não altera o valor sugerido da dose oficial
+        return;
+      }
 
       let unitPrice = p.precoFinal;
       if (pay === 'cartao_6x') {
@@ -1026,11 +1282,6 @@
       const currentStock = Number((state.meuEstoque || {})[pid] || 0);
       const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
 
-      if (qty > currentStock) {
-        alert(`Quantidade solicitada (${qty}) é maior do que o estoque disponível em BH (${currentStock} un)!`);
-        return;
-      }
-
       const unitVal = Number(document.getElementById('saleUnitPrice').value) || p.precoFinal;
       const totalVal = Number(document.getElementById('saleTotalValue').value) || (unitVal * qty);
       const pay = document.getElementById('salePayment').value;
@@ -1045,6 +1296,78 @@
       const phone = document.getElementById('saleClientPhone').value.trim();
       const notes = document.getElementById('saleNotes').value.trim();
       const dateVal = document.getElementById('saleDate').value || new Date().toISOString();
+
+      const isDose = document.getElementById('saleIsDose') && document.getElementById('saleIsDose').value === '1';
+      const doseMg = Number(document.getElementById('saleDoseMg') ? document.getElementById('saleDoseMg').value : 0) || 0;
+
+      // Se for venda de dose fracionada
+      if (isDose) {
+        if (doseMg <= 0) {
+          alert('Informe a quantidade em mg da dose aplicada!');
+          return;
+        }
+        if (!state.frascosDoses) state.frascosDoses = {};
+        if (!state.frascosDoses[pid]) state.frascosDoses[pid] = { mgRestante: 120, totalAplicadasMg: 0 };
+
+        const frascoAtual = state.frascosDoses[pid];
+        if (frascoAtual.mgRestante < doseMg) {
+          const abrirOutro = confirm(`Atenção: o frasco em uso só tem ${frascoAtual.mgRestante} mg restantes (a dose é de ${doseMg} mg).\n\nDeseja abrir um novo frasco de 120mg agora usando seu estoque de reserva?`);
+          if (abrirOutro) {
+            const estoqueReserva = Number((state.meuEstoque || {})[pid] || 0);
+            if (estoqueReserva <= 0) {
+              alert('Você não tem frascos reservas fechados no Estoque BH!');
+              return;
+            }
+            state.meuEstoque[pid] = estoqueReserva - 1;
+            frascoAtual.mgRestante = 120;
+          } else {
+            return;
+          }
+        }
+
+        // Abate miligramas do frasco
+        frascoAtual.mgRestante = Math.max(0, frascoAtual.mgRestante - doseMg);
+        frascoAtual.totalAplicadasMg = (frascoAtual.totalAplicadasMg || 0) + doseMg;
+
+        // Custo proporcional da dose
+        const custoDose = Math.round(((p.custo || 600) / 120) * doseMg);
+        const lucroEst = totalVal - custoDose;
+
+        const venda = {
+          id: Date.now(),
+          data: dateVal,
+          produtoId: p.id,
+          produtoNome: `${p.nombre} — Dose Avulsa ${doseMg} mg`,
+          marca: p.marca || '',
+          qtd: 1,
+          isDose: true,
+          doseMg: doseMg,
+          valorUnitario: unitVal,
+          valorTotal: totalVal,
+          formaPagamento: payLabel,
+          cliente: client,
+          telefone: phone,
+          obs: notes,
+          custoTotal: custoDose,
+          lucro: lucroEst
+        };
+
+        if (!state.vendas) state.vendas = [];
+        state.vendas.unshift(venda);
+        saveState();
+
+        document.getElementById('saleModal').classList.remove('open');
+        renderAll();
+        showToast(`Dose de ${doseMg} mg registrada! Restam ${frascoAtual.mgRestante} mg no frasco.`);
+        window.CRM.showSaleReceipt(venda, p);
+        return;
+      }
+
+      // Se for frasco/caixa fechada
+      if (qty > currentStock) {
+        alert(`Quantidade solicitada (${qty}) é maior do que o estoque disponível em BH (${currentStock} un)!`);
+        return;
+      }
 
       // Baixa no estoque
       const nextStock = currentStock - qty;
@@ -1063,6 +1386,7 @@
         produtoNome: p.nombre,
         marca: p.marca || '',
         qtd: qty,
+        isDose: false,
         valorUnitario: unitVal,
         valorTotal: totalVal,
         formaPagamento: payLabel,
@@ -1089,6 +1413,29 @@
       const modal = document.getElementById('saleReceiptModal');
       const textarea = document.getElementById('saleReceiptText');
       const dataFmt = new Date(venda.data).toLocaleString('pt-BR');
+
+      if (venda.isDose) {
+        const lines = [
+          `💉 *COMPROVANTE DE APLICAÇÃO DE DOSE — SHAPE TOTAL*`,
+          `━━━━━━━━━━━━━━━━━━━━━━━━━`,
+          `👤 *Paciente / Cliente:* ${venda.cliente}`,
+          `🧪 *Medicamento:* ${venda.produtoNome}`,
+          `💉 *Dosagem Aplicada:* *${venda.doseMg} mg* (Dose Individual)`,
+          `💰 *Valor Cobrado:* *${formatBRL(venda.valorTotal)}*`,
+          `💳 *Forma de Pagamento:* ${venda.formaPagamento}`,
+          `📅 *Data da Aplicação:* ${dataFmt}`,
+          `📍 *Local:* Atendimento Pronta Entrega Belo Horizonte`,
+          venda.obs ? `📝 *Observação:* ${venda.obs}` : ``,
+          `━━━━━━━━━━━━━━━━━━━━━━━━━`,
+          `🔒 *Procedência:* Medicamento 100% original com controle de pureza e diluição precisa.`,
+          `Conte sempre com a Shape Total para alcançar sua melhor versão com saúde! 🚀💪`
+        ].filter(Boolean);
+
+        textarea.value = lines.join('\n');
+        window._lastReceiptPhone = venda.telefone;
+        modal.classList.add('open');
+        return;
+      }
 
       const lines = [
         `✅ *COMPROVANTE DE PEDIDO — SHAPE TOTAL*`,
@@ -1492,6 +1839,31 @@
           lines.push(`🔒 Produtos 100% originais com QR Code.`);
           textarea.value = lines.join('\n');
         }
+      } else if (mode === 'tabela_doses_avulsas') {
+        textarea.value = `💉 *TABELA OFICIAL DE DOSES INDIVIDUAIS — SHAPE TOTAL*
+_Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🇺🇸 *TIRZEPATIDE INJECTION 120MG / 4ML*
+*USA Peptides — Qualidade Internacional*
+• *2,5 mg:* R$ 65,00 (Dose Individual)
+• *5,0 mg:* R$ 130,00 (Dose Individual)
+• *7,5 mg:* R$ 185,00 (Dose Individual)
+✨ _Auxilia no controle de peso, suporte metabólico e qualidade de vida._
+📌 _Doses calculadas para o melhor aproveitamento do lote de 120 mg._
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧬 *RETATRUTIDE 120 MG (GLP-1, GIP, GLUCAGON)*
+*GEN-HEALTH — Ciência Para Uma Vida Melhor*
+• *2,5 mg:* R$ 80,00 (Dose Individual)
+• *5,0 mg:* R$ 150,00 (Dose Individual)
+✨ _Revolução no emagrecimento com triplo agonista (aplicação 1x por semana)._
+📌 _Solução injetável em vial de altíssima pureza._
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚚 *Atendimento Express em Belo Horizonte e Região*
+🔒 *Garantia:* Produtos originais em vials lacrados, diluição correta e total segurança.
+📲 _Dúvidas ou agendamento de aplicação? Chame aqui!_`;
       } else if (mode === 'tabela_especial') {
         textarea.value = `📋 TABELA DE PREÇOS
 

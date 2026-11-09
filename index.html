@@ -67,6 +67,7 @@
         <button class="btn btn-green internal-only" style="background:#059669; color:#ffffff; font-weight:800; border:1px solid #34d399;" onclick="window.CRM.openSaleModal()">⚡ Nova Venda / Baixa</button>
         <button class="btn btn-blue internal-only" style="font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">📋 Vendas (<span id="countVendasBadge">0</span>)</button>
         <button class="btn btn-amber internal-only" style="font-weight:800; border:1px solid #fbbf24; background:#b45309; color:#fff;" onclick="window.CRM.openTransitoModal()">🚚 A Chegar (<span id="countTransitoBadge">17</span>)</button>
+        <button class="btn internal-only" style="background:#0891b2; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')">💉 Doses Avulsas WhatsApp</button>
         <button class="btn btn-green internal-only" style="background:#065f46; color:#ffffff; font-weight:700;" onclick="window.CRM.openWhatsAppCatalogModal('meu_estoque')">📍 WhatsApp Pronta Entrega</button>
         <button class="btn btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_especial')">📋 Tabela Tirzepatida & Reta</button>
         <button class="btn btn-primary" onclick="window.CRM.openWhatsAppCatalogModal('grok')">🧬 Guia Grok WhatsApp</button>
@@ -167,6 +168,25 @@
           <div style="font-size:11px; color:#34d399; font-weight:800; text-transform:uppercase;">🏆 Potencial Total (Mãos + Trânsito)</div>
           <div id="bhPanelTotalPotencial" style="font-size:19px; font-weight:800; color:#ffffff; margin-top:4px;">R$ 37.380,00</div>
           <div id="bhPanelTotalLucro" style="font-size:11px; color:#34d399; font-weight:700; margin-top:2px;">44 unidades · Lucro Previsto: +R$ 16.956,23</div>
+        </div>
+      </div>
+
+      <!-- Seção: Frascos em Uso para Aplicações de Doses Avulsas (120 mg) -->
+      <div style="margin-top:14px; background:rgba(15,23,42,0.92); border:1px solid #38bdf8; border-radius:10px; padding:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <div>
+            <h4 style="font-size:14px; font-weight:800; color:#38bdf8; margin:0; display:flex; align-items:center; gap:6px;">
+              💉 Frascos em Uso para Aplicação de Doses Avulsas (120 mg)
+            </h4>
+            <p style="font-size:11px; color:#94a3b8; margin:2px 0 0 0;">
+              Dê baixa direta por miligrama aplicado (2,5mg, 5,0mg, 7,5mg) conforme as tabelas oficiais com recibo WhatsApp.
+            </p>
+          </div>
+          <button class="btn btn-amber" style="font-size:11px; font-weight:700;" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')">📲 Enviar Tabela de Doses WhatsApp</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:12px;" id="dosesFrascosContainer">
+          <!-- Renderizado dinamicamente pelo app.js com barras de progresso e botões de dose -->
         </div>
       </div>
     </section>
@@ -409,7 +429,28 @@
         </div>
       </div>
 
-      <!-- Seletor de produto caso abra pelo botão superior -->
+      <!-- Box especial de doses fracionadas caso seja Tirzepatida ou Retatrutida 120mg -->
+      <div id="saleDoseSelectorBox" style="display:none; background:#0b1329; border:1px solid #38bdf8; border-radius:8px; padding:12px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <b style="font-size:12px; color:#38bdf8; display:flex; align-items:center; gap:6px;">💉 Venda de Dose Fracionada / Avulsa</b>
+          <span id="saleDoseFrascoSaldoBadge" style="font-size:11px; font-weight:700; color:#34d399;">Frasco: 120 mg disponíveis</span>
+        </div>
+        <div id="saleDoseButtons" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
+          <!-- Botões rápidos de doses gerados dinamicamente -->
+        </div>
+        <div id="saleDoseCustomContainer" style="display:none; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; border-top:1px dashed #334155; padding-top:8px;">
+          <div>
+            <label style="font-size:10px; color:#94a3b8; font-weight:700;">Dose em mg</label>
+            <input id="saleCustomDoseMg" type="number" step="0.5" placeholder="Ex: 10" style="text-align:center; font-size:13px;" oninput="window.CRM.onCustomDoseChange()" />
+          </div>
+          <div>
+            <label style="font-size:10px; color:#94a3b8; font-weight:700;">Preço Cobrado (R$)</label>
+            <input id="saleCustomDosePrice" type="number" step="1" placeholder="Ex: 240" style="text-align:right; font-size:13px; font-weight:800; color:#34d399;" oninput="window.CRM.onCustomDosePriceChange()" />
+          </div>
+        </div>
+        <input type="hidden" id="saleIsDose" value="0" />
+        <input type="hidden" id="saleDoseMg" value="0" />
+      </div>
       <div class="m-field" id="saleProdSelectContainer" style="display:none; margin-bottom:14px;">
         <label>Medicamento do Estoque</label>
         <select id="saleProdSelect" class="filter-select" style="width:100%; font-size:13px;" onchange="window.CRM.onSaleProductSelect(this.value)"></select>
@@ -554,6 +595,21 @@
       <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
         <button id="btnOpenReceiptWa" class="btn btn-green" onclick="window.CRM.openReceiptWhatsApp()">📲 Abrir WhatsApp do Cliente</button>
         <button id="btnCopyReceipt" class="btn btn-primary" onclick="window.CRM.copyReceiptText()">📋 Copiar Recibo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Visualizador da Tabela Oficial de Doses (Foto em Alta Resolução) -->
+  <div id="doseImageModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:640px; text-align:center;">
+      <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:10px; margin-bottom:12px;">
+        <h3 id="doseImageModalTitle" style="font-size:16px; font-weight:800; color:#38bdf8;">Tabela Oficial de Doses</h3>
+        <button class="btn" onclick="document.getElementById('doseImageModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+      <img id="doseImageModalImg" src="" style="max-width:100%; max-height:75vh; border-radius:8px; border:1px solid #334155; object-fit:contain;" />
+      <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:11px; color:#94a3b8;">Tabela Oficial com Valores Pronta Entrega BH</span>
+        <button class="btn btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')">📲 Enviar Tabela no WhatsApp</button>
       </div>
     </div>
   </div>
