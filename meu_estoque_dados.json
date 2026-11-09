@@ -1,0 +1,136 @@
+{
+  "atualizado_em": "09/11/2026 às 10:35",
+  "responsavel": "Italo Souza",
+  "local": "Belo Horizonte / MG (Pronta Entrega)",
+  "resumo": {
+    "caixas_fechadas_60mg": 10,
+    "ampolas_retatrutida_60mg": 7,
+    "ampolas_avulsas_15mg": 11,
+    "frascos_doses_120mg": 2,
+    "total_itens_contabilizados": 12,
+    "faturamento_potencial_pix": 22350.0,
+    "faturamento_potencial_cartao": 25000.0
+  },
+  "itens": [
+    {
+      "id_catalogo": 2848,
+      "nome": "TG 60 mg (Tirzepatida Indufar)",
+      "tipo": "caixa_fechada",
+      "apresentacao": "Caixa com 4 ampolas de 15 mg (60 mg total)",
+      "qtd": 4,
+      "preco_pix": 900.0,
+      "preco_cartao": 1000.0,
+      "obs": "Caixa lacrada original Indufar"
+    },
+    {
+      "id_catalogo": 2889,
+      "nome": "Lipoless 60 mg (Tirzepatida Eticos)",
+      "tipo": "caixa_fechada",
+      "apresentacao": "Caixa com 4 ampolas de 15 mg (60 mg total)",
+      "qtd": 4,
+      "preco_pix": 900.0,
+      "preco_cartao": 1000.0,
+      "obs": "Caixa lacrada original Eticos Labs"
+    },
+    {
+      "id_catalogo": 3207,
+      "nome": "Tirzec 60 mg (Tirzepatida Quimfa)",
+      "tipo": "caixa_fechada",
+      "apresentacao": "Caixa com 4 ampolas de 15 mg (60 mg total)",
+      "qtd": 1,
+      "preco_pix": 900.0,
+      "preco_cartao": 1000.0,
+      "obs": "Caixa lacrada original Quimfa"
+    },
+    {
+      "id_catalogo": 3136,
+      "nome": "Tirzedral 60 mg (Tirzepatida Catedral)",
+      "tipo": "caixa_fechada",
+      "apresentacao": "Caixa com 4 ampolas de 15 mg (60 mg total)",
+      "qtd": 1,
+      "preco_pix": 900.0,
+      "preco_cartao": 1000.0,
+      "obs": "Caixa lacrada original Catedral"
+    },
+    {
+      "id_catalogo": 3370,
+      "nome": "Retatrutida Gen-Health 240 mg (Kit 4x60 mg)",
+      "tipo": "kit_fechado",
+      "apresentacao": "Kit fechado com 4 frascos de 60 mg + 1 Água Bacteriostática",
+      "qtd": 1,
+      "preco_pix": 3800.0,
+      "preco_cartao": 4200.0,
+      "obs": "Kit fechado de fábrica completo com diluente estéril"
+    },
+    {
+      "id_catalogo": 2830,
+      "nome": "Retatrutida Gen-Health 60 mg (Ampolas)",
+      "tipo": "ampola_fechada",
+      "apresentacao": "Ampola liofilizada de 60 mg + Água Bacteriostática",
+      "qtd": 3,
+      "preco_pix": 1000.0,
+      "preco_cartao": 1100.0,
+      "obs": "3 ampolas fechadas de 60 mg com diluente estéril incluso"
+    },
+    {
+      "id_catalogo": 2988,
+      "nome": "Lipoland 15 mg (Ampola Avulsa)",
+      "tipo": "ampola_avulsa",
+      "apresentacao": "1 ampola liofilizada de 15 mg (Landerlan)",
+      "qtd": 3,
+      "preco_pix": 250.0,
+      "preco_cartao": 300.0,
+      "obs": "Ampola avulsa oficial Landerlan"
+    },
+    {
+      "id_catalogo": 3207,
+      "nome": "Tirzec 15 mg (Ampola Avulsa)",
+      "tipo": "ampola_avulsa",
+      "apresentacao": "1 ampola liofilizada de 15 mg (Quimfa)",
+      "qtd": 3,
+      "preco_pix": 250.0,
+      "preco_cartao": 300.0,
+      "obs": "Ampola avulsa oficial Quimfa"
+    },
+    {
+      "id_catalogo": 2848,
+      "nome": "TG 15 mg (Ampola Avulsa)",
+      "tipo": "ampola_avulsa",
+      "apresentacao": "1 ampola liofilizada de 15 mg (Indufar)",
+      "qtd": 3,
+      "preco_pix": 250.0,
+      "preco_cartao": 300.0,
+      "obs": "Ampola avulsa oficial Indufar"
+    },
+    {
+      "id_catalogo": 2889,
+      "nome": "Lipoless 15 mg (Ampola Avulsa)",
+      "tipo": "ampola_avulsa",
+      "apresentacao": "1 ampola liofilizada de 15 mg (Eticos)",
+      "qtd": 2,
+      "preco_pix": 250.0,
+      "preco_cartao": 300.0,
+      "obs": "Ampola avulsa oficial Eticos Labs"
+    },
+    {
+      "id_catalogo": 2819,
+      "nome": "Retatrutida Gen-Health 120 mg (Frasco para Doses)",
+      "tipo": "frasco_doses",
+      "apresentacao": "Frasco de 120 mg aberto reservado para aplicação fracionada",
+      "qtd": 1,
+      "preco_pix": 2000.0,
+      "preco_cartao": 2200.0,
+      "obs": "Frasco aberto exclusivo para doses locais"
+    },
+    {
+      "id_catalogo": 3038,
+      "nome": "Tirzepatida Gen-Tirz 120 mg (Frasco para Doses)",
+      "tipo": "frasco_doses",
+      "apresentacao": "Frasco de 120 mg aberto reservado para aplicação fracionada",
+      "qtd": 1,
+      "preco_pix": 1800.0,
+      "preco_cartao": 2000.0,
+      "obs": "Frasco aberto exclusivo para doses locais"
+    }
+  ]
+}
