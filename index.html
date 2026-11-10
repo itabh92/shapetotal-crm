@@ -32,52 +32,60 @@
   <!-- Top Sticky Header -->
   <header class="topbar">
     <div class="topbar-inner">
-      <div class="brand">
-        <div class="brand-logo">ST</div>
-        <div>
-          <div class="brand-title">SHAPE TOTAL · CRM & ESTOQUE BH</div>
-          <div class="brand-sub">890 SKUs Oficiais · Gestão de Pronta Entrega BH, Compras em Trânsito & Baixa de Vendas</div>
+      <div class="topbar-primary">
+        <div class="brand">
+          <div class="brand-logo">ST</div>
+          <div>
+            <div class="brand-title">SHAPE TOTAL · CRM & ESTOQUE BH</div>
+            <div class="brand-sub">890 SKUs Oficiais · Gestão de Pronta Entrega BH, Compras em Trânsito & Baixa de Vendas</div>
+          </div>
+        </div>
+
+        <div class="topbar-quick-actions">
+          <button class="btn btn-green internal-only" style="background:#059669; color:#ffffff; font-weight:800; border:1px solid #34d399;" onclick="window.CRM.openSaleModal()">⚡ Nova Venda</button>
+          <button class="btn btn-blue internal-only" style="font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">📋 Vendas (<span id="countVendasBadge">0</span>)</button>
+          <button class="btn btn-amber internal-only" style="font-weight:800; border:1px solid #fbbf24; background:#b45309; color:#fff;" onclick="window.CRM.openTransitoModal()">🚚 A Chegar (<span id="countTransitoBadge">21</span>)</button>
+          <button class="btn internal-only" style="background:#0284c7; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openSyncModal()" title="Sincronize estoque, vendas e doses entre celular e computador">☁️ Sincronizar</button>
+          <button id="btnClientMode" class="btn">👁️ Modo Cliente</button>
+          <button id="btnToggleTopbarTools" class="btn" style="background:#1e293b; border-color:#475569; color:#38bdf8; font-weight:800;" onclick="window.CRM.toggleTopbarTools()">🛠️ Ferramentas ▾</button>
         </div>
       </div>
 
-      <div class="global-controls internal-only">
-        <div class="ctrl-group">
-          <label for="inputCotacao">💵 Dólar (R$):</label>
-          <input id="inputCotacao" class="ctrl-input" type="number" step="0.01" value="5.60" />
-        </div>
-        <div class="ctrl-group">
-          <label for="inputFrete">🚚 Frete (%):</label>
-          <input id="inputFrete" class="ctrl-input" type="number" step="1" value="30" />
-        </div>
-        <div class="ctrl-group">
-          <label for="inputTaxaCartao">💳 Cartão (+R$):</label>
-          <input id="inputTaxaCartao" class="ctrl-input" type="number" step="5" value="100" />
+      <div id="topbarToolsDrawer" class="topbar-tools-drawer">
+        <div class="global-controls internal-only">
+          <div class="ctrl-group">
+            <label for="inputCotacao">💵 Dólar (R$):</label>
+            <input id="inputCotacao" class="ctrl-input" type="number" step="0.01" value="5.60" />
+          </div>
+          <div class="ctrl-group">
+            <label for="inputFrete">🚚 Frete (%):</label>
+            <input id="inputFrete" class="ctrl-input" type="number" step="1" value="30" />
+          </div>
+          <div class="ctrl-group">
+            <label for="inputTaxaCartao">💳 Cartão (+R$):</label>
+            <input id="inputTaxaCartao" class="ctrl-input" type="number" step="5" value="100" />
+          </div>
+
+          <div class="tier-switch" title="Escolher qual faixa de lucro aplicar no preço principal">
+            <button class="tier-btn" data-tier="min">🟢 Mínimo</button>
+            <button class="tier-btn active-rec" data-tier="rec">🎯 Recomendado</button>
+            <button class="tier-btn" data-tier="max">🔥 Máximo</button>
+          </div>
+
+          <button id="btnToggleMargins" class="btn btn-amber">⚙️ Margens por Grupo</button>
         </div>
 
-        <div class="tier-switch" title="Escolher qual faixa de lucro aplicar no preço principal">
-          <button class="tier-btn" data-tier="min">🟢 Mínimo</button>
-          <button class="tier-btn active-rec" data-tier="rec">🎯 Recomendado</button>
-          <button class="tier-btn" data-tier="max">🔥 Máximo</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <button class="btn internal-only" style="background:#0891b2; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')">💉 Doses Avulsas WhatsApp</button>
+          <button class="btn btn-green internal-only" style="background:#065f46; color:#ffffff; font-weight:700;" onclick="window.CRM.openWhatsAppCatalogModal('meu_estoque')">📍 WhatsApp Pronta Entrega</button>
+          <button class="btn btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_especial')">📋 Tabela Tirzepatida & Reta</button>
+          <button class="btn btn-primary" onclick="window.CRM.openWhatsAppCatalogModal('grok')">🧬 Guia Grok WhatsApp</button>
+          <button class="btn btn-blue" onclick="window.CRM.openWhatsAppCatalogModal('filtro')">📲 Lista WhatsApp Atual</button>
+          <button id="btnViewMode" class="btn">📊 Ver Planilha</button>
+          <button class="btn internal-only" style="background:#1e293b; color:#94a3b8; font-size:11px;" title="Restaura os 32 itens físicos canônicos de BH" onclick="window.CRM.resetEstoqueBase()">🔄 Reset Estoque (32 un)</button>
+          <button class="btn internal-only" onclick="window.CRM.exportCSV()">📥 Excel/CSV</button>
+          <button class="btn" onclick="window.CRM.lockApp()" title="Bloquear tela">🔒 Sair</button>
         </div>
-
-        <button id="btnToggleMargins" class="btn btn-amber">⚙️ Margens por Grupo</button>
-      </div>
-
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button class="btn btn-green internal-only" style="background:#059669; color:#ffffff; font-weight:800; border:1px solid #34d399;" onclick="window.CRM.openSaleModal()">⚡ Nova Venda / Baixa</button>
-        <button class="btn btn-blue internal-only" style="font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">📋 Vendas (<span id="countVendasBadge">0</span>)</button>
-        <button class="btn btn-amber internal-only" style="font-weight:800; border:1px solid #fbbf24; background:#b45309; color:#fff;" onclick="window.CRM.openTransitoModal()">🚚 A Chegar (<span id="countTransitoBadge">22</span>)</button>
-        <button class="btn internal-only" style="background:#0284c7; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openSyncModal()" title="Sincronize estoque, vendas e doses entre celular e computador">☁️ Sincronizar (iPhone ⇄ Mac)</button>
-        <button class="btn internal-only" style="background:#0891b2; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')">💉 Doses Avulsas WhatsApp</button>
-        <button class="btn btn-green internal-only" style="background:#065f46; color:#ffffff; font-weight:700;" onclick="window.CRM.openWhatsAppCatalogModal('meu_estoque')">📍 WhatsApp Pronta Entrega</button>
-        <button class="btn btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_especial')">📋 Tabela Tirzepatida & Reta</button>
-        <button class="btn btn-primary" onclick="window.CRM.openWhatsAppCatalogModal('grok')">🧬 Guia Grok WhatsApp</button>
-        <button class="btn btn-blue" onclick="window.CRM.openWhatsAppCatalogModal('filtro')">📲 Lista WhatsApp Atual</button>
-        <button id="btnViewMode" class="btn">📊 Ver Planilha</button>
-        <button id="btnClientMode" class="btn">👁️ Modo Cliente</button>
-        <button class="btn internal-only" style="background:#1e293b; color:#94a3b8; font-size:11px;" title="Restaura os 27 itens físicos canônicos de BH" onclick="window.CRM.resetEstoqueBase()">🔄 Reset Estoque (27 un)</button>
-        <button class="btn" onclick="window.CRM.lockApp()" title="Bloquear tela">🔒 Sair</button>
-        <button class="btn internal-only" onclick="window.CRM.exportCSV()">📥 Excel/CSV</button>
       </div>
     </div>
   </header>
@@ -98,22 +106,22 @@
     <!-- KPI Strip -->
     <section class="kpi-strip internal-only">
       <div class="kpi-card">
-        <div class="kpi-label">Produtos Filtrados</div>
-        <div id="kpiCount" class="kpi-value">884 SKUs</div>
+        <div id="kpiLabel1" class="kpi-label">Produtos Filtrados</div>
+        <div id="kpiCount" class="kpi-value">890 SKUs</div>
         <div id="kpiCountSub" class="kpi-sub">Carregando...</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Multiplicador de Custo</div>
+        <div id="kpiLabel2" class="kpi-label">Multiplicador de Custo</div>
         <div id="kpiMult" class="kpi-value" style="color:#38bdf8;">R$ 7,28</div>
         <div id="kpiMultSub" class="kpi-sub">Dólar R$ 5,60 + 30% frete</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Ticket Médio de Venda</div>
+        <div id="kpiLabel3" class="kpi-label">Ticket Médio de Venda</div>
         <div id="kpiAvgPrice" class="kpi-value" style="color:var(--accent);">R$ 0,00</div>
         <div id="kpiAvgCost" class="kpi-sub">Custo médio: R$ 0,00</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Lucro Líquido Médio / Un</div>
+        <div id="kpiLabel4" class="kpi-label">Lucro Líquido Médio / Un</div>
         <div id="kpiAvgProfit" class="kpi-value" style="color:#34d399;">R$ 0,00</div>
         <div id="kpiAvgProfitSub" class="kpi-sub">Faixa ativa: Recomendado</div>
       </div>
@@ -127,7 +135,7 @@
       <button class="group-tab" data-group="peptideos">🧬 Peptídeos & HGH <span class="tab-count">176</span></button>
       <button class="group-tab" data-group="estetico_outros">✨ Estética & Beleza <span class="tab-count">36</span></button>
       <button class="group-tab" data-group="saude_mental">🧠 Saúde Mental & Suporte <span class="tab-count">50</span></button>
-      <button class="group-tab tab-meu-estoque" data-group="meu_estoque" style="background:#064e3b; color:#34d399; font-weight:800; border:1px solid #10b981;">📍 Meu Estoque BH <span class="tab-count" id="countMeuEstoque">27</span></button>
+      <button class="group-tab tab-meu-estoque" data-group="meu_estoque" style="background:#064e3b; color:#34d399; font-weight:800; border:1px solid #10b981;">📍 Meu Estoque BH <span class="tab-count" id="countMeuEstoque">32</span></button>
     </nav>
 
     <!-- Painel Executivo Exclusivo da Operação BH (visível na aba Meu Estoque BH) -->
@@ -168,7 +176,7 @@
         <div style="background:rgba(15,23,42,0.85); padding:12px 14px; border-radius:8px; border:1px solid #10b981;">
           <div style="font-size:11px; color:#34d399; font-weight:800; text-transform:uppercase;">🏆 Potencial Total (Mãos + Trânsito)</div>
           <div id="bhPanelTotalPotencial" style="font-size:19px; font-weight:800; color:#ffffff; margin-top:4px;">R$ 45.480,00</div>
-          <div id="bhPanelTotalLucro" style="font-size:11px; color:#34d399; font-weight:700; margin-top:2px;">49 unidades · Lucro Previsto: +R$ 18.331,23</div>
+          <div id="bhPanelTotalLucro" style="font-size:11px; color:#34d399; font-weight:700; margin-top:2px;">53 unidades · Lucro Previsto: +R$ 18.331,23</div>
         </div>
       </div>
 
@@ -366,7 +374,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top:1px solid #1e293b; padding-top:12px; flex-wrap:wrap; gap:8px;">
         <button class="btn btn-amber" style="font-weight:800;" onclick="window.CRM.toggleNewPurchaseForm()">➕ Lançar Nova Compra Paga</button>
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-          <button class="btn" style="background:#1e293b; color:#fbbf24; font-size:11px; font-weight:700;" onclick="window.CRM.resetPedidosTransito()">🔄 Recarregar Pedidos Pagos (22 un)</button>
+          <button class="btn" style="background:#1e293b; color:#fbbf24; font-size:11px; font-weight:700;" onclick="window.CRM.resetPedidosTransito()">🔄 Recarregar Pedidos (21 un a chegar)</button>
           <button class="btn" onclick="document.getElementById('transitoModal').classList.remove('open')">Fechar</button>
         </div>
       </div>
@@ -440,11 +448,11 @@
           <!-- Botões rápidos de doses gerados dinamicamente -->
         </div>
         <div id="saleDoseCustomContainer" style="display:none; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; border-top:1px dashed #334155; padding-top:8px;">
-          <div>
+          <div class="m-field">
             <label style="font-size:10px; color:#94a3b8; font-weight:700;">Dose em mg</label>
             <input id="saleCustomDoseMg" type="number" step="0.5" placeholder="Ex: 10" style="text-align:center; font-size:13px;" oninput="window.CRM.onCustomDoseChange()" />
           </div>
-          <div>
+          <div class="m-field">
             <label style="font-size:10px; color:#94a3b8; font-weight:700;">Preço Cobrado (R$)</label>
             <input id="saleCustomDosePrice" type="number" step="1" placeholder="Ex: 240" style="text-align:right; font-size:13px; font-weight:800; color:#34d399;" oninput="window.CRM.onCustomDosePriceChange()" />
           </div>
@@ -632,7 +640,7 @@
 
       <div style="background:#0f172a; border:1px solid #1e293b; border-radius:8px; padding:12px; margin-bottom:16px;">
         <span id="syncSummaryBadge" style="font-size:12px; font-weight:700; color:#34d399;">
-          27 unidades no estoque · 0 vendas · Doses sincronizadas
+          32 unidades no estoque · 0 vendas · Doses sincronizadas
         </span>
       </div>
 
@@ -676,8 +684,8 @@
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script src="dados_catalogo.js?v=20261110_1620"></script>
-  <script src="app.js?v=20261110_1620"></script>
+  <script src="dados_catalogo.js?v=20261110_1815"></script>
+  <script src="app.js?v=20261110_1815"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

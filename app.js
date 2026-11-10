@@ -29,15 +29,15 @@
     2942: { rec: 1000, cartao: 1100, label: 'Gen-Health Caneta 60mg' },
     3156: { rec: 1000, cartao: 1100, label: 'Veltrane Retatrutide 60mg' },
     3391: { rec: 1000, cartao: 1100, label: 'Synedica Retatrutide 60mg' },
-    3147: { rec: 1000, cartao: 1100, label: 'ZPHC Caneta Retatrutide 60mg' },
-    2965: { rec: 1000, cartao: 1100, label: 'ZPHC Retatrutide 60mg (5x12mg)' },
+    3147: { rec: 2250, cartao: 2450, label: 'ZPHC Caneta Retatrutide 60mg' },
+    2965: { rec: 2000, cartao: 2200, label: 'ZPHC Retatrutide 60mg (5x12mg)' },
     3370: { rec: 3800, cartao: 4200, label: 'Kit Retatrutida Gen-Health (4x60mg)' },
 
     // Ampolas / Frascos avulsos 15 mg
     3206: { rec: 735, cartao: 835, label: 'Pharmacom Jaros Tirzepatida 15mg (Importado)' },
     2763: { rec: 450, cartao: 550, label: 'Gen-Tirz 15mg' },
     2875: { rec: 250, cartao: 300, label: 'Sin Marca Tirzepatida 15mg' },
-    3008: { rec: 250, cartao: 300, label: 'ZPHC Tirzepatide 15mg' },
+    3008: { rec: 350, cartao: 400, label: 'ZPHC Tirzepatide 15mg' },
 
     // Itens Exclusivos Pronta Entrega BH (Ampolas avulsas e frascos)
     9001: { rec: 250, cartao: 300, label: 'Lipoland 15mg (Ampola Avulsa)' },
@@ -496,16 +496,29 @@
       else if (custo >= 300) recPct = 38;
     }
 
-    const minPct = gm.min;
-    const maxPct = gm.max;
+    let minPct = gm.min;
+    let maxPct = gm.max;
 
-    const precoMin = Math.ceil(custo * (1 + minPct / 100));
+    let precoMin = Math.ceil(custo * (1 + minPct / 100));
     let precoRec = Math.ceil(custo * (1 + recPct / 100));
+    let precoMax = Math.ceil(custo * (1 + maxPct / 100));
     const isSpecialFixed = SPECIAL_FIXED_REC[p.id];
     if (isSpecialFixed) {
       precoRec = isSpecialFixed.rec;
+      const pisoMin = Math.max(Math.ceil(custo * 1.18), Math.round(precoRec * 0.90));
+      if (precoMin >= precoRec || precoMin < Math.round(precoRec * 0.85)) {
+        precoMin = Math.min(precoRec - 20, pisoMin);
+      }
+      const tetoMax = isSpecialFixed.cartao || Math.ceil(precoRec * 1.12);
+      if (precoMax <= precoRec) {
+        precoMax = Math.max(tetoMax, precoRec + 50);
+      }
+      if (custo > 0) {
+        minPct = Math.round(((precoMin - custo) / custo) * 100);
+        recPct = Math.round(((precoRec - custo) / custo) * 100);
+        maxPct = Math.round(((precoMax - custo) / custo) * 100);
+      }
     }
-    const precoMax = Math.ceil(custo * (1 + maxPct / 100));
 
     const lucroMin = Math.max(0, precoMin - custo);
     const lucroRec = Math.max(0, precoRec - custo);
@@ -753,7 +766,8 @@
     if (badgeMeuEstoque) badgeMeuEstoque.textContent = totalMeuEstoqueCount;
 
     const badgeVendas = document.getElementById('countVendasBadge');
-    if (badgeVendas) badgeVendas.textContent = (state.vendas || []).length;
+    const vendasAtivas = (state.vendas || []).filter(v => !v.estornada);
+    if (badgeVendas) badgeVendas.textContent = vendasAtivas.length;
 
     const pedidosTransito = (state.pedidosTransito || []).filter(p => p.status === 'em_transito');
     const totalItensTransito = pedidosTransito.reduce((acc, ped) => {
@@ -764,6 +778,11 @@
 
     const bhPanel = document.getElementById('bhExecutivePanel');
     const pyFilters = ['subCatSelect', 'brandSelect', 'stockSelect', 'branchSelect'];
+
+    const lbl1 = document.getElementById('kpiLabel1');
+    const lbl2 = document.getElementById('kpiLabel2');
+    const lbl3 = document.getElementById('kpiLabel3');
+    const lbl4 = document.getElementById('kpiLabel4');
 
     if (state.mainGroup === 'meu_estoque') {
       if (bhPanel) bhPanel.style.display = 'block';
@@ -788,9 +807,8 @@
       });
       const transitoLucro = transitoVendaPix - transitoInvestido;
 
-      const vendas = state.vendas || [];
-      const vendasFaturado = vendas.reduce((s, v) => s + (Number(v.valorTotal) || 0), 0);
-      const vendasLucro = vendas.reduce((s, v) => s + (Number(v.lucro) || 0), 0);
+      const vendasFaturado = vendasAtivas.reduce((s, v) => s + (Number(v.valorTotal) || 0), 0);
+      const vendasLucro = vendasAtivas.reduce((s, v) => s + (Number(v.lucro) || 0), 0);
 
       if (document.getElementById('bhPanelEmMaosValor')) {
         document.getElementById('bhPanelEmMaosValor').textContent = `${formatBRL(totalVenda)} (PIX)`;
@@ -798,19 +816,24 @@
         document.getElementById('bhPanelTransitoValor').textContent = `${formatBRL(transitoVendaPix)} (PIX)`;
         document.getElementById('bhPanelTransitoSub').textContent = `${totalItensTransito} un · Pago: ${formatBRL(transitoInvestido)}`;
         document.getElementById('bhPanelVendasValor').textContent = formatBRL(vendasFaturado);
-        document.getElementById('bhPanelVendasSub').textContent = `${vendas.length} vendas · Lucro: +${formatBRL(vendasLucro)}`;
+        document.getElementById('bhPanelVendasSub').textContent = `${vendasAtivas.length} vendas · Lucro: +${formatBRL(vendasLucro)}`;
         document.getElementById('bhPanelTotalPotencial').textContent = formatBRL(totalVenda + transitoVendaPix);
         document.getElementById('bhPanelTotalLucro').textContent = `${totalItens + totalItensTransito} unidades · Lucro Previsto: +${formatBRL(totalLucro + transitoLucro)}`;
       }
 
       renderDosesFrascos();
 
+      if (lbl1) lbl1.textContent = 'Estoque Físico BH';
+      if (lbl2) lbl2.textContent = 'Capital em Mãos (Custo)';
+      if (lbl3) lbl3.textContent = 'Faturamento em Mãos (PIX)';
+      if (lbl4) lbl4.textContent = 'Lucro Líquido em Mãos';
+
       document.getElementById('kpiCount').textContent = `${totalItens} unidades`;
       document.getElementById('kpiCountSub').textContent = `${filtered.length} SKUs em mãos (Pronta Entrega)`;
       document.getElementById('kpiMult').textContent = formatBRL(totalCusto);
       document.getElementById('kpiMultSub').textContent = `Capital Investido no Estoque`;
       document.getElementById('kpiAvgPrice').textContent = formatBRL(totalVenda);
-      document.getElementById('kpiAvgCost').textContent = `Faturamento Previsto (PIX)`;
+      document.getElementById('kpiAvgCost').textContent = `No Cartão: ${formatBRL(totalCartao)}`;
       document.getElementById('kpiAvgProfit').textContent = formatBRL(totalLucro);
       document.getElementById('kpiAvgProfitSub').textContent = `Lucro Líquido Projetado no Bolso`;
       return;
@@ -821,6 +844,11 @@
       const el = document.getElementById(id);
       if (el) el.style.display = '';
     });
+
+    if (lbl1) lbl1.textContent = 'Produtos Filtrados';
+    if (lbl2) lbl2.textContent = 'Multiplicador de Custo';
+    if (lbl3) lbl3.textContent = 'Ticket Médio de Venda';
+    if (lbl4) lbl4.textContent = 'Lucro Líquido Médio / Un';
 
     const withStock = filtered.filter(p => p.stockTotal > 0);
     const avgCost = withStock.length ? withStock.reduce((s, p) => s + p.custo, 0) / withStock.length : 0;
@@ -848,18 +876,26 @@
     if (state.viewMode === 'grid') {
       container.className = 'product-grid';
       container.innerHTML = filtered.map(p => {
+        const meuQtd = Number((state.meuEstoque || {})[p.id] || 0);
+        const hasAnyStock = p.stockTotal > 0 || meuQtd > 0;
+        const stockBadgeLabel = (meuQtd > 0 && p.stockTotal > 0)
+          ? `EST: ${p.stockTotal} · BH: ${meuQtd}`
+          : (meuQtd > 0)
+            ? `📍 PRONTA ENTREGA BH: ${meuQtd}`
+            : (p.stockTotal > 0 ? `EST: ${p.stockTotal}` : 'SEM ESTOQUE');
+
         const imgHtml = p.localFoto
           ? `<img src="${p.localFoto}" loading="lazy" alt="${p.nombre}" onerror="if(this.src!=='${p.remoteFoto}'){this.src='${p.remoteFoto}';}else{this.parentElement.innerHTML='<div class=\\'p-placeholder\\'>🧬<br><small>${p.marca || 'SHAPE'}</small></div>';}">`
           : `<div class="p-placeholder"><span style="font-size:28px;">💊</span><small style="margin-top:6px;">${(p.marca || 'SHAPE TOTAL').toUpperCase()}</small></div>`;
 
         return `
-          <div class="p-card ${p.stockTotal <= 0 ? 'no-stock' : ''}" data-id="${p.id}">
+          <div class="p-card ${!hasAnyStock ? 'no-stock' : ''}" data-id="${p.id}">
             <div class="p-media" onclick="window.CRM.openEditModal(${p.id})">
               ${imgHtml}
               <div class="p-badges">
                 <span class="badge badge-cat">${p.categoria || 'geral'}</span>
-                <span class="badge ${p.stockTotal > 0 ? 'badge-stock-ok' : 'badge-stock-zero'}">
-                  ${p.stockTotal > 0 ? `EST: ${p.stockTotal}` : 'SEM ESTOQUE'}
+                <span class="badge ${hasAnyStock ? 'badge-stock-ok' : 'badge-stock-zero'}">
+                  ${stockBadgeLabel}
                 </span>
               </div>
             </div>
@@ -1084,6 +1120,10 @@
               <div style="width:100%; height:7px; background:#1e293b; border-radius:4px; overflow:hidden;">
                 <div style="width:${pct}%; height:100%; background:${barColor}; transition:width 0.3s;"></div>
               </div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; color:#64748b; margin-top:4px;">
+                <span>Aplicado no frasco: <b style="color:#cbd5e1;">${Number(doseState.totalAplicadasMg || 0)} mg</b></span>
+                ${Number(doseState.perdaMg || 0) > 0 ? `<span style="color:#f87171;">Sobra/Perda acum.: ${Number(doseState.perdaMg)} mg</span>` : `<span>Capacidade: ${totalMg} mg</span>`}
+              </div>
             </div>
 
             <!-- Botões de Aplicação / Venda de Dose Rápida -->
@@ -1101,11 +1141,14 @@
           </div>
 
           <!-- Ações do Frasco -->
-          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #1e293b; padding-top:8px; margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #1e293b; padding-top:8px; margin-top:4px; flex-wrap:wrap; gap:6px;">
             <button class="btn" style="font-size:11px; color:#38bdf8; padding:4px 8px;" onclick="window.CRM.openDoseImageModal(${id})">
               🔍 Ver Tabela Oficial
             </button>
-            <div style="display:flex; gap:6px;">
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button class="btn" style="font-size:10px; color:#cbd5e1; background:#1e293b; padding:4px 8px;" title="Ajustar manualmente os mg restantes do frasco em uso" onclick="window.CRM.ajustarSaldoFrascoDose(${id})">
+                ✏️ Ajustar mg
+              </button>
               <button class="btn" style="font-size:10px; color:#fbbf24; background:#1e293b; padding:4px 8px;" title="Resetar ou abrir outro frasco de 120mg" onclick="window.CRM.abrirNovoFrascoDose(${id})">
                 🔄 Abrir Novo Frasco
               </button>
@@ -1252,12 +1295,45 @@
     },
 
     resetEstoqueBase() {
-      if (confirm('Deseja restaurar o estoque físico para a contagem canônica de 27 itens em BH?')) {
+      if (confirm('Deseja restaurar o estoque físico para a contagem canônica de 32 itens em BH?')) {
         state.meuEstoque = JSON.parse(JSON.stringify(ESTOQUE_CANONICO_BH));
         saveState();
         renderAll();
-        showToast('Estoque BH restaurado para 27 unidades!');
+        showToast('Estoque BH restaurado para 32 unidades!');
       }
+    },
+
+    toggleTopbarTools() {
+      const drawer = document.getElementById('topbarToolsDrawer');
+      const btn = document.getElementById('btnToggleTopbarTools');
+      if (!drawer) return;
+      const isCollapsed = drawer.classList.toggle('collapsed');
+      if (btn) {
+        btn.textContent = isCollapsed ? '🛠️ Ferramentas ▸' : '🛠️ Ferramentas ▾';
+      }
+    },
+
+    ajustarSaldoFrascoDose(productId) {
+      const conf = TABELA_DOSES_OFICIAIS[productId];
+      if (!conf) return;
+      if (!state.frascosDoses) state.frascosDoses = {};
+      if (!state.frascosDoses[productId]) state.frascosDoses[productId] = { mgRestante: 120, totalAplicadasMg: 0, perdaMg: 0 };
+      const atual = Number(state.frascosDoses[productId].mgRestante || 0);
+      const novoRaw = prompt(`Ajustar saldo em mg do frasco em uso (${conf.nome}):\nSaldo atual: ${atual} mg (máx 120 mg)`, String(atual));
+      if (novoRaw === null) return;
+      const novo = Number(String(novoRaw).replace(',', '.'));
+      if (!isFinite(novo) || novo < 0 || novo > 120) {
+        alert('Informe um valor válido entre 0 e 120 mg.');
+        return;
+      }
+      const diff = atual - novo;
+      if (diff > 0) {
+        state.frascosDoses[productId].perdaMg = Math.max(0, (Number(state.frascosDoses[productId].perdaMg) || 0) + diff);
+      }
+      state.frascosDoses[productId].mgRestante = novo;
+      saveState();
+      renderAll();
+      showToast(`Saldo do frasco ajustado para ${novo} mg!`);
     },
 
     openDoseSaleModal(productId, doseMg, dosePreco) {
@@ -1783,8 +1859,17 @@
         if (v.isDose) {
           if (!state.frascosDoses) state.frascosDoses = {};
           if (!state.frascosDoses[v.produtoId]) state.frascosDoses[v.produtoId] = { mgRestante: 120, totalAplicadasMg: 0 };
-          state.frascosDoses[v.produtoId].mgRestante = Math.min(120, (Number(state.frascosDoses[v.produtoId].mgRestante) || 0) + Number(v.doseMg || 0));
-          state.frascosDoses[v.produtoId].totalAplicadasMg = Math.max(0, (Number(state.frascosDoses[v.produtoId].totalAplicadasMg) || 0) - Number(v.doseMg || 0));
+          const curMg = Number(state.frascosDoses[v.produtoId].mgRestante) || 0;
+          const addMg = Number(v.doseMg || 0);
+          if (curMg + addMg > 120) {
+            // Se houve abertura de novo frasco após esta dose, devolve 1 frasco fechado à reserva
+            if (!state.meuEstoque) state.meuEstoque = {};
+            state.meuEstoque[v.produtoId] = (Number(state.meuEstoque[v.produtoId]) || 0) + 1;
+            state.frascosDoses[v.produtoId].mgRestante = (curMg + addMg) - 120;
+          } else {
+            state.frascosDoses[v.produtoId].mgRestante = curMg + addMg;
+          }
+          state.frascosDoses[v.produtoId].totalAplicadasMg = Math.max(0, (Number(state.frascosDoses[v.produtoId].totalAplicadasMg) || 0) - addMg);
         } else {
           if (!state.meuEstoque) state.meuEstoque = {};
           state.meuEstoque[v.produtoId] = (Number(state.meuEstoque[v.produtoId]) || 0) + v.qtd;
@@ -1966,12 +2051,13 @@
     },
 
     resetPedidosTransito() {
-      if (confirm('Restaurar os 4 pedidos pagos em trânsito (26 unidades a chegar — R$ 13.601,96 investidos)?')) {
+      if (confirm('Restaurar os pedidos canônicos (3 pedidos em trânsito com 21 unidades a chegar — R$ 10.476,96 investidos + 1 entregue)?')) {
         state.pedidosTransito = JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
+        state.canonVistos = PEDIDOS_TRANSITO_CANONICOS.map(c => String(c.id));
         saveState();
         renderAll();
         window.CRM.openTransitoModal();
-        showToast('Pedidos em trânsito restaurados com sucesso (26 un)!');
+        showToast('Pedidos em trânsito restaurados com sucesso (21 un a chegar)!');
       }
     },
 
@@ -2595,6 +2681,16 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
     renderMarginDrawer();
     initEvents();
     renderAll();
+
+    // Em telas mobile/tablet (<= 900px), inicia a gaveta de ferramentas recolhida para liberar 88% da tela para os produtos
+    if (window.innerWidth <= 900) {
+      const drawer = document.getElementById('topbarToolsDrawer');
+      const btn = document.getElementById('btnToggleTopbarTools');
+      if (drawer && !drawer.classList.contains('collapsed')) {
+        drawer.classList.add('collapsed');
+        if (btn) btn.textContent = '🛠️ Ferramentas ▸';
+      }
+    }
 
     // Check initial authentication
     const isAuthed = localStorage.getItem('ST_AUTH') === 'true' || sessionStorage.getItem('ST_AUTH') === 'true';
