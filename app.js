@@ -91,6 +91,18 @@
 
   const PEDIDOS_TRANSITO_CANONICOS = [
     {
+      id: "PED-20261110-01",
+      data_compra: "10/11/2026",
+      fornecedor: "Mega Servicos Digitais LTDA",
+      status: "em_transito",
+      custo_total_reais: 1729.35,
+      comprovante: "E00416968202611101746bdLuXF7tnqj",
+      itens: [
+        { id_catalogo: 3207, nome: "TIRZEC X 15 MG. X 4 AMPOLLAS (60 MG)", qtd: 2, preco_venda_pix: 900, preco_venda_cartao: 1000 },
+        { id_catalogo: 2848, nome: "INDUFAR T.G. TIRZEPATIDA X 15 MG. X 4 AMP. (60 MG)", qtd: 2, preco_venda_pix: 900, preco_venda_cartao: 1000 }
+      ]
+    },
+    {
       id: "PED-20261109-02",
       data_compra: "09/11/2026",
       fornecedor: "Outro Fornecedor",
@@ -1935,12 +1947,12 @@
     },
 
     resetPedidosTransito() {
-      if (confirm('Restaurar os 3 pedidos pagos em trânsito (22 unidades a chegar — R$ 11.872,61 investidos)?')) {
+      if (confirm('Restaurar os 4 pedidos pagos em trânsito (26 unidades a chegar — R$ 13.601,96 investidos)?')) {
         state.pedidosTransito = JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
         saveState();
         renderAll();
         window.CRM.openTransitoModal();
-        showToast('Pedidos em trânsito restaurados com sucesso (22 un)!');
+        showToast('Pedidos em trânsito restaurados com sucesso (26 un)!');
       }
     },
 
