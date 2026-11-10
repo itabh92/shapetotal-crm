@@ -636,27 +636,33 @@
         </span>
       </div>
 
-      <!-- Opção 1: Câmera do iPhone (QR Code) -->
-      <div style="margin-bottom:18px;">
-        <b style="font-size:13px; color:#f8fafc; display:block; margin-bottom:6px;">Opção 1: Aponte a câmera do iPhone para a tela</b>
-        <div style="display:inline-block; padding:10px; background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.4);">
-          <img id="syncQrCodeImg" src="" style="width:200px; height:200px; display:block;" alt="QR Code de Sincronização" />
-        </div>
-        <p style="font-size:11px; color:#94a3b8; margin-top:6px;">
-          Basta apontar a câmera do iPhone. Ao tocar no link amarelo, o app abre e sincroniza tudo na hora.
-        </p>
-      </div>
-
-      <!-- Opção 2: Enviar Link via WhatsApp -->
+      <!-- Opção 1: Link de sincronização (fica só entre os seus aparelhos) -->
       <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
-        <b style="font-size:13px; color:#f8fafc;">Opção 2: Enviar link para si mesmo no WhatsApp</b>
+        <b style="font-size:13px; color:#f8fafc;">Opção 1: Enviar o link para o outro aparelho</b>
         <div style="display:flex; gap:8px;">
           <input id="syncUrlInput" type="text" readonly style="font-size:11px; color:#94a3b8; background:#0b1120; border:1px solid #334155; padding:8px 10px; border-radius:6px; flex:1;" />
           <button class="btn btn-primary" onclick="window.CRM.copySyncUrl()">📋 Copiar</button>
         </div>
-        <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; padding:10px;" onclick="window.CRM.shareSyncWhatsApp()">
-          📲 Abrir no WhatsApp para Enviar ao Celular
+        <button class="btn btn-primary" style="font-weight:800; padding:10px;" onclick="window.CRM.shareSyncNative()">
+          📤 Compartilhar (AirDrop / Mensagens)
         </button>
+        <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; padding:10px;" onclick="window.CRM.shareSyncWhatsApp()">
+          📲 Enviar para mim no WhatsApp
+        </button>
+        <p style="font-size:11px; color:#94a3b8; margin:0;">
+          No Mac, "Copiar" e depois colar no Safari do iPhone também funciona (Área de Transferência Universal).
+        </p>
+      </div>
+
+      <!-- Opção 2: Backup em arquivo -->
+      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+        <b style="font-size:13px; color:#f8fafc;">Opção 2: Backup em arquivo</b>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" onclick="window.CRM.exportBackupFile()">💾 Exportar backup</button>
+          <button class="btn" onclick="document.getElementById('backupFileInput').click()">📂 Restaurar de arquivo</button>
+          <button class="btn" id="btnUndoImport" style="display:none; color:#fbbf24;" onclick="window.CRM.undoLastImport()">↩️ Desfazer última importação</button>
+        </div>
+        <input id="backupFileInput" type="file" accept="application/json,.json" style="display:none;" onchange="window.CRM.importBackupFile(this)" />
       </div>
 
       <!-- Opção 3: Importar código manual -->
@@ -670,7 +676,7 @@
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script src="dados_catalogo.js?v=20261109_1655"></script>
-  <script src="app.js?v=20261109_1655"></script>
+  <script src="dados_catalogo.js?v=20261109_2330"></script>
+  <script src="app.js?v=20261109_2330"></script>
 </body>
 </html>

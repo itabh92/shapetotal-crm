@@ -131,6 +131,7 @@
 
 (function () {
   const STORAGE_KEY = 'SHAPETOTAL_CRM_STATE_V1';
+  const BACKUP_KEY = 'SHAPETOTAL_CRM_BACKUP_PRE_IMPORT';
 
   const DEFAULT_GROUP_MARGINS = {
     anabolizante: { label: '💪 Anabolizantes', min: 28, rec: 40, max: 58 },
@@ -169,10 +170,15 @@
   };
 
   function loadState() {
+    // O estoque canônico só é semeado quando o aparelho nunca teve estoque salvo.
+    // Estoque zerado por vendas é estado legítimo e não pode ser "recuperado".
+    let temEstoqueSalvo = false;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
+        temEstoqueSalvo = !!parsed.meuEstoque && typeof parsed.meuEstoque === 'object';
+        state.canonVistos = Array.isArray(parsed.canonVistos) ? parsed.canonVistos.map(String) : [];
         state.cotacao = Number(parsed.cotacao) || 5.60;
         state.fretePct = parsed.fretePct !== undefined ? Number(parsed.fretePct) : 30;
         state.taxaCartaoFixa = parsed.taxaCartaoFixa !== undefined ? Number(parsed.taxaCartaoFixa) : 100;
@@ -187,15 +193,12 @@
         state.overrides = parsed.overrides || {};
         state.meuEstoque = parsed.meuEstoque || {};
         state.vendas = Array.isArray(parsed.vendas) ? parsed.vendas : [];
-        state.pedidosTransito = Array.isArray(parsed.pedidosTransito) && parsed.pedidosTransito.length > 0
-          ? parsed.pedidosTransito
-          : JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
+        state.pedidosTransito = Array.isArray(parsed.pedidosTransito) ? parsed.pedidosTransito : [];
         state.frascosDoses = parsed.frascosDoses || {
           9006: { mgRestante: 120, totalAplicadasMg: 0 },
           9005: { mgRestante: 120, totalAplicadasMg: 0 }
         };
       } else {
-        state.pedidosTransito = JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
         state.frascosDoses = {
           9006: { mgRestante: 120, totalAplicadasMg: 0 },
           9005: { mgRestante: 120, totalAplicadasMg: 0 }
@@ -211,28 +214,135 @@
     if (!state.frascosDoses[9006]) state.frascosDoses[9006] = { mgRestante: 120, totalAplicadasMg: 0 };
     if (!state.frascosDoses[9005]) state.frascosDoses[9005] = { mgRestante: 120, totalAplicadasMg: 0 };
 
-    if (!state.pedidosTransito || state.pedidosTransito.length === 0) {
-      state.pedidosTransito = JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
-      saveState();
-    } else {
-      // Auto-merge: se houver novo pedido canônico ainda não presente no storage, inclui automaticamente
-      let changed = false;
-      PEDIDOS_TRANSITO_CANONICOS.forEach(canon => {
-        const exists = state.pedidosTransito.some(p => p.id === canon.id);
-        if (!exists) {
-          state.pedidosTransito.unshift(JSON.parse(JSON.stringify(canon)));
-          changed = true;
+    // Auto-merge: cada pedido canônico entra uma única vez por aparelho.
+    // Depois de visto, não volta mesmo que o usuário o exclua.
+    if (!Array.isArray(state.pedidosTransito)) state.pedidosTransito = [];
+    if (!Array.isArray(state.canonVistos)) state.canonVistos = [];
+    let changed = false;
+    PEDIDOS_TRANSITO_CANONICOS.forEach(canon => {
+      const cid = String(canon.id);
+      if (state.canonVistos.includes(cid)) return;
+      if (!state.pedidosTransito.some(p => String(p.id) === cid)) {
+        state.pedidosTransito.unshift(JSON.parse(JSON.stringify(canon)));
+      }
+      state.canonVistos.push(cid);
+      changed = true;
+    });
+
+    // Semeia o estoque físico de BH somente na primeira carga do aparelho
+    if (!temEstoqueSalvo) {
+      state.meuEstoque = JSON.parse(JSON.stringify(ESTOQUE_CANONICO_BH));
+      changed = true;
+    }
+    if (changed) saveState();
+  }
+
+  function esc(v) {
+    return String(v === undefined || v === null ? '' : v).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  // Dados que trafegam entre aparelhos (link de sync e arquivo de backup)
+  function buildSyncData() {
+    return {
+      cotacao: state.cotacao,
+      fretePct: state.fretePct,
+      taxaCartaoFixa: state.taxaCartaoFixa,
+      activeTier: state.activeTier,
+      meuEstoque: state.meuEstoque,
+      vendas: state.vendas || [],
+      pedidosTransito: state.pedidosTransito || [],
+      frascosDoses: state.frascosDoses || {},
+      overrides: state.overrides || {},
+      canonVistos: state.canonVistos || []
+    };
+  }
+
+  // Aceita somente as chaves e os tipos esperados de um payload importado
+  function sanitizeImported(imp) {
+    if (!imp || typeof imp !== 'object' || Array.isArray(imp)) return null;
+    const out = {};
+    const isObj = o => !!o && typeof o === 'object' && !Array.isArray(o);
+    ['cotacao', 'fretePct', 'taxaCartaoFixa'].forEach(k => {
+      if (imp[k] !== undefined && isFinite(Number(imp[k]))) out[k] = Number(imp[k]);
+    });
+    if (['min', 'rec', 'max'].includes(imp.activeTier)) out.activeTier = imp.activeTier;
+    if (isObj(imp.meuEstoque)) {
+      out.meuEstoque = {};
+      Object.keys(imp.meuEstoque).forEach(k => {
+        const q = Math.floor(Number(imp.meuEstoque[k]));
+        if (/^\d+$/.test(k) && q > 0) out.meuEstoque[k] = q;
+      });
+    }
+    if (Array.isArray(imp.vendas)) {
+      const num = x => Number(x) || 0;
+      out.vendas = imp.vendas.filter(isObj).map(v => ({
+        ...v,
+        id: num(v.id),
+        produtoId: num(v.produtoId),
+        qtd: num(v.qtd),
+        doseMg: num(v.doseMg),
+        isDose: !!v.isDose,
+        valorUnitario: num(v.valorUnitario),
+        valorTotal: num(v.valorTotal),
+        custoTotal: num(v.custoTotal),
+        lucro: num(v.lucro),
+        data: String(v.data || ''),
+        produtoNome: String(v.produtoNome || ''),
+        marca: String(v.marca || ''),
+        formaPagamento: String(v.formaPagamento || ''),
+        cliente: String(v.cliente || ''),
+        telefone: String(v.telefone || ''),
+        obs: String(v.obs || '')
+      })).filter(v => v.id > 0);
+    }
+    if (Array.isArray(imp.pedidosTransito)) {
+      out.pedidosTransito = imp.pedidosTransito.filter(isObj).map(p => ({
+        ...p,
+        id: String(p.id || '').replace(/[^\w-]/g, ''),
+        itens: Array.isArray(p.itens) ? p.itens.filter(isObj) : []
+      })).filter(p => p.id);
+    }
+    if (isObj(imp.frascosDoses)) {
+      out.frascosDoses = {};
+      Object.keys(imp.frascosDoses).forEach(k => {
+        const f = imp.frascosDoses[k];
+        if (/^\d+$/.test(k) && isObj(f)) {
+          out.frascosDoses[k] = {
+            mgRestante: Math.max(0, Number(f.mgRestante) || 0),
+            totalAplicadasMg: Math.max(0, Number(f.totalAplicadasMg) || 0),
+            perdaMg: Math.max(0, Number(f.perdaMg) || 0)
+          };
         }
       });
-      if (changed) saveState();
     }
+    if (isObj(imp.overrides)) out.overrides = imp.overrides;
+    if (Array.isArray(imp.canonVistos)) out.canonVistos = imp.canonVistos.map(String);
+    return out;
+  }
 
-    // Auto-recuperação: se meuEstoque estiver vazio ou zerado, carrega o estoque físico de BH
-    const totalItens = Object.values(state.meuEstoque || {}).reduce((s, v) => s + (Number(v) || 0), 0);
-    if (!state.meuEstoque || Object.keys(state.meuEstoque).length === 0 || totalItens === 0) {
-      state.meuEstoque = JSON.parse(JSON.stringify(ESTOQUE_CANONICO_BH));
-      saveState();
+  // Importação sempre pede confirmação e guarda o estado anterior para desfazer
+  function applyImported(rawImported, origem) {
+    const imp = sanitizeImported(rawImported);
+    if (!imp || !Object.keys(imp).length) {
+      alert('Dados de sincronização inválidos.');
+      return false;
     }
+    const current = localStorage.getItem(STORAGE_KEY);
+    let cur = {};
+    if (current) try { cur = JSON.parse(current) || {}; } catch (e) {}
+    const soma = o => Object.values(o || {}).reduce((s, v) => s + (Number(v) || 0), 0);
+    const msg = `Importar dados (${origem})?\n\n` +
+      `NESTE APARELHO HOJE: ${soma(cur.meuEstoque)} un em estoque · ${(cur.vendas || []).length} vendas\n` +
+      `DADOS RECEBIDOS: ${soma(imp.meuEstoque)} un em estoque · ${(imp.vendas || []).length} vendas\n\n` +
+      `Os dados recebidos SUBSTITUEM os deste aparelho. Uma cópia do estado atual fica guardada para desfazer.`;
+    if (!confirm(msg)) return false;
+    if (current) {
+      localStorage.setItem(BACKUP_KEY, JSON.stringify({ quando: new Date().toISOString(), estado: current }));
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...cur, ...imp }));
+    return true;
   }
 
   function saveState() {
@@ -247,10 +357,12 @@
         meuEstoque: state.meuEstoque,
         vendas: state.vendas || [],
         pedidosTransito: state.pedidosTransito || [],
-        frascosDoses: state.frascosDoses || {}
+        frascosDoses: state.frascosDoses || {},
+        canonVistos: state.canonVistos || []
       }));
     } catch (e) {
       console.error('Erro ao salvar estado:', e);
+      alert('⚠️ Não foi possível salvar os dados neste aparelho. Exporte um backup agora.');
     }
   }
 
@@ -1092,11 +1204,17 @@
 
       const msg = `Frasco em uso atual possui ${doseState.mgRestante} mg restantes.\nVocê possui ${estoqueFechados} frascos fechados no Estoque Reserva de BH.\n\nDeseja abrir um novo frasco de 120mg e dar baixa de 1 unidade do seu estoque reserva?`;
       if (confirm(msg)) {
-        if (estoqueFechados > 0) {
-          state.meuEstoque[productId] = estoqueFechados - 1;
+        if (estoqueFechados <= 0) {
+          alert('Você não tem frascos fechados no Estoque BH para abrir!');
+          return;
         }
+        state.meuEstoque[productId] = estoqueFechados - 1;
         if (!state.frascosDoses) state.frascosDoses = {};
-        state.frascosDoses[productId] = { mgRestante: 120, totalAplicadasMg: 0 };
+        state.frascosDoses[productId] = {
+          mgRestante: 120,
+          totalAplicadasMg: 0,
+          perdaMg: (Number(doseState.perdaMg) || 0) + (Number(doseState.mgRestante) || 0)
+        };
         saveState();
         renderAll();
         showToast(`Novo frasco de ${conf.nome} aberto com sucesso (120 mg disponíveis)!`);
@@ -1305,8 +1423,10 @@
       const currentStock = Number((state.meuEstoque || {})[pid] || 0);
       const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
 
-      const unitVal = Number(document.getElementById('saleUnitPrice').value) || p.precoFinal;
-      const totalVal = Number(document.getElementById('saleTotalValue').value) || (unitVal * qty);
+      const unitRaw = document.getElementById('saleUnitPrice').value.trim();
+      const totalRaw = document.getElementById('saleTotalValue').value.trim();
+      const unitVal = unitRaw !== '' && isFinite(Number(unitRaw)) ? Number(unitRaw) : p.precoFinal;
+      const totalVal = totalRaw !== '' && isFinite(Number(totalRaw)) ? Number(totalRaw) : (unitVal * qty);
       const pay = document.getElementById('salePayment').value;
       const payLabelMap = {
         'pix': '💠 À vista no PIX',
@@ -1342,6 +1462,7 @@
               return;
             }
             state.meuEstoque[pid] = estoqueReserva - 1;
+            frascoAtual.perdaMg = (Number(frascoAtual.perdaMg) || 0) + (Number(frascoAtual.mgRestante) || 0);
             frascoAtual.mgRestante = 120;
           } else {
             return;
@@ -1522,15 +1643,15 @@
           return `
             <tr>
               <td style="white-space:nowrap; font-size:11px; color:#94a3b8;">${d}</td>
-              <td><b>${v.produtoNome}</b></td>
+              <td><b>${esc(v.produtoNome)}</b></td>
               <td style="text-align:center;"><b style="color:#34d399;">${v.qtd}</b></td>
               <td style="color:#38bdf8;">${formatBRL(unitVal)}</td>
               <td><b style="color:#34d399;">${formatBRL(v.valorTotal)}</b></td>
               <td style="color:#fbbf24;">+${formatBRL(v.lucro)}</td>
-              <td>${v.cliente}</td>
-              <td style="font-size:11px;">${v.formaPagamento}</td>
+              <td>${esc(v.cliente)}</td>
+              <td style="font-size:11px;">${esc(v.formaPagamento)}</td>
               <td style="text-align:center;">
-                <button class="btn" style="padding:2px 8px; font-size:11px; color:#f87171;" title="Estornar venda e devolver item ao estoque" onclick="window.CRM.undoSale(${v.id})">
+                <button class="btn" style="padding:2px 8px; font-size:11px; color:#f87171;" title="Estornar venda e devolver item ao estoque" onclick="window.CRM.undoSale(${Number(v.id) || 0})">
                   ↩️ Estornar
                 </button>
               </td>
@@ -2042,27 +2163,15 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
     openSyncModal() {
       const modal = document.getElementById('syncModal');
-      const syncData = {
-        cotacao: state.cotacao,
-        fretePct: state.fretePct,
-        taxaCartaoFixa: state.taxaCartaoFixa,
-        activeTier: state.activeTier,
-        meuEstoque: state.meuEstoque,
-        vendas: state.vendas || [],
-        pedidosTransito: state.pedidosTransito || [],
-        frascosDoses: state.frascosDoses || {},
-        overrides: state.overrides || {}
-      };
-
-      const jsonStr = JSON.stringify(syncData);
+      const jsonStr = JSON.stringify(buildSyncData());
       const b64 = btoa(encodeURIComponent(jsonStr));
       const baseUrl = window.location.origin + window.location.pathname;
       const syncUrl = `${baseUrl}#sync=${b64}`;
 
       document.getElementById('syncUrlInput').value = syncUrl;
 
-      const qrImg = document.getElementById('syncQrCodeImg');
-      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(syncUrl)}`;
+      const undoBtn = document.getElementById('btnUndoImport');
+      if (undoBtn) undoBtn.style.display = localStorage.getItem(BACKUP_KEY) ? 'inline-flex' : 'none';
 
       const totalVendas = (state.vendas || []).length;
       const totalItens = Object.values(state.meuEstoque || {}).reduce((s, v) => s + Number(v || 0), 0);
@@ -2085,6 +2194,65 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
     },
 
+    async shareSyncNative() {
+      const url = document.getElementById('syncUrlInput').value;
+      if (navigator.share) {
+        try { await navigator.share({ title: 'Sincronização ShapeTotal CRM', url }); } catch (e) {}
+      } else {
+        window.CRM.copySyncUrl();
+      }
+    },
+
+    exportBackupFile() {
+      const blob = new Blob([JSON.stringify({ app: 'shapetotal-crm', versao: 1, exportado_em: new Date().toISOString(), dados: buildSyncData() }, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const d = new Date();
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      a.download = `backup_shapetotal_${d.toISOString().slice(0, 16).replace(/[:T]/g, '-')}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      showToast('Backup exportado!');
+    },
+
+    importBackupFile(inputEl) {
+      const file = inputEl && inputEl.files && inputEl.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (applyImported(parsed && parsed.dados ? parsed.dados : parsed, 'arquivo de backup')) {
+            loadState();
+            renderAll();
+            document.getElementById('syncModal').classList.remove('open');
+            showToast('Backup restaurado!');
+          }
+        } catch (e) {
+          alert('Arquivo de backup inválido.');
+        }
+        inputEl.value = '';
+      };
+      reader.readAsText(file);
+    },
+
+    undoLastImport() {
+      const raw = localStorage.getItem(BACKUP_KEY);
+      if (!raw) { showToast('Nenhuma importação para desfazer.'); return; }
+      try {
+        const bk = JSON.parse(raw);
+        if (!confirm(`Desfazer a última importação e voltar ao estado de ${new Date(bk.quando).toLocaleString('pt-BR')}?`)) return;
+        localStorage.setItem(STORAGE_KEY, bk.estado);
+        localStorage.removeItem(BACKUP_KEY);
+        loadState();
+        renderAll();
+        document.getElementById('syncModal').classList.remove('open');
+        showToast('Importação desfeita.');
+      } catch (e) {
+        alert('Não foi possível desfazer.');
+      }
+    },
+
     importSyncPayloadManual() {
       const raw = prompt('Cole aqui o código ou link de sincronização copiado do outro aparelho:');
       if (!raw) return;
@@ -2095,16 +2263,12 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         }
         const jsonStr = decodeURIComponent(atob(b64));
         const imported = JSON.parse(jsonStr);
-
-        if (imported.meuEstoque) state.meuEstoque = imported.meuEstoque;
-        if (Array.isArray(imported.vendas)) state.vendas = imported.vendas;
-        if (imported.frascosDoses) state.frascosDoses = imported.frascosDoses;
-        if (Array.isArray(imported.pedidosTransito)) state.pedidosTransito = imported.pedidosTransito;
-
-        saveState();
-        renderAll();
-        document.getElementById('syncModal').classList.remove('open');
-        alert('✅ Sincronização concluída com sucesso!');
+        if (applyImported(imported, 'código colado')) {
+          loadState();
+          renderAll();
+          document.getElementById('syncModal').classList.remove('open');
+          showToast('Sincronização concluída!');
+        }
       } catch (e) {
         alert('Código de sincronização inválido. Certifique-se de copiar o link completo.');
       }
@@ -2235,6 +2399,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       });
     });
 
+    let searchTimer = null;
     const searchInp = document.getElementById('searchInput');
     const searchClearBtn = document.getElementById('btnClearSearch');
     searchInp.addEventListener('input', e => {
@@ -2242,7 +2407,8 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (searchClearBtn) {
         searchClearBtn.style.display = state.search ? 'flex' : 'none';
       }
-      renderAll();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(renderAll, 150);
     });
 
     document.getElementById('subCatSelect').addEventListener('change', e => {
@@ -2294,30 +2460,18 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
   }
 
   function checkSyncFromUrl() {
+    const hash = window.location.hash || '';
+    if (!hash.startsWith('#sync=')) return;
     try {
-      const hash = window.location.hash || '';
-      if (hash.startsWith('#sync=')) {
-        const payload = hash.substring(6);
-        const jsonStr = decodeURIComponent(atob(payload));
-        const imported = JSON.parse(jsonStr);
-
-        if (imported && typeof imported === 'object') {
-          const current = localStorage.getItem(STORAGE_KEY);
-          let currentParsed = {};
-          if (current) try { currentParsed = JSON.parse(current); } catch(e){}
-
-          const nextState = {
-            ...currentParsed,
-            ...imported
-          };
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
-          history.replaceState(null, null, window.location.pathname + window.location.search);
-          alert('✅ Sincronização Concluída!\nTodos os dados de estoque, vendas e doses foram sincronizados com sucesso neste aparelho.');
-        }
+      const imported = JSON.parse(decodeURIComponent(atob(hash.substring(6))));
+      if (applyImported(imported, 'link de sincronização')) {
+        alert('✅ Sincronização concluída neste aparelho.');
       }
     } catch (e) {
       console.error('Erro na sincronização via URL:', e);
+      alert('Link de sincronização inválido ou incompleto.');
     }
+    history.replaceState(null, null, window.location.pathname + window.location.search);
   }
 
   document.addEventListener('DOMContentLoaded', () => {
