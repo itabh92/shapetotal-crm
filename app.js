@@ -7,7 +7,7 @@
     2988: { rec: 900, cartao: 1000, label: 'Lipoland 15mg x 4 (60mg)' },
     3072: { rec: 900, cartao: 1000, label: 'Lipoland MD 15mg' },
     2997: { rec: 900, cartao: 1000, label: 'Lipoless MD 15mg' },
-    2996: { rec: 900, cartao: 1000, label: 'Tirzec MD 15mg' },
+    2996: { rec: 900, cartao: 1000, label: 'Quimfa Tirzec 60mg Ampola Única (1x2ml)' },
     3308: { rec: 900, cartao: 1000, label: 'T36 MD 15mg' },
     3381: { rec: 900, cartao: 1000, label: 'T36 15mg x 4 (60mg)' },
     3039: { rec: 900, cartao: 1000, label: 'Gluconex 15mg x 4 (60mg)' },
