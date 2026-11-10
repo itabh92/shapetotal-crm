@@ -279,11 +279,14 @@
       const num = x => Number(x) || 0;
       out.vendas = imp.vendas.filter(isObj).map(v => ({
         ...v,
-        id: num(v.id),
+        id: String(v.id || ''),
         produtoId: num(v.produtoId),
         qtd: num(v.qtd),
         doseMg: num(v.doseMg),
         isDose: !!v.isDose,
+        estornada: !!v.estornada,
+        estornadaEm: v.estornadaEm ? String(v.estornadaEm) : null,
+        origemAparelho: String(v.origemAparelho || ''),
         valorUnitario: num(v.valorUnitario),
         valorTotal: num(v.valorTotal),
         custoTotal: num(v.custoTotal),
@@ -295,7 +298,7 @@
         cliente: String(v.cliente || ''),
         telefone: String(v.telefone || ''),
         obs: String(v.obs || '')
-      })).filter(v => v.id > 0);
+      })).filter(v => v.id);
     }
     if (Array.isArray(imp.pedidosTransito)) {
       out.pedidosTransito = imp.pedidosTransito.filter(isObj).map(p => ({
@@ -322,7 +325,7 @@
     return out;
   }
 
-  // Importação sempre pede confirmação e guarda o estado anterior para desfazer
+  // Importação: mescla vendas (append-only) e atualiza estoque com confirmação e backup
   function applyImported(rawImported, origem) {
     const imp = sanitizeImported(rawImported);
     if (!imp || !Object.keys(imp).length) {
@@ -332,16 +335,73 @@
     const current = localStorage.getItem(STORAGE_KEY);
     let cur = {};
     if (current) try { cur = JSON.parse(current) || {}; } catch (e) {}
+
+    // 1. Merge inteligente de vendas (append-only por ID único)
+    const curVendas = Array.isArray(cur.vendas) ? cur.vendas : [];
+    const impVendas = Array.isArray(imp.vendas) ? imp.vendas : [];
+    const vendasMap = new Map();
+
+    // Registra as vendas locais existentes
+    curVendas.forEach(v => {
+      if (v && v.id) vendasMap.set(String(v.id), { ...v });
+    });
+
+    // Mescla as vendas recebidas
+    let novasVendasCount = 0;
+    impVendas.forEach(v => {
+      if (!v || !v.id) return;
+      const vid = String(v.id);
+      if (vendasMap.has(vid)) {
+        const existente = vendasMap.get(vid);
+        // Se em qualquer aparelho a venda foi estornada, o estorno prevalece
+        if (v.estornada) {
+          existente.estornada = true;
+          existente.estornadaEm = v.estornadaEm || existente.estornadaEm || new Date().toISOString();
+        }
+      } else {
+        vendasMap.set(vid, { ...v });
+        novasVendasCount++;
+      }
+    });
+
+    const mergedVendas = Array.from(vendasMap.values()).sort((a, b) => {
+      const da = new Date(a.data || 0).getTime();
+      const db = new Date(b.data || 0).getTime();
+      return db - da;
+    });
+
+    // 2. Merge de pedidos em trânsito
+    const curPedidos = Array.isArray(cur.pedidosTransito) ? cur.pedidosTransito : [];
+    const impPedidos = Array.isArray(imp.pedidosTransito) ? imp.pedidosTransito : [];
+    const pedidosMap = new Map();
+    curPedidos.forEach(p => { if (p && p.id) pedidosMap.set(String(p.id), p); });
+    impPedidos.forEach(p => { if (p && p.id) pedidosMap.set(String(p.id), p); });
+    const mergedPedidos = Array.from(pedidosMap.values());
+
+    // 3. Merge de canonVistos
+    const canonSet = new Set([...(cur.canonVistos || []), ...(imp.canonVistos || [])]);
+
     const soma = o => Object.values(o || {}).reduce((s, v) => s + (Number(v) || 0), 0);
-    const msg = `Importar dados (${origem})?\n\n` +
-      `NESTE APARELHO HOJE: ${soma(cur.meuEstoque)} un em estoque · ${(cur.vendas || []).length} vendas\n` +
-      `DADOS RECEBIDOS: ${soma(imp.meuEstoque)} un em estoque · ${(imp.vendas || []).length} vendas\n\n` +
-      `Os dados recebidos SUBSTITUEM os deste aparelho. Uma cópia do estado atual fica guardada para desfazer.`;
+    const msg = `Sincronizar dados (${origem})?\n\n` +
+      `📦 Estoque BH: ${soma(imp.meuEstoque !== undefined ? imp.meuEstoque : cur.meuEstoque)} un\n` +
+      `🧾 Vendas: ${curVendas.length} locais + ${novasVendasCount} novas = ${mergedVendas.length} total histórico\n\n` +
+      `As vendas de ambos os aparelhos serão unidas sem perder nenhum lançamento. Uma cópia do estado atual fica salva para desfazer.`;
+
     if (!confirm(msg)) return false;
+
     if (current) {
       localStorage.setItem(BACKUP_KEY, JSON.stringify({ quando: new Date().toISOString(), estado: current }));
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...cur, ...imp }));
+
+    const nextState = {
+      ...cur,
+      ...imp,
+      vendas: mergedVendas,
+      pedidosTransito: mergedPedidos,
+      canonVistos: Array.from(canonSet)
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
     return true;
   }
 
@@ -1477,8 +1537,11 @@
         const custoDose = Math.round(((p.custo || 600) / 120) * doseMg);
         const lucroEst = totalVal - custoDose;
 
+        const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
+
         const venda = {
-          id: Date.now(),
+          id: saleId,
           data: dateVal,
           produtoId: p.id,
           produtoNome: `${p.nombre} — Dose Avulsa ${doseMg} mg`,
@@ -1486,6 +1549,8 @@
           qtd: 1,
           isDose: true,
           doseMg: doseMg,
+          estornada: false,
+          origemAparelho: aparelhoOrigem,
           valorUnitario: unitVal,
           valorTotal: totalVal,
           formaPagamento: payLabel,
@@ -1523,14 +1588,19 @@
 
       // Registro de Venda com Valor Unitário explícito
       const lucroEst = totalVal - (p.custo * qty);
+      const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
+
       const venda = {
-        id: Date.now(),
+        id: saleId,
         data: dateVal,
         produtoId: p.id,
         produtoNome: p.nombre,
         marca: p.marca || '',
         qtd: qty,
         isDose: false,
+        estornada: false,
+        origemAparelho: aparelhoOrigem,
         valorUnitario: unitVal,
         valorTotal: totalVal,
         formaPagamento: payLabel,
@@ -1623,15 +1693,17 @@
     openSalesHistoryModal() {
       const modal = document.getElementById('salesHistoryModal');
       const vendas = state.vendas || [];
+      const vendasAtivas = vendas.filter(v => !v.estornada);
 
-      const totalFat = vendas.reduce((s, v) => s + (Number(v.valorTotal) || 0), 0);
-      const totalLucro = vendas.reduce((s, v) => s + (Number(v.lucro) || 0), 0);
-      const totalQtd = vendas.reduce((s, v) => s + (Number(v.qtd) || 0), 0);
+      const totalFat = vendasAtivas.reduce((s, v) => s + (Number(v.valorTotal) || 0), 0);
+      const totalLucro = vendasAtivas.reduce((s, v) => s + (Number(v.lucro) || 0), 0);
+      const totalQtd = vendasAtivas.reduce((s, v) => s + (Number(v.qtd) || 0), 0);
 
       document.getElementById('historyTotalFaturado').textContent = formatBRL(totalFat);
       document.getElementById('historyTotalLucro').textContent = formatBRL(totalLucro);
       document.getElementById('historyTotalQtd').textContent = `${totalQtd} unidades`;
-      document.getElementById('historyTotalVendasCount').textContent = `${vendas.length} vendas`;
+      const estornadasCount = vendas.length - vendasAtivas.length;
+      document.getElementById('historyTotalVendasCount').textContent = `${vendasAtivas.length} vendas ativas${estornadasCount > 0 ? ` (${estornadasCount} estornadas)` : ''}`;
 
       const tbody = document.getElementById('historyTableBody');
       if (!vendas.length) {
@@ -1640,21 +1712,23 @@
         tbody.innerHTML = vendas.map(v => {
           const d = new Date(v.data).toLocaleString('pt-BR');
           const unitVal = v.valorUnitario || (v.qtd > 0 ? Math.round(v.valorTotal / v.qtd) : v.valorTotal);
+          const isEst = !!v.estornada;
+          const trStyle = isEst ? 'opacity:0.55; background:rgba(239,68,68,0.06);' : '';
+          const statusBtn = isEst
+            ? `<span style="font-size:10px; color:#f87171; font-weight:700; white-space:nowrap;">🚫 ESTORNADA</span>`
+            : `<button class="btn" style="padding:2px 8px; font-size:11px; color:#f87171;" title="Estornar venda e devolver item ao estoque" onclick="window.CRM.undoSale('${esc(String(v.id))}')">↩️ Estornar</button>`;
+
           return `
-            <tr>
+            <tr style="${trStyle}">
               <td style="white-space:nowrap; font-size:11px; color:#94a3b8;">${d}</td>
-              <td><b>${esc(v.produtoNome)}</b></td>
-              <td style="text-align:center;"><b style="color:#34d399;">${v.qtd}</b></td>
+              <td><b>${esc(v.produtoNome)}</b>${isEst ? ' <span style="font-size:10px; color:#f87171;">(Estornada)</span>' : ''}</td>
+              <td style="text-align:center;"><b style="color:${isEst ? '#94a3b8' : '#34d399'};">${v.qtd}</b></td>
               <td style="color:#38bdf8;">${formatBRL(unitVal)}</td>
-              <td><b style="color:#34d399;">${formatBRL(v.valorTotal)}</b></td>
-              <td style="color:#fbbf24;">+${formatBRL(v.lucro)}</td>
+              <td><b style="color:${isEst ? '#94a3b8' : '#34d399'};">${formatBRL(v.valorTotal)}</b></td>
+              <td style="color:${isEst ? '#94a3b8' : '#fbbf24'};">${isEst ? '—' : '+' + formatBRL(v.lucro)}</td>
               <td>${esc(v.cliente)}</td>
               <td style="font-size:11px;">${esc(v.formaPagamento)}</td>
-              <td style="text-align:center;">
-                <button class="btn" style="padding:2px 8px; font-size:11px; color:#f87171;" title="Estornar venda e devolver item ao estoque" onclick="window.CRM.undoSale(${Number(v.id) || 0})">
-                  ↩️ Estornar
-                </button>
-              </td>
+              <td style="text-align:center;">${statusBtn}</td>
             </tr>
           `;
         }).join('');
@@ -1664,9 +1738,14 @@
     },
 
     undoSale(saleId) {
-      const vIdx = (state.vendas || []).findIndex(v => v.id === saleId);
+      const vidStr = String(saleId);
+      const vIdx = (state.vendas || []).findIndex(v => String(v.id) === vidStr);
       if (vIdx === -1) return;
       const v = state.vendas[vIdx];
+      if (v.estornada) {
+        alert('Esta venda já foi estornada anteriormente.');
+        return;
+      }
 
       const descItem = v.isDose ? `Dose Avulsa (${v.doseMg} mg)` : `${v.qtd}x`;
       if (confirm(`Estornar a venda de ${descItem} "${v.produtoNome}" para ${v.cliente}?\n\nO item ou os miligramas voltarão automaticamente para o seu estoque.`)) {
@@ -1680,7 +1759,10 @@
           state.meuEstoque[v.produtoId] = (Number(state.meuEstoque[v.produtoId]) || 0) + v.qtd;
         }
 
-        state.vendas.splice(vIdx, 1);
+        // Soft delete (append-only) para preservar histórico na sincronização entre Mac e iPhone
+        v.estornada = true;
+        v.estornadaEm = new Date().toISOString();
+
         saveState();
         renderAll();
         window.CRM.openSalesHistoryModal();
@@ -1704,12 +1786,14 @@
         showToast('Nenhuma venda para exportar!');
         return;
       }
-      const header = ['ID', 'Data', 'Produto', 'Quantidade', 'Valor_Unitario_BRL', 'Valor_Total_BRL', 'Forma_Pagamento', 'Cliente', 'Telefone', 'Observacao', 'Lucro_Estimado_BRL'];
+      const header = ['ID', 'Data', 'Status', 'Origem', 'Produto', 'Quantidade', 'Valor_Unitario_BRL', 'Valor_Total_BRL', 'Forma_Pagamento', 'Cliente', 'Telefone', 'Observacao', 'Lucro_Estimado_BRL'];
       const rows = vendas.map(v => {
         const unitVal = v.valorUnitario || (v.qtd > 0 ? Math.round(v.valorTotal / v.qtd) : v.valorTotal);
         return [
           v.id,
           `"${new Date(v.data).toLocaleString('pt-BR')}"`,
+          v.estornada ? '"ESTORNADA"' : '"CONCLUIDA"',
+          `"${v.origemAparelho || 'Web'}"`,
           `"${(v.produtoNome || '').replace(/"/g, '""')}"`,
           v.qtd,
           unitVal,
@@ -1718,7 +1802,7 @@
           `"${(v.cliente || '').replace(/"/g, '""')}"`,
           `"${(v.telefone || '').replace(/"/g, '""')}"`,
           `"${(v.obs || '').replace(/"/g, '""')}"`,
-          v.lucro
+          v.estornada ? 0 : v.lucro
         ].join(';');
       });
       const csv = '\uFEFF' + [header.join(';'), ...rows].join('\n');
@@ -1731,9 +1815,8 @@
 
     openTransitoModal() {
       const modal = document.getElementById('transitoModal');
-      if (!state.pedidosTransito || state.pedidosTransito.length === 0) {
-        state.pedidosTransito = JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
-        saveState();
+      if (!Array.isArray(state.pedidosTransito)) {
+        state.pedidosTransito = [];
       }
       const pedidos = state.pedidosTransito || [];
       const emTransito = pedidos.filter(p => p.status === 'em_transito');

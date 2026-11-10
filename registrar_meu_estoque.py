@@ -237,22 +237,21 @@ def main():
     with open(DADOS_JS_PATH, 'w', encoding='utf-8') as f:
         f.write(js_content)
 
-    # 4. Reempacota shapetotal_mobile.html
+    # 4. Mantém shapetotal_mobile.html como redirecionador seguro para index.html
     try:
-        with open(os.path.join(BASE_DIR, 'styles.css'), 'r', encoding='utf-8') as f: css = f.read()
-        with open(DADOS_JS_PATH, 'r', encoding='utf-8') as f: d_js = f.read()
-        with open(os.path.join(BASE_DIR, 'app.js'), 'r', encoding='utf-8') as f: a_js = f.read()
-        with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f: h_code = f.read()
-
-        html_b = h_code.replace('<link rel="stylesheet" href="styles.css" />', f'<style>\n{css}\n</style>')
-        s_rep = f'<script>\n{d_js}\n{a_js}\n</script>'
-        html_b = html_b.replace('<script src="dados_catalogo.js"></script>\n  <script src="app.js"></script>', s_rep)
-        html_b = html_b.replace('<script src="dados_catalogo.js"></script>', '')
-        html_b = html_b.replace('<script src="app.js"></script>', s_rep)
-
-        with open(os.path.join(BASE_DIR, 'shapetotal_mobile.html'), 'w', encoding='utf-8') as f:
-            f.write(html_b)
-        print("shapetotal_mobile.html sincronizado!")
+        out_path = os.path.join(BASE_DIR, 'shapetotal_mobile.html')
+        redirect_html = (
+            '<!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n'
+            '  <meta charset="UTF-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n'
+            '  <title>Shape Total CRM</title>\n'
+            '  <meta http-equiv="refresh" content="0; url=index.html" />\n'
+            '  <script>window.location.replace("index.html" + window.location.search + window.location.hash);</script>\n'
+            '</head>\n<body style="background:#0b1120; color:#94a3b8; font-family:sans-serif; text-align:center; padding-top:40px;">\n'
+            '  <p>Redirecionando para o Shape Total CRM...</p>\n</body>\n</html>\n'
+        )
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(redirect_html)
+        print("shapetotal_mobile.html redirecionador sincronizado!")
     except Exception as e:
         print(f"Aviso bundle: {e}")
 

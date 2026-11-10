@@ -165,26 +165,20 @@ def main():
             if fut.result():
                 novas_fotos += 1
 
-    # Atualiza shapetotal_mobile.html
+    # Mantém shapetotal_mobile.html como redirecionador seguro para index.html
     try:
-        with open(os.path.join(BASE_DIR, 'styles.css'), 'r', encoding='utf-8') as f:
-            css = f.read()
-        with open(DADOS_JS_PATH, 'r', encoding='utf-8') as f:
-            dados_js = f.read()
-        with open(os.path.join(BASE_DIR, 'app.js'), 'r', encoding='utf-8') as f:
-            app_js = f.read()
-        with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f:
-            html = f.read()
-
-        html_bundled = html.replace('<link rel="stylesheet" href="styles.css" />', f'<style>\n{css}\n</style>')
-        script_replacement = f'<script>\n{dados_js}\n{app_js}\n</script>'
-        html_bundled = html_bundled.replace('<script src="dados_catalogo.js"></script>\n  <script src="app.js"></script>', script_replacement)
-        html_bundled = html_bundled.replace('<script src="dados_catalogo.js"></script>', '')
-        html_bundled = html_bundled.replace('<script src="app.js"></script>', script_replacement)
-
         out_path = os.path.join(BASE_DIR, 'shapetotal_mobile.html')
+        redirect_html = (
+            '<!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n'
+            '  <meta charset="UTF-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n'
+            '  <title>Shape Total CRM</title>\n'
+            '  <meta http-equiv="refresh" content="0; url=index.html" />\n'
+            '  <script>window.location.replace("index.html" + window.location.search + window.location.hash);</script>\n'
+            '</head>\n<body style="background:#0b1120; color:#94a3b8; font-family:sans-serif; text-align:center; padding-top:40px;">\n'
+            '  <p>Redirecionando para o Shape Total CRM...</p>\n</body>\n</html>\n'
+        )
         with open(out_path, 'w', encoding='utf-8') as f:
-            f.write(html_bundled)
+            f.write(redirect_html)
     except Exception as e:
         log(f"Aviso ao atualizar bundle mobile: {e}")
 
