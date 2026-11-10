@@ -49,9 +49,10 @@
   };
 
   const ESTOQUE_CANONICO_BH = {
-    2848: 4, // TG 60mg (Caixa 4x15mg)
+    2848: 6, // TG 60mg (Caixa 4x15mg) — 4 originais + 2 recebidas hoje
     2889: 4, // Lipoless 60mg (Caixa 4x15mg)
-    3207: 1, // Tirzec 60mg (Caixa 4x15mg)
+    3207: 2, // Tirzec 60mg (Caixa 4x15mg) — 1 original + 1 recebida hoje
+    2996: 2, // Quimfa Tirzec Multi Dosis 60mg (Ampola Única) — 2 recebidas hoje
     3136: 1, // Tirzedral 60mg (Caixa 4x15mg)
     3370: 1, // Kit Retatrutida 4x60mg + Água
     2830: 3, // Retatrutida 60mg ampolas fechadas
@@ -106,7 +107,8 @@
       id: "PED-20261109-02",
       data_compra: "09/11/2026",
       fornecedor: "Outro Fornecedor",
-      status: "em_transito",
+      status: "entregue",
+      data_entrega: "10/11/2026 às 16:00",
       custo_total_reais: 3125.00,
       itens: [
         { id_catalogo: 2996, nome: "QUIMFA TIRZEC MULTI DOSIS 60 MG (AMPOLA ÚNICA)", qtd: 2, preco_venda_pix: 900, preco_venda_cartao: 1000 },
@@ -239,6 +241,23 @@
       }
       state.canonVistos.push(cid);
       changed = true;
+    });
+
+    // Se algum pedido canônico foi marcado como 'entregue', sincroniza o status no aparelho e credita o estoque local
+    PEDIDOS_TRANSITO_CANONICOS.forEach(canon => {
+      if (canon.status === 'entregue') {
+        const pedLocal = state.pedidosTransito.find(p => String(p.id) === String(canon.id));
+        if (pedLocal && pedLocal.status !== 'entregue') {
+          pedLocal.status = 'entregue';
+          pedLocal.data_entrega = canon.data_entrega || new Date().toISOString();
+          if (!state.meuEstoque) state.meuEstoque = {};
+          (pedLocal.itens || []).forEach(it => {
+            const pid = it.id_catalogo;
+            state.meuEstoque[pid] = (Number(state.meuEstoque[pid]) || 0) + Number(it.qtd || 0);
+          });
+          changed = true;
+        }
+      }
     });
 
     // Semeia o estoque físico de BH somente na primeira carga do aparelho

@@ -34,17 +34,37 @@ ESTOQUE_LOCAL = [
     # -------------------------------------------------------------
     {
         'id_catalogo': 2848,
-        'nome': 'TG 60 mg (Tirzepatida Indufar)',
+        'nome': 'TG 60 mg — Indufar (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 4,
+        'qtd': 6,
         'preco_pix': 900.0,
         'preco_cartao': 1000.0,
-        'obs': 'Caixa lacrada original Indufar'
+        'obs': 'Caixa lacrada original Indufar (+2 caixas recebidas hoje 10/11)'
+    },
+    {
+        'id_catalogo': 2996,
+        'nome': 'Tirzec 60 mg Ampola Única — Quimfa (1x2 mL)',
+        'tipo': 'caixa_fechada',
+        'apresentacao': 'Frasco ampola única multi-dosis de 2 mL (60 mg total / 15 mg por 0,5 mL)',
+        'qtd': 2,
+        'preco_pix': 900.0,
+        'preco_cartao': 1000.0,
+        'obs': 'Ampola única multi-dosis lacrada original Quimfa (recebidas hoje 10/11)'
+    },
+    {
+        'id_catalogo': 3207,
+        'nome': 'Tirzec 60 mg — Quimfa (4x15 mg)',
+        'tipo': 'caixa_fechada',
+        'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
+        'qtd': 2,
+        'preco_pix': 900.0,
+        'preco_cartao': 1000.0,
+        'obs': 'Caixa lacrada original Quimfa (+1 caixa recebida hoje 10/11)'
     },
     {
         'id_catalogo': 2889,
-        'nome': 'Lipoless 60 mg (Tirzepatida Eticos)',
+        'nome': 'Lipoless 60 mg — Eticos (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
         'qtd': 4,
@@ -53,18 +73,8 @@ ESTOQUE_LOCAL = [
         'obs': 'Caixa lacrada original Eticos Labs'
     },
     {
-        'id_catalogo': 3207,
-        'nome': 'Tirzec 60 mg (Tirzepatida Quimfa)',
-        'tipo': 'caixa_fechada',
-        'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 1,
-        'preco_pix': 900.0,
-        'preco_cartao': 1000.0,
-        'obs': 'Caixa lacrada original Quimfa'
-    },
-    {
         'id_catalogo': 3136,
-        'nome': 'Tirzedral 60 mg (Tirzepatida Catedral)',
+        'nome': 'Tirzedral 60 mg — Catedral (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
         'qtd': 1,

@@ -1,13 +1,13 @@
 {
-  "atualizado_em": "10/11/2026 às 14:50",
+  "atualizado_em": "10/11/2026 às 16:00",
   "resumo": {
-    "total_investido_reais": 13601.96,
-    "total_pedidos": 4,
-    "total_itens_a_chegar": 26,
-    "faturamento_previsto_pix": 23130.0,
-    "faturamento_previsto_cartao": 25730.0,
-    "lucro_liquido_previsto": 9528.04,
-    "roi_projetado_pct": 70.1
+    "total_investido_reais": 10476.96,
+    "total_pedidos": 3,
+    "total_itens_a_chegar": 21,
+    "faturamento_previsto_pix": 18630.0,
+    "faturamento_previsto_cartao": 20730.0,
+    "lucro_liquido_previsto": 8153.04,
+    "roi_projetado_pct": 77.8
   },
   "pedidos": [
     {
@@ -41,7 +41,8 @@
       "id": "PED-20261109-02",
       "data_compra": "09/11/2026",
       "fornecedor": "Outro Fornecedor",
-      "status": "em_transito",
+      "status": "entregue",
+      "data_entrega": "10/11/2026 às 16:00",
       "custo_total_reais": 3125.0,
       "moeda": "BRL",
       "itens": [
