@@ -155,7 +155,7 @@ ESTOQUE_LOCAL = [
         'nome': 'Catedral Tirzedral 15 mg (Ampola Avulsa)',
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Catedral)',
-        'qtd': 0,
+        'qtd': 4,
         'preco_pix': 250.0,
         'preco_cartao': 300.0,
         'obs': 'Ampola avulsa oficial Catedral'

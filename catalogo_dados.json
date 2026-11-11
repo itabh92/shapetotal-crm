@@ -16050,7 +16050,7 @@
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
       "preco_pix_fixo": 250.0,
       "preco_cartao_fixo": 300.0,
-      "meu_estoque_qtd": 0
+      "meu_estoque_qtd": 4
     }
   ],
   "principales": [
@@ -16294,6 +16294,7 @@
     "9003": 3,
     "9004": 2,
     "9005": 1,
-    "9006": 1
+    "9006": 1,
+    "9007": 4
   }
 }
