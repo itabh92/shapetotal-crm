@@ -84,7 +84,7 @@ COLECOES_CONFIG = {
         'brand_bar_border': '#86efac',
         'brand_bar_text': '#065f46',
         'price_pix_color': '#047857',
-        'garantia_texto': 'Garantia Shape Total: Triplos e duplos agonistas GLP-1/GIP/Glucagon autênticos, termogênicos e lipolíticos formulados para máxima queima de gordura e definição corporal. Pagamento seguro à vista no PIX com margem tabelada ou Cartão de Crédito em até 6x sem juros.'
+        'garantia_texto': 'Garantia Shape Total: Triplos e duplos agonistas GLP-1/GIP/Glucagon autênticos, termogênicos e lipolíticos formulados para máxima queima de gordura e definição corporal. Pagamento seguro à vista no PIX com margem tabelada ou Cartão de Crédito em até 12x sem juros para Tirzepatidas e Retatrutida (demais em até 6x).'
     },
     '2_anabolizantes': {
         'id': '2_anabolizantes',
@@ -230,28 +230,132 @@ def get_product_image(pid, max_w=95, max_h=95):
             pass
     return None
 
+def get_subcategoria_produto(p, col_id):
+    txt = f"{p.get('nombre','')} {p.get('composicion','')} {p.get('categoria','')}".lower()
+    
+    if col_id == '1_emagrecedores':
+        if any(k in txt for k in ['tirzepatid', 'tirzep', 'mounjaro', 'zepbound', 'tg ', 'tg.', 'tirzec', 'lipoless', 'lipoland', 't36', 'gluconex', 'tirzedral', 'slimex', 'tirzegen']):
+            return 'Tirzepatida (Duplo Agonista GLP-1/GIP)'
+        if any(k in txt for k in ['retatrutid', 'retratutid', 'reta ']):
+            return 'Retatrutida (Triplo Agonista GLP-1/GIP/Glucagon)'
+        if any(k in txt for k in ['semaglutid', 'ozempic', 'wegovy', 'rybelsus', 'cangrisema', 'cargrisema', 'delgacil', 'glucox', 'semaglix']):
+            return 'Semaglutida'
+        if any(k in txt for k in ['liraglutid', 'saxenda', 'victoza']):
+            return 'Liraglutida'
+        if any(k in txt for k in ['clembuterol', 'clenbuterol', 'lavizoo', 'pulmonil']):
+            return 'Clembuterol'
+        if any(k in txt for k in ['t3', 'liotironin', 'liothironine', 'thyro3', 'cytomel', 'tiros']):
+            return 'T3 / Hormônios Tireoidianos'
+        return 'Termogênicos, Lipolíticos & Outros'
+        
+    elif col_id == '2_anabolizantes':
+        if any(k in txt for k in ['oximetolon', 'oximetalona', 'hemogenin', 'hemogenim', 'anadrol', 'oxydrolone', 'oxybolic', 'oxyprime', 'drolgenic', 'oxitoland', 'oxymethos', 'oximetol', 'anapolon']):
+            return 'Oximetolona (Hemogenin)'
+        if any(k in txt for k in ['testosteron', 'durateston', 'sustanon', 'sustan', 'enantato de test', 'enanthate', 'cipionato de test', 'cypionate', 'propionato de test', 'propionate', 'undecanoat', 'nebido', 'testoviron', 'testo', 'androgenon', 'giga test', 'testol']):
+            return 'Testosteronas & Durateston'
+        if any(k in txt for k in ['deca', 'nandrolon', 'durabolin']):
+            return 'Deca & Nandrolonas'
+        if any(k in txt for k in ['trembo', 'trenbolon', 'tri-tren', 'parabolan', 'tren']):
+            return 'Trembolonas'
+        if any(k in txt for k in ['masteron', 'drostanolon']):
+            return 'Masteron (Drostanolona)'
+        if any(k in txt for k in ['boldenon', 'equipoise']):
+            return 'Boldenona'
+        if any(k in txt for k in ['oxandrolon', 'anavar']):
+            return 'Oxandrolona'
+        if any(k in txt for k in ['stano', 'stanozolol', 'stanazol', 'winstrol', 'rexogin', 'stromba']):
+            return 'Stanozolol (Winstrol)'
+        if any(k in txt for k in ['diana', 'dianabol', 'd-bol', 'metandienon', 'methandienon', 'metandrostenolon']):
+            return 'Dianabol'
+        if any(k in txt for k in ['primobolan', 'metenolon']):
+            return 'Primobolan'
+        if any(k in txt for k in ['proviron', 'mesterolon']):
+            return 'Proviron'
+        if any(k in txt for k in ['turinabol']):
+            return 'Turinabol'
+        if any(k in txt for k in ['halotestin', 'fluoximesteron']):
+            return 'Halotestin'
+        if any(k in txt for k in ['trestolone', 'trestolona', 'ment 50']):
+            return 'Trestolona (MENT)'
+        if any(k in txt for k in ['mix 1', 'mix 2', 'mix 3', 'mix 4', 'mix 5', 'mix 6', 'anomass', 'lean stack', 'mega mix', 'cycl mix']):
+            return 'Blends & Mixes Anabólicos'
+        if any(k in txt for k in ['sarm', 'rad-140', 'rad 140', 'lgd-4033', 'lgd 4033', 'mk-2866', 'mk 2866', 'ostarine', 'cardarine', 'gw-501516', 'gw 1516', 'yk-11', 's-23', 'hen50']):
+            return 'SARMs'
+        if any(k in txt for k in ['tamoxifeno', 'clomifeno', 'clomid', 'anastrozol', 'letrozol', 'exemestano', 'hcg', 'choragon', 'choriomon', 'ovitrelle', 'finasterid', 'dutasterid', 'tpc', 'post ciclo']):
+            return 'TPC & Protetores'
+        return 'Outros Compostos Anabólicos'
+        
+    elif col_id == '3_hgh_peptideos':
+        if any(k in txt for k in ['somatropin', 'somatrop', 'plextropin', 'spectrus', 'kigtropin', 'genotropin', 'omnitrope', 'hgh', 'pharmatropin']):
+            return 'HGH (Somatropina)'
+        if any(k in txt for k in ['bpc-157', 'bpc 157', 'tb-500', 'tb 500', 'klow', 'glow', 'ultra rehab']):
+            return 'Regeneração & Articulações (BPC-157, TB-500)'
+        if any(k in txt for k in ['cjc', 'ipamorelin', 'ghrp', 'tesamorelin', 'sermorelin', 'mega mass']):
+            return 'Estímulo de GH & Secretagogos (CJC-1295, Ipamorelin, Tesamorelin)'
+        if any(k in txt for k in ['frag', '176-191', 'aod', 'mots', 'slu-pp', 'slupp', 'adipotide', 'double burn', 'super slim']):
+            return 'Queima & Metabolismo (Frag 176, AOD, MOTS-c)'
+        if any(k in txt for k in ['ghk', 'ahk', 'cobre']):
+            return 'Pele, Colágeno & Cabelo (GHK-Cu, AHK-Cu)'
+        if any(k in txt for k in ['epithalon', 'ephitalon', 'nad+', 'nad ', 'ss-31', 'glutathione', 'glutationa']):
+            return 'Longevidade & Mitocôndrias (Epithalon, NAD+, SS-31)'
+        if any(k in txt for k in ['pt-141', 'pt 141', 'melanotan']):
+            return 'Libido & Bronzeamento (PT-141, Melanotan-2)'
+        return 'Outros Peptídeos'
+        
+    elif col_id == '4_estetica':
+        if any(k in txt for k in ['botox', 'dysport', 'botulax', 'meditoxin', 'nabota', 'rentox', 'toxina']):
+            return 'Toxinas Botulínicas (Botox)'
+        if any(k in txt for k in ['acido hialu', 'acid hialu', 'line body', 'line derm', 'bio fill', 'neuramis', 'avalon', 'sofiderm', 'israderm', 'sculptra', 'preenchedor']):
+            return 'Preenchedores & Bioestimuladores'
+        if any(k in txt for k in ['roacutan', 'isotretinoina', 'roas']):
+            return 'Tratamento Anti-Acne (Isotretinoína)'
+        return 'Dermo-Cosméticos, Capilar & Cuidados'
+        
+    else: # 5_saude_mental_suporte
+        if any(k in txt for k in ['tadalafil', 'tadala', 'sildenafil', 'pramil', 'ceebis', 'digram', 'erofast']):
+            return 'Potência & Vigor Sexual (Tadalafila / Sildenafila)'
+        if any(k in txt for k in ['lisdexanfetamina', 'zicartil', 'lispax', 'venvanse', 'modafinil', 'modcop', 'bolixin', 'fluoxetina', 'confium', 'cognil', 'semax', 'selank', 'dsip', 'cbl', 'saude mental']):
+            return 'Saúde Mental, Foco & Nootrópicos'
+        if any(k in txt for k in ['cannabidiol', 'cbd']):
+            return 'Cannabidiol (CBD)'
+        return 'Diluentes, Insumos & Suporte Clínico'
+
 def generate_pdf_for_collection(col_id, prods, cfg):
     pdf_path = os.path.join(BASE_DIR, cfg['pdf_filename'])
     print(f"\n--- Gerando {cfg['nome']} ({len(prods)} SKUs) -> {cfg['pdf_filename']} ---")
     
-    grouped = {}
+    # Agrupa primeiro por Subcategoria Temática (ex: Masteron, Testosterona, Deca)
+    # e dentro de cada Subcategoria agrupa por Marca
+    subcat_groups = {}
     for p in prods:
+        sc = get_subcategoria_produto(p, col_id)
+        p['subcategoria_nome'] = sc
         m = (p.get('marca') or 'SHAPE TOTAL').upper().strip()
-        grouped.setdefault(m, []).append(p)
+        subcat_groups.setdefault(sc, {}).setdefault(m, []).append(p)
         
-    for m in grouped:
-        grouped[m].sort(key=lambda x: (
-            -int(x.get('stock_cde', 0) or 0),
-            x.get('nombre', '')
-        ))
+    for sc in subcat_groups:
+        for m in subcat_groups[sc]:
+            subcat_groups[sc][m].sort(key=lambda x: (
+                -int(x.get('stock_cde', 0) or 0),
+                x.get('nombre', '')
+            ))
 
     styles = getSampleStyleSheet()
+
+    subcat_header_style = ParagraphStyle(
+        f"SubcatH_{col_id}",
+        fontName='Helvetica-Bold',
+        fontSize=13,
+        leading=16,
+        textColor=colors.HexColor('#ffffff'),
+        alignment=TA_LEFT
+    )
     
     brand_header_style = ParagraphStyle(
         f"BrandH_{col_id}",
         fontName='Helvetica-Bold',
-        fontSize=11.5,
-        leading=14.5,
+        fontSize=10.5,
+        leading=13.5,
         textColor=colors.HexColor(cfg['brand_bar_text']),
         alignment=TA_LEFT
     )
@@ -345,86 +449,115 @@ def generate_pdf_for_collection(col_id, prods, cfg):
     story.append(t_notice)
     story.append(Spacer(1, 12))
     
-    sorted_brands = sorted(grouped.keys(), key=lambda b: -len(grouped[b]))
+    sorted_subcats = sorted(subcat_groups.keys(), key=lambda s: -sum(len(subcat_groups[s][m]) for m in subcat_groups[s]))
     
-    for brand in sorted_brands:
-        b_prods = grouped[brand]
-        if not b_prods:
+    for subcat in sorted_subcats:
+        brands_in_subcat = subcat_groups[subcat]
+        total_sub_items = sum(len(brands_in_subcat[b]) for b in brands_in_subcat)
+        if total_sub_items == 0:
             continue
             
-        b_bar = Table([[
-            Paragraph(f"<b>🏷️ {brand}</b> ({len(b_prods)} itens)", brand_header_style)
-        ]], colWidths=[543])
-        b_bar.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,-1), colors.HexColor(cfg['brand_bar_bg'])),
-            ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor(cfg['brand_bar_border'])),
-            ('TOPPADDING', (0,0), (-1,-1), 5),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+        # Barra da Subcategoria Principal (Ex: MASTERON, TESTOSTERONAS, DECA)
+        t_subcat = Table([[
+            Paragraph(f"<b>📌 GRUPO: {subcat.upper()}</b>", subcat_header_style),
+            Paragraph(f"<b>{total_sub_items} ITENS</b>", ParagraphStyle('SubR', fontName='Helvetica-Bold', fontSize=10, leading=13, textColor=colors.HexColor('#ffffff'), alignment=TA_RIGHT))
+        ]], colWidths=[400, 143])
+        t_subcat.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,-1), colors.HexColor(cfg['topbar_bg'])),
+            ('TOPPADDING', (0,0), (-1,-1), 7),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 7),
             ('LEFTPADDING', (0,0), (-1,-1), 10),
+            ('RIGHTPADDING', (0,0), (-1,-1), 10),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ]))
+        story.append(t_subcat)
+        story.append(Spacer(1, 6))
         
-        brand_flow = [b_bar, Spacer(1, 5)]
+        sorted_brands = sorted(brands_in_subcat.keys(), key=lambda b: -len(brands_in_subcat[b]))
         
-        for p in b_prods:
-            pix, cartao, is_fixed = get_product_prices(p, col_id)
-            parc = round(cartao / 6, 2)
-            
-            nome = p.get('nombre') or 'Produto sem nome'
-            comp = (p.get('composicion') or '').strip()
-            pres = (p.get('presentacion') or '').strip()
-            mg = (p.get('mg') or '').strip()
-            cat_display = (p.get('categoria') or '').upper().strip()
-            
-            sub_parts = []
-            if comp: sub_parts.append(f"<b>Princípio:</b> {comp.upper()}")
-            if pres: sub_parts.append(f"<b>Formato:</b> {pres.upper()}")
-            if mg: sub_parts.append(f"<b>Dose:</b> {mg.upper()}")
-            sub_parts.append(f"<b>Linha:</b> {cat_display}")
-            sub_text = " • ".join(sub_parts)
-            
-            stock_cde = int(p.get('stock_cde', 0) or 0)
-            stock_badge = f"<font color='{cfg['price_pix_color']}'><b>● DISPONÍVEL</b></font>" if stock_cde > 0 else "<font color='#64748b'>● SOB ENCOMENDA</font>"
-            fixed_tag = " &nbsp;|&nbsp; <font color='#047857'><b>VALOR FIXO OFICIAL</b></font>" if is_fixed else ""
-            
-            details_cell = [
-                Paragraph(f"<b>{nome}</b>", prod_name_style),
-                Spacer(1, 3),
-                Paragraph(sub_text, prod_sub_style),
-                Spacer(1, 2),
-                Paragraph(f"{stock_badge}{fixed_tag} &nbsp;|&nbsp; <font color='#0f172a'>Cód #{p.get('id')}</font>", prod_sub_style)
-            ]
-            
-            price_cell = [
-                Paragraph(f"<font size='7' color='{cfg['price_pix_color']}'>À VISTA NO PIX</font><br/><b>R$ {pix:,d}</b>".replace(',', '.'), price_pix_style),
-                Spacer(1, 2),
-                Paragraph(f"<font size='6.5' color='#4338ca'>NO CARTÃO</font><br/><b>R$ {cartao:,d}</b>".replace(',', '.'), price_cartao_style),
-                Paragraph(f"em até 6x de R$ {parc:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'), price_parc_style)
-            ]
-            
-            img_element = get_product_image(p.get('id'), max_w=85, max_h=85)
-            if not img_element:
-                img_element = Paragraph("<font size='8' color='#94a3b8'>[Foto Oficial<br/>Shape Total]</font>", ParagraphStyle('NoImg', alignment=TA_CENTER))
+        for brand in sorted_brands:
+            b_prods = brands_in_subcat[brand]
+            if not b_prods:
+                continue
                 
-            row_data = [
-                [img_element, details_cell, price_cell]
-            ]
-            
-            t_prod = Table(row_data, colWidths=[90, 310, 143])
-            t_prod.setStyle(TableStyle([
-                ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-                ('ALIGN', (0,0), (0,0), 'CENTER'),
-                ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#ffffff')),
-                ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#e2e8f0')),
+            b_bar = Table([[
+                Paragraph(f"<b>🏷️ Marca: {brand}</b> ({len(b_prods)} opç{'ões' if len(b_prods) > 1 else 'ão'})", brand_header_style)
+            ]], colWidths=[543])
+            b_bar.setStyle(TableStyle([
+                ('BACKGROUND', (0,0), (-1,-1), colors.HexColor(cfg['brand_bar_bg'])),
+                ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor(cfg['brand_bar_border'])),
                 ('TOPPADDING', (0,0), (-1,-1), 4),
                 ('BOTTOMPADDING', (0,0), (-1,-1), 4),
-                ('LEFTPADDING', (0,0), (-1,-1), 6),
-                ('RIGHTPADDING', (0,0), (-1,-1), 6),
+                ('LEFTPADDING', (0,0), (-1,-1), 10),
             ]))
             
-            brand_flow.append(t_prod)
-            brand_flow.append(Spacer(1, 4))
+            brand_flow = [b_bar, Spacer(1, 4)]
             
-        story.extend(brand_flow)
+            for p in b_prods:
+                pix, cartao, is_fixed = get_product_prices(p, col_id)
+                is_12x = ('tirzepatid' in p.get('nombre', '').lower() or 'retatrutid' in p.get('nombre', '').lower() or p.get('id') in SPECIAL_FIXED)
+                num_parc = 12 if is_12x else 6
+                parc = round(cartao / num_parc, 2)
+                
+                nome = p.get('nombre') or 'Produto sem nome'
+                comp = (p.get('composicion') or '').strip()
+                pres = (p.get('presentacion') or '').strip()
+                mg = (p.get('mg') or '').strip()
+                cat_display = (p.get('categoria') or '').upper().strip()
+                
+                sub_parts = []
+                if comp: sub_parts.append(f"<b>Princípio:</b> {comp.upper()}")
+                if pres: sub_parts.append(f"<b>Formato:</b> {pres.upper()}")
+                if mg: sub_parts.append(f"<b>Dose:</b> {mg.upper()}")
+                sub_parts.append(f"<b>Subgrupo:</b> {subcat}")
+                sub_text = " • ".join(sub_parts)
+                
+                stock_cde = int(p.get('stock_cde', 0) or 0)
+                stock_badge = f"<font color='{cfg['price_pix_color']}'><b>● DISPONÍVEL</b></font>" if stock_cde > 0 else "<font color='#64748b'>● SOB ENCOMENDA</font>"
+                fixed_tag = " &nbsp;|&nbsp; <font color='#047857'><b>VALOR FIXO OFICIAL</b></font>" if is_fixed else ""
+                
+                details_cell = [
+                    Paragraph(f"<b>{nome}</b>", prod_name_style),
+                    Spacer(1, 3),
+                    Paragraph(sub_text, prod_sub_style),
+                    Spacer(1, 2),
+                    Paragraph(f"{stock_badge}{fixed_tag} &nbsp;|&nbsp; <font color='#0f172a'>Cód #{p.get('id')}</font>", prod_sub_style)
+                ]
+                
+                parcelas_texto = f"em até {num_parc}x de R$ {parc:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.') + (" s/ juros" if num_parc == 12 else "")
+                price_cell = [
+                    Paragraph(f"<font size='7' color='{cfg['price_pix_color']}'>À VISTA NO PIX</font><br/><b>R$ {pix:,d}</b>".replace(',', '.'), price_pix_style),
+                    Spacer(1, 2),
+                    Paragraph(f"<font size='6.5' color='#4338ca'>NO CARTÃO</font><br/><b>R$ {cartao:,d}</b>".replace(',', '.'), price_cartao_style),
+                    Paragraph(parcelas_texto, price_parc_style)
+                ]
+                
+                img_element = get_product_image(p.get('id'), max_w=85, max_h=85)
+                if not img_element:
+                    img_element = Paragraph("<font size='8' color='#94a3b8'>[Foto Oficial<br/>Shape Total]</font>", ParagraphStyle('NoImg', alignment=TA_CENTER))
+                    
+                row_data = [
+                    [img_element, details_cell, price_cell]
+                ]
+                
+                t_prod = Table(row_data, colWidths=[90, 310, 143])
+                t_prod.setStyle(TableStyle([
+                    ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+                    ('ALIGN', (0,0), (0,0), 'CENTER'),
+                    ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#ffffff')),
+                    ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#e2e8f0')),
+                    ('TOPPADDING', (0,0), (-1,-1), 4),
+                    ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+                    ('LEFTPADDING', (0,0), (-1,-1), 6),
+                    ('RIGHTPADDING', (0,0), (-1,-1), 6),
+                ]))
+                
+                brand_flow.append(t_prod)
+                brand_flow.append(Spacer(1, 4))
+                
+            story.extend(brand_flow)
+            story.append(Spacer(1, 6))
+            
         story.append(Spacer(1, 8))
         
     doc.build(story)
