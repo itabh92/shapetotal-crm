@@ -16031,6 +16031,26 @@
       "preco_pix_fixo": 1800.0,
       "preco_cartao_fixo": 2000.0,
       "meu_estoque_qtd": 1
+    },
+    {
+      "id": 9007,
+      "nombre": "CATEDRAL TIRZEDRAL X 15 MG (AMPOLA AVULSA)",
+      "marca": "catedral",
+      "composicion": "tirzepatida 15 mg",
+      "categoria": "emagrecedores",
+      "presentacion": "ampola liofilizada avulsa 15 mg",
+      "qty": "1 amp",
+      "mg": "15 mg",
+      "precio": 22,
+      "stock_cde": 100,
+      "stock_pj": 10,
+      "stock_sg": 10,
+      "foto": "/fotos/producto-9007.jpg",
+      "colecao_id": "1_emagrecedores",
+      "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
+      "preco_pix_fixo": 250.0,
+      "preco_cartao_fixo": 300.0,
+      "meu_estoque_qtd": 0
     }
   ],
   "principales": [

@@ -44,6 +44,7 @@
     9002: { rec: 250, cartao: 300, label: 'Tirzec 15mg (Ampola Avulsa)' },
     9003: { rec: 250, cartao: 300, label: 'TG 15mg (Ampola Avulsa)' },
     9004: { rec: 250, cartao: 300, label: 'Lipoless 15mg (Ampola Avulsa)' },
+    9007: { rec: 250, cartao: 300, label: 'Tirzedral 15mg (Ampola Avulsa)' },
     9005: { rec: 2000, cartao: 2200, label: 'Retatrutida Gen 120mg (Doses)' },
     9006: { rec: 1800, cartao: 2000, label: 'Tirzepatida Gen-Tirz 120mg (Doses)' }
   };
@@ -60,6 +61,7 @@
     9002: 3, // Ampola avulsa Tirzec 15mg
     9003: 3, // Ampola avulsa TG 15mg
     9004: 2, // Ampola avulsa Lipoless 15mg
+    9007: 0, // Ampola avulsa Catedral Tirzedral 15mg
     9005: 1, // Retatrutida 120mg frasco doses
     9006: 1  // Tirzepatida 120mg frasco doses
   };
@@ -275,12 +277,12 @@
     // Semeia o estoque físico de BH na primeira carga do aparelho
     if (!temEstoqueSalvo || !state.meuEstoque || typeof state.meuEstoque !== 'object') {
       state.meuEstoque = JSON.parse(JSON.stringify(ESTOQUE_CANONICO_BH));
-      state._bhStockSyncKey = 'SYNC_BH_ESTOQUE_20261111_TG_V2';
+      state._bhStockSyncKey = 'SYNC_BH_ESTOQUE_20261111_TIRZEDRAL_V3';
       changed = true;
     } else {
       // Auto-migração inteligente: aparelhos com localStorage prévio recebem automaticamente
-      // os novos SKUs canônicos de BH (como a Ampola Avulsa de TG 9003 e Tirzec 60mg Única 2996)
-      const SYNC_KEY = 'SYNC_BH_ESTOQUE_20261111_TG_V2';
+      // os novos SKUs canônicos de BH (TG 9003, Tirzec 60mg Única 2996, Tirzedral Avulsa 9007)
+      const SYNC_KEY = 'SYNC_BH_ESTOQUE_20261111_TIRZEDRAL_V3';
       if (state._bhStockSyncKey !== SYNC_KEY) {
         // Injeta ou garante TG 15mg avulsa (9003) com 3 un se ausente ou zerado
         if (!state.meuEstoque[9003] || Number(state.meuEstoque[9003]) <= 0) {
@@ -290,6 +292,11 @@
         // Injeta ou garante Tirzec 60mg ampola única (2996) com 2 un se ausente ou zerado
         if (!state.meuEstoque[2996] || Number(state.meuEstoque[2996]) <= 0) {
           state.meuEstoque[2996] = ESTOQUE_CANONICO_BH[2996] || 2;
+          changed = true;
+        }
+        // Injeta ou garante Tirzedral 15mg avulsa (9007) no mapa se ausente
+        if (state.meuEstoque[9007] === undefined) {
+          state.meuEstoque[9007] = 0;
           changed = true;
         }
         // Atualiza caixas recebidas recentemente se o aparelho estiver com saldo defasado
@@ -694,6 +701,8 @@
     'tirzec': ['tirzec', 'quimfa'],
     'lipoless': ['lipoless', 'eticos'],
     'lipoland': ['lipoland', 'landerlan'],
+    'tirzedral': ['tirzedral', 'catedral', 't36'],
+    'catedral': ['catedral', 'tirzedral', 't36'],
     'ozempic': ['ozempic', 'semaglutida', 'semaglutide', 'wegovy'],
     'wegovy': ['ozempic', 'semaglutida', 'semaglutide', 'wegovy'],
     'semaglutida': ['ozempic', 'semaglutida', 'semaglutide'],

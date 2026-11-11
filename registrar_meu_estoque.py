@@ -150,6 +150,16 @@ ESTOQUE_LOCAL = [
         'preco_cartao': 300.0,
         'obs': 'Ampola avulsa oficial Eticos Labs'
     },
+    {
+        'id_catalogo': 9007,
+        'nome': 'Catedral Tirzedral 15 mg (Ampola Avulsa)',
+        'tipo': 'ampola_avulsa',
+        'apresentacao': '1 ampola liofilizada de 15 mg (Catedral)',
+        'qtd': 0,
+        'preco_pix': 250.0,
+        'preco_cartao': 300.0,
+        'obs': 'Ampola avulsa oficial Catedral'
+    },
 
     # -------------------------------------------------------------
     # 4. FRASCOS ABERTOS PARA FRACIONAMENTO DE DOSES
