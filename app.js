@@ -641,6 +641,12 @@
     'clenbuterol': ['clembu', 'clembuterol', 'clenbuterol'],
     'mounjaro': ['mounjaro', 'tirzepatida', 'tirzepatide', 'tirzec', 'lipoless', 'lipoland'],
     'tirzepatida': ['mounjaro', 'tirzepatida', 'tirzepatide', 'tirzec', 'lipoless'],
+    'tg': ['tg', 't.g', 't.g.', 'indufar'],
+    't.g': ['tg', 't.g', 't.g.', 'indufar'],
+    't.g.': ['tg', 't.g', 't.g.', 'indufar'],
+    'tirzec': ['tirzec', 'quimfa'],
+    'lipoless': ['lipoless', 'eticos'],
+    'lipoland': ['lipoland', 'landerlan'],
     'ozempic': ['ozempic', 'semaglutida', 'semaglutide', 'wegovy'],
     'wegovy': ['ozempic', 'semaglutida', 'semaglutide', 'wegovy'],
     'semaglutida': ['ozempic', 'semaglutida', 'semaglutide'],
@@ -690,7 +696,10 @@
       }
 
       if (q) {
-        const hay = `${p.id} shape-${p.id} ${p.nombre || ''} ${p.marca || ''} ${p.composicion || ''} ${p.categoria || ''} ${p.desc || ''}`.toLowerCase();
+        const rawHay = `${p.id} shape-${p.id} ${p.nombre || ''} ${p.marca || ''} ${p.composicion || ''} ${p.categoria || ''} ${p.desc || ''}`.toLowerCase();
+        // Normaliza removendo pontos entre siglas curtas para casar tanto "TG" quanto "T.G."
+        const cleanHay = rawHay.replace(/t\.g\./g, 'tg').replace(/t\.g\b/g, 'tg');
+        const hay = `${rawHay} ${cleanHay}`;
         const tokens = q.split(/\s+/).filter(Boolean);
         for (const t of tokens) {
           const syns = GYM_SYNONYMS[t] || [t];
