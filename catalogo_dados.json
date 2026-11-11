@@ -5794,7 +5794,7 @@
       "foto": "/fotos/producto-2848.jpg",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
-      "meu_estoque_qtd": 6
+      "meu_estoque_qtd": 1
     },
     {
       "id": 2810,
@@ -7648,7 +7648,7 @@
       "foto": "/fotos/producto-2889.jpg",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
-      "meu_estoque_qtd": 4
+      "meu_estoque_qtd": 3
     },
     {
       "id": 2857,
@@ -15910,7 +15910,7 @@
       "foto": "/fotos/producto-3136.jpg",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
-      "meu_estoque_qtd": 1
+      "meu_estoque_qtd": 0
     },
     {
       "id": 9001,
@@ -16050,7 +16050,7 @@
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)",
       "preco_pix_fixo": 250.0,
       "preco_cartao_fixo": 300.0,
-      "meu_estoque_qtd": 4
+      "meu_estoque_qtd": 3
     }
   ],
   "principales": [
@@ -16273,28 +16273,28 @@
   ],
   "actualizado": "2026-11-07T13:19:50.824Z",
   "meu_estoque_resumo": {
-    "caixas_fechadas_60mg": 15,
+    "caixas_fechadas_60mg": 8,
     "ampolas_retatrutida_60mg": 7,
-    "ampolas_avulsas_15mg": 11,
+    "ampolas_avulsas_15mg": 14,
     "frascos_doses_120mg": 2,
     "total_itens_contabilizados": 13,
-    "faturamento_potencial_pix": 26850.0,
-    "faturamento_potencial_cartao": 30000.0
+    "faturamento_potencial_pix": 21300.0,
+    "faturamento_potencial_cartao": 23900.0
   },
   "meu_estoque_qtds": {
-    "2848": 6,
-    "2996": 2,
+    "2848": 1,
+    "2889": 3,
     "3207": 2,
-    "2889": 4,
-    "3136": 1,
+    "2996": 2,
+    "3136": 0,
     "3370": 1,
     "2830": 3,
     "9001": 3,
     "9002": 3,
     "9003": 3,
     "9004": 2,
+    "9007": 3,
     "9005": 1,
-    "9006": 1,
-    "9007": 4
+    "9006": 1
   }
 }

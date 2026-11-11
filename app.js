@@ -50,18 +50,18 @@
   };
 
   const ESTOQUE_CANONICO_BH = {
-    2848: 6, // TG 60mg (Caixa 4x15mg) — 4 originais + 2 recebidas hoje
-    2889: 4, // Lipoless 60mg (Caixa 4x15mg)
-    3207: 2, // Tirzec 60mg (Caixa 4x15mg) — 1 original + 1 recebida hoje
-    2996: 2, // Quimfa Tirzec Multi Dosis 60mg (Ampola Única) — 2 recebidas hoje
-    3136: 1, // Tirzedral 60mg (Caixa 4x15mg)
+    2848: 1, // TG 60mg (Caixa 4x15mg) — conferido 11/11
+    2889: 3, // Lipoless 60mg (Caixa 4x15mg) — conferido 11/11
+    3207: 2, // Tirzec 60mg (Caixa 4x15mg) — conferido 11/11
+    2996: 2, // Quimfa Tirzec Multi Dosis 60mg (Ampola Única)
+    3136: 0, // Tirzedral 60mg (Caixa 4x15mg) — aberta para ampolas avulsas
     3370: 1, // Kit Retatrutida 4x60mg + Água
     2830: 3, // Retatrutida 60mg ampolas fechadas
     9001: 3, // Ampola avulsa Lipoland 15mg
     9002: 3, // Ampola avulsa Tirzec 15mg
     9003: 3, // Ampola avulsa TG 15mg
     9004: 2, // Ampola avulsa Lipoless 15mg
-    9007: 4, // Ampola avulsa Catedral Tirzedral 15mg (4 ampolas de 15mg)
+    9007: 3, // Ampola avulsa Catedral Tirzedral 15mg — conferido 11/11 (3 un)
     9005: 1, // Retatrutida 120mg frasco doses
     9006: 1  // Tirzepatida 120mg frasco doses
   };
@@ -277,44 +277,14 @@
     // Semeia o estoque físico de BH na primeira carga do aparelho
     if (!temEstoqueSalvo || !state.meuEstoque || typeof state.meuEstoque !== 'object') {
       state.meuEstoque = JSON.parse(JSON.stringify(ESTOQUE_CANONICO_BH));
-      state._bhStockSyncKey = 'SYNC_BH_ESTOQUE_20261111_TIRZEDRAL_4UN_V4';
+      state._bhStockSyncKey = 'SYNC_BH_ESTOQUE_20261111_INVENTARIO_CONFIRMADO_V5';
       changed = true;
     } else {
-      // Auto-migração inteligente: aparelhos com localStorage prévio recebem automaticamente
-      // os novos SKUs canônicos de BH (TG 9003, Tirzec 60mg Única 2996, Tirzedral Avulsa 9007 com 4 un)
-      const SYNC_KEY = 'SYNC_BH_ESTOQUE_20261111_TIRZEDRAL_4UN_V4';
+      // Sincronização do inventário físico conferido por Italo em 11/11:
+      // (1 TG 4x15, 3 Lipoless 4x15, 2 Tirzec 4x15, 3 Tirzedral avulsas, 0 Tirzedral cx fechada)
+      const SYNC_KEY = 'SYNC_BH_ESTOQUE_20261111_INVENTARIO_CONFIRMADO_V5';
       if (state._bhStockSyncKey !== SYNC_KEY) {
-        // Injeta ou garante TG 15mg avulsa (9003) com 3 un se ausente ou zerado
-        if (!state.meuEstoque[9003] || Number(state.meuEstoque[9003]) <= 0) {
-          state.meuEstoque[9003] = ESTOQUE_CANONICO_BH[9003] || 3;
-          changed = true;
-        }
-        // Injeta ou garante Tirzec 60mg ampola única (2996) com 2 un se ausente ou zerado
-        if (!state.meuEstoque[2996] || Number(state.meuEstoque[2996]) <= 0) {
-          state.meuEstoque[2996] = ESTOQUE_CANONICO_BH[2996] || 2;
-          changed = true;
-        }
-        // Injeta ou garante Tirzedral 15mg avulsa (9007) com 4 un
-        if (!state.meuEstoque[9007] || Number(state.meuEstoque[9007]) <= 0) {
-          state.meuEstoque[9007] = 4;
-          changed = true;
-        }
-        // Atualiza caixas recebidas recentemente se o aparelho estiver com saldo defasado
-        if (Number(state.meuEstoque[2848] || 0) < ESTOQUE_CANONICO_BH[2848]) {
-          state.meuEstoque[2848] = ESTOQUE_CANONICO_BH[2848];
-          changed = true;
-        }
-        if (Number(state.meuEstoque[3207] || 0) < ESTOQUE_CANONICO_BH[3207]) {
-          state.meuEstoque[3207] = ESTOQUE_CANONICO_BH[3207];
-          changed = true;
-        }
-        // Garante que nenhum SKU canônico de pronta entrega BH fique faltando
-        Object.keys(ESTOQUE_CANONICO_BH).forEach(k => {
-          if (state.meuEstoque[k] === undefined) {
-            state.meuEstoque[k] = ESTOQUE_CANONICO_BH[k];
-            changed = true;
-          }
-        });
+        state.meuEstoque = JSON.parse(JSON.stringify(ESTOQUE_CANONICO_BH));
         state._bhStockSyncKey = SYNC_KEY;
         changed = true;
       }

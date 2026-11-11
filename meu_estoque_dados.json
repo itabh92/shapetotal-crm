@@ -1,15 +1,15 @@
 {
-  "atualizado_em": "11/11/2026 às 10:56",
+  "atualizado_em": "11/11/2026 às 12:15",
   "responsavel": "Italo Souza",
   "local": "Belo Horizonte / MG (Pronta Entrega)",
   "resumo": {
-    "caixas_fechadas_60mg": 15,
+    "caixas_fechadas_60mg": 8,
     "ampolas_retatrutida_60mg": 7,
-    "ampolas_avulsas_15mg": 11,
+    "ampolas_avulsas_15mg": 14,
     "frascos_doses_120mg": 2,
     "total_itens_contabilizados": 13,
-    "faturamento_potencial_pix": 26850.0,
-    "faturamento_potencial_cartao": 30000.0
+    "faturamento_potencial_pix": 21300.0,
+    "faturamento_potencial_cartao": 23900.0
   },
   "itens": [
     {
@@ -17,7 +17,7 @@
       "nome": "TG 60 mg — Indufar (4x15 mg)",
       "tipo": "caixa_fechada",
       "apresentacao": "Caixa com 4 ampolas de 15 mg (60 mg total)",
-      "qtd": 6,
+      "qtd": 1,
       "preco_pix": 900.0,
       "preco_cartao": 1000.0,
       "obs": "Caixa lacrada original Indufar (+2 caixas recebidas hoje 10/11)"
@@ -47,7 +47,7 @@
       "nome": "Lipoless 60 mg — Eticos (4x15 mg)",
       "tipo": "caixa_fechada",
       "apresentacao": "Caixa com 4 ampolas de 15 mg (60 mg total)",
-      "qtd": 4,
+      "qtd": 3,
       "preco_pix": 900.0,
       "preco_cartao": 1000.0,
       "obs": "Caixa lacrada original Eticos Labs"
@@ -57,7 +57,7 @@
       "nome": "Tirzedral 60 mg — Catedral (4x15 mg)",
       "tipo": "caixa_fechada",
       "apresentacao": "Caixa com 4 ampolas de 15 mg (60 mg total)",
-      "qtd": 1,
+      "qtd": 0,
       "preco_pix": 900.0,
       "preco_cartao": 1000.0,
       "obs": "Caixa lacrada original Catedral"
@@ -127,7 +127,7 @@
       "nome": "Catedral Tirzedral 15 mg (Ampola Avulsa)",
       "tipo": "ampola_avulsa",
       "apresentacao": "1 ampola liofilizada de 15 mg (Catedral)",
-      "qtd": 4,
+      "qtd": 3,
       "preco_pix": 250.0,
       "preco_cartao": 300.0,
       "obs": "Ampola avulsa oficial Catedral"

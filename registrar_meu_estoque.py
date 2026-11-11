@@ -37,10 +37,10 @@ ESTOQUE_LOCAL = [
         'nome': 'TG 60 mg — Indufar (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 6,
+        'qtd': 1,
         'preco_pix': 900.0,
         'preco_cartao': 1000.0,
-        'obs': 'Caixa lacrada original Indufar (+2 caixas recebidas hoje 10/11)'
+        'obs': 'Caixa lacrada original Indufar'
     },
     {
         'id_catalogo': 2996,
@@ -60,14 +60,14 @@ ESTOQUE_LOCAL = [
         'qtd': 2,
         'preco_pix': 900.0,
         'preco_cartao': 1000.0,
-        'obs': 'Caixa lacrada original Quimfa (+1 caixa recebida hoje 10/11)'
+        'obs': 'Caixa lacrada original Quimfa'
     },
     {
         'id_catalogo': 2889,
         'nome': 'Lipoless 60 mg — Eticos (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 4,
+        'qtd': 3,
         'preco_pix': 900.0,
         'preco_cartao': 1000.0,
         'obs': 'Caixa lacrada original Eticos Labs'
@@ -77,10 +77,10 @@ ESTOQUE_LOCAL = [
         'nome': 'Tirzedral 60 mg — Catedral (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 1,
+        'qtd': 0,
         'preco_pix': 900.0,
         'preco_cartao': 1000.0,
-        'obs': 'Caixa lacrada original Catedral'
+        'obs': 'Caixa aberta para venda em ampolas avulsas'
     },
 
     # -------------------------------------------------------------
@@ -155,7 +155,7 @@ ESTOQUE_LOCAL = [
         'nome': 'Catedral Tirzedral 15 mg (Ampola Avulsa)',
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Catedral)',
-        'qtd': 4,
+        'qtd': 3,
         'preco_pix': 250.0,
         'preco_cartao': 300.0,
         'obs': 'Ampola avulsa oficial Catedral'
