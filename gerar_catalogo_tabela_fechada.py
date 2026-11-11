@@ -345,7 +345,7 @@ def main():
     
     # Banner de Garantia e Condições
     notice_data = [[
-        Paragraph("<b>Garantia Shape Total:</b> Produtos 100% originais com lacre e autenticidade. Linha 60 mg com duração de até 6 meses de tratamento. Pagamento seguro à vista no PIX com super desconto ou no Cartão de Crédito em até 6x sem juros.", ParagraphStyle('N1', fontName='Helvetica', fontSize=8.5, leading=12, textColor=colors.HexColor('#1e293b')))
+        Paragraph("<b>Garantia Shape Total:</b> Produtos 100% originais com lacre e autenticidade. Linha 60 mg com duração de até 6 meses de tratamento. Pagamento seguro à vista no PIX com super desconto ou no Cartão de Crédito em até 12x sem juros.", ParagraphStyle('N1', fontName='Helvetica', fontSize=8.5, leading=12, textColor=colors.HexColor('#1e293b')))
     ]]
     t_notice = Table(notice_data, colWidths=[543])
     t_notice.setStyle(TableStyle([
@@ -379,7 +379,7 @@ def main():
         for p in sec['produtos']:
             pix = p['pix']
             cartao = p['cartao']
-            parc = round(cartao / 6, 2)
+            parc = round(cartao / 12, 2)
             
             nome = p['nome']
             marca = p['marca']
@@ -410,7 +410,7 @@ def main():
                 Paragraph(f"<font size='7' color='#047857'>À VISTA NO PIX</font><br/><b>{str_pix}</b>", price_pix_style),
                 Spacer(1, 2),
                 Paragraph(f"<font size='7' color='#4338ca'>NO CARTÃO</font><br/><b>{str_cartao}</b>", price_cartao_style),
-                Paragraph(f"em até 6x de {str_parc} s/ juros", price_parc_style)
+                Paragraph(f"em até 12x de {str_parc} s/ juros", price_parc_style)
             ]
             
             img_element = get_product_image(p['id_foto'], max_w=85, max_h=85)

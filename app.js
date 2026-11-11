@@ -600,6 +600,18 @@
     return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
+  function isGlpProduct(p) {
+    if (!p) return false;
+    if (SPECIAL_FIXED_REC[p.id]) return true;
+    const txt = `${p.nombre || ''} ${p.composicion || ''} ${p.desc || ''}`.toLowerCase();
+    return (
+      txt.includes('tirzepatid') || txt.includes('tirz') || txt.includes('retatrutid') ||
+      txt.includes('mounjaro') || txt.includes('tirzec') || txt.includes('lipoless') ||
+      txt.includes('lipoland') || txt.includes('t36') || txt.includes('gluconex') ||
+      txt.includes('tirzedral') || txt.includes('slimex') || txt.includes('tirzegen')
+    );
+  }
+
   const GYM_SYNONYMS = {
     'dura': ['dura', 'durateston', 'sustanon', 'sustan', 'testoviron'],
     'durateston': ['dura', 'durateston', 'sustanon', 'sustan'],
@@ -940,7 +952,7 @@
               <div class="p-price-hero">
                 <div>
                   <div class="final-label">Preço Final PIX ${p.hasCustom ? '✏️' : ''}</div>
-                  <div class="card-val">Cartão: ${formatBRLInt(p.precoCartao)}</div>
+                  <div class="card-val">Cartão: ${formatBRLInt(p.precoCartao)} <span style="font-size:10px; color:#38bdf8; font-weight:700;">(${isGlpProduct(p) ? 'em até 12x s/ juros' : 'em até 6x'})</span></div>
                 </div>
                 <div style="text-align:right">
                   <div class="final-val">${formatBRLInt(p.precoFinal)}</div>
@@ -1393,7 +1405,7 @@
       if (!raw) return;
       const p = computeProduct(raw);
       const pay = document.getElementById('salePayment').value;
-      const isCartao = pay === 'cartao_6x';
+      const isCartao = pay === 'cartao_parcelado' || pay === 'cartao_6x';
 
       if (mode === 'frasco_inteiro') {
         document.getElementById('saleIsDose').value = '0';
@@ -1403,7 +1415,7 @@
         document.getElementById('saleUnitPrice').value = unitVal;
         document.getElementById('saleTotalValue').value = unitVal;
         document.getElementById('saleQty').value = 1;
-        document.getElementById('salePriceHint').textContent = `Frasco Fechado 120mg (${isCartao ? 'Cartão' : 'PIX'}): ${formatBRL(unitVal)}`;
+        document.getElementById('salePriceHint').textContent = `Frasco Fechado 120mg (${isCartao ? (isGlpProduct(p) ? 'Cartão até 12x s/ juros' : 'Cartão até 6x') : 'PIX'}): ${formatBRL(unitVal)}`;
       } else if (mode === 'custom') {
         document.getElementById('saleIsDose').value = '1';
         document.getElementById('saleDoseCustomContainer').style.display = 'grid';
@@ -1541,14 +1553,16 @@
         return;
       }
 
+      const isCartao = pay === 'cartao_parcelado' || pay === 'cartao_6x';
       let unitPrice = p.precoFinal;
-      if (pay === 'cartao_6x') {
+      if (isCartao) {
         unitPrice = p.precoCartao;
       }
       const total = unitPrice * qty;
       document.getElementById('saleUnitPrice').value = unitPrice;
       document.getElementById('saleTotalValue').value = total;
-      document.getElementById('salePriceHint').textContent = `Sugestão (${pay === 'cartao_6x' ? 'Cartão' : 'PIX'}): ${formatBRL(unitPrice)} cada un × ${qty} = ${formatBRL(total)}`;
+      const parcelasTxt = isGlpProduct(p) ? 'até 12x s/ juros' : 'até 6x';
+      document.getElementById('salePriceHint').textContent = `Sugestão (${isCartao ? `Cartão ${parcelasTxt}` : 'PIX'}): ${formatBRL(unitPrice)} cada un × ${qty} = ${formatBRL(total)}`;
     },
 
     onSaleUnitPriceChange() {
@@ -1595,9 +1609,11 @@
       const unitVal = unitRaw !== '' && isFinite(Number(unitRaw)) ? Number(unitRaw) : p.precoFinal;
       const totalVal = totalRaw !== '' && isFinite(Number(totalRaw)) ? Number(totalRaw) : (unitVal * qty);
       const pay = document.getElementById('salePayment').value;
+      const isGlp = isGlpProduct(p);
       const payLabelMap = {
         'pix': '💠 À vista no PIX',
-        'cartao_6x': '💳 Cartão de Crédito (até 6x)',
+        'cartao_parcelado': isGlp ? '💳 Cartão de Crédito (até 12x s/ juros)' : '💳 Cartão de Crédito (até 6x s/ juros)',
+        'cartao_6x': isGlp ? '💳 Cartão de Crédito (até 12x s/ juros)' : '💳 Cartão de Crédito (até 6x)',
         'cartao_debito': '💳 Cartão Débito',
         'dinheiro': '💵 Dinheiro em Espécie'
       };
@@ -2183,9 +2199,10 @@
           ];
           inStock.forEach(p => {
             const qtd = (state.meuEstoque || {})[p.id];
+            const parcelasMsg = isGlpProduct(p) ? 'em até 12x s/ juros' : 'em até 6x s/ juros';
             lines.push(`• *${p.nombre}* (${qtd}x un em mãos)`);
             lines.push(`  💠 *À vista no PIX: ${formatBRLInt(p.precoFinal)}*`);
-            lines.push(`  💳 *No Cartão: ${formatBRLInt(p.precoCartao)}* (em até 6x s/ juros)`);
+            lines.push(`  💳 *No Cartão: ${formatBRLInt(p.precoCartao)}* (${parcelasMsg})`);
             lines.push(``);
           });
           lines.push(`🚀 Entrega expressa para Belo Horizonte e região.`);
@@ -2230,16 +2247,16 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 •  T36 MD (multidose)
 •  Gluconex (4 vias)
 💠 Pix: R$ 900,00
-💳 Cartão: R$ 1.000,00 em até 6x sem juros
+💳 Cartão: R$ 1.000,00 em até 12x sem juros
 
 🧬 Retatrutida 60 mg
 💠 Pix: R$ 1.000,00
-💳 Cartão: R$ 1.100,00 em até 6x sem juros
+💳 Cartão: R$ 1.100,00 em até 12x sem juros
 
 💉 Ampolas avulsas de 15 mg
 •  Tirzepatida • Lipoless • TG • Tirzec • Lipoland
 💠 Pix: R$ 250,00 cada
-💳 Cartão: R$ 300,00 cada em até 6x sem juros`;
+💳 Cartão: R$ 300,00 cada em até 12x sem juros`;
       } else if (mode === 'grok') {
         textarea.value = generateGrokGuideWhatsApp();
       } else {

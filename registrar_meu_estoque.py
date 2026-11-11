@@ -315,7 +315,7 @@ def main():
 
     # Aviso de Retirada e Entrega
     notice_data = [[
-        Paragraph("<b>Envio Expresso para BH e Região:</b> Produtos disponíveis para entrega no mesmo dia via motoboy ou retirada segura. Pagamento à vista no PIX com super desconto ou no Cartão de Crédito em até 6x sem juros.", ParagraphStyle('N1', fontName='Helvetica', fontSize=8.5, leading=12, textColor=colors.HexColor('#1e293b')))
+        Paragraph("<b>Envio Expresso para BH e Região:</b> Produtos disponíveis para entrega no mesmo dia via motoboy ou retirada segura. Pagamento à vista no PIX com super desconto ou no Cartão de Crédito em até 12x sem juros para Tirzepatidas e Retatrutida.", ParagraphStyle('N1', fontName='Helvetica', fontSize=8.5, leading=12, textColor=colors.HexColor('#1e293b')))
     ]]
     t_notice = Table(notice_data, colWidths=[543])
     t_notice.setStyle(TableStyle([
@@ -337,7 +337,8 @@ def main():
         qtd = item['qtd']
         pix = item['preco_pix']
         cartao = item['preco_cartao']
-        parc = round(cartao / 6, 2)
+        num_parc = 12 if item['tipo'] in ['caixa_fechada', 'kit_fechado', 'ampola_fechada', 'ampola_avulsa', 'frasco_doses'] else 6
+        parc = round(cartao / num_parc, 2)
         obs = item['obs']
 
         # Imagem
@@ -370,7 +371,7 @@ def main():
             Paragraph(f"<font size='7' color='#047857'>À VISTA NO PIX</font><br/><b>{str_pix}</b>", price_pix_style),
             Spacer(1, 2),
             Paragraph(f"<font size='7' color='#4338ca'>NO CARTÃO</font><br/><b>{str_cartao}</b>", price_cartao_style),
-            Paragraph(f"em até 6x de {str_parc} s/ juros", price_parc_style)
+            Paragraph(f"em até {num_parc}x de {str_parc} s/ juros", price_parc_style)
         ]
 
         row_data = [[img_el, details_cell, price_cell]]
