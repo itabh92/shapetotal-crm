@@ -483,14 +483,25 @@
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:6px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px;">
         <div class="m-field">
-          <label>💵 Valor de Cada Item (R$ / un)</label>
+          <label>💵 Valor Unitário (R$ / un)</label>
           <input id="saleUnitPrice" type="number" step="1" style="font-size:16px; font-weight:800; color:#38bdf8; text-align:right;" oninput="window.CRM.onSaleUnitPriceChange()" />
         </div>
         <div class="m-field">
-          <label>💰 Valor Total Cobrado (R$)</label>
-          <input id="saleTotalValue" type="number" step="1" style="font-size:16px; font-weight:800; color:#34d399; text-align:right;" oninput="window.CRM.onSaleTotalValueChange()" />
+          <label>📦 Subtotal Produtos (R$)</label>
+          <input id="saleTotalValue" type="number" step="1" style="font-size:16px; font-weight:800; color:#38bdf8; text-align:right;" oninput="window.CRM.onSaleTotalValueChange()" />
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1.2fr; gap:12px; margin-bottom:6px; background:#0b1329; padding:10px 12px; border-radius:8px; border:1px solid #334155;">
+        <div class="m-field">
+          <label style="color:#fbbf24; font-weight:700;">🚚 Frete / Envio (R$)</label>
+          <input id="saleShipping" type="number" step="1" min="0" placeholder="0" value="0" style="font-size:16px; font-weight:800; color:#fbbf24; text-align:right; border-color:#d97706;" oninput="window.CRM.onSaleShippingChange()" />
+        </div>
+        <div class="m-field">
+          <label style="color:#34d399; font-weight:800;">💰 Total a Pagar (C/ Frete)</label>
+          <input id="saleGrandTotal" type="number" step="1" readonly style="font-size:18px; font-weight:900; color:#34d399; text-align:right; background:#064e3b; border-color:#10b981;" />
         </div>
       </div>
       <div style="font-size:11px; color:#94a3b8; margin-bottom:14px; text-align:right;" id="salePriceHint">Sugestão de tabela: R$ 900,00 cada un</div>
@@ -684,8 +695,8 @@
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script src="dados_catalogo.js?v=20261111_1220"></script>
-  <script src="app.js?v=20261111_1220"></script>
+  <script src="dados_catalogo.js?v=20261111_1230"></script>
+  <script src="app.js?v=20261111_1230"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

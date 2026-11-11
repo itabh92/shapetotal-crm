@@ -1571,6 +1571,8 @@
       document.getElementById('saleClientPhone').value = '';
       document.getElementById('saleNotes').value = '';
       document.getElementById('salePayment').value = 'pix';
+      const shipInput = document.getElementById('saleShipping');
+      if (shipInput) shipInput.value = '0';
 
       // Configuração de doses fracionadas se for 9005 ou 9006
       const doseBox = document.getElementById('saleDoseSelectorBox');
@@ -1630,8 +1632,7 @@
       const total = unitPrice * qty;
       document.getElementById('saleUnitPrice').value = unitPrice;
       document.getElementById('saleTotalValue').value = total;
-      const parcelasTxt = isGlpProduct(p) ? 'até 12x s/ juros' : 'até 6x';
-      document.getElementById('salePriceHint').textContent = `Sugestão (${isCartao ? `Cartão ${parcelasTxt}` : 'PIX'}): ${formatBRL(unitPrice)} cada un × ${qty} = ${formatBRL(total)}`;
+      window.CRM.updateSaleGrandTotal();
     },
 
     onSaleUnitPriceChange() {
@@ -1639,7 +1640,7 @@
       const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
       const total = unitVal * qty;
       document.getElementById('saleTotalValue').value = total;
-      document.getElementById('salePriceHint').textContent = `Valor: ${formatBRL(unitVal)} cada un × ${qty} = ${formatBRL(total)}`;
+      window.CRM.updateSaleGrandTotal();
     },
 
     onSaleQtyChange() {
@@ -1647,7 +1648,7 @@
       const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
       const total = unitVal * qty;
       document.getElementById('saleTotalValue').value = total;
-      document.getElementById('salePriceHint').textContent = `Valor: ${formatBRL(unitVal)} cada un × ${qty} = ${formatBRL(total)}`;
+      window.CRM.updateSaleGrandTotal();
     },
 
     onSaleTotalValueChange() {
@@ -1655,7 +1656,32 @@
       const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
       const unitVal = Math.round(totalVal / qty);
       document.getElementById('saleUnitPrice').value = unitVal;
-      document.getElementById('salePriceHint').textContent = `Total: ${formatBRL(totalVal)} ➔ ${formatBRL(unitVal)} por cada unidade`;
+      window.CRM.updateSaleGrandTotal();
+    },
+
+    onSaleShippingChange() {
+      window.CRM.updateSaleGrandTotal();
+    },
+
+    updateSaleGrandTotal() {
+      const subtotal = Math.max(0, Number(document.getElementById('saleTotalValue').value) || 0);
+      const shipEl = document.getElementById('saleShipping');
+      const frete = Math.max(0, Number(shipEl ? shipEl.value : 0) || 0);
+      const grandTotal = subtotal + frete;
+      const grandEl = document.getElementById('saleGrandTotal');
+      if (grandEl) grandEl.value = grandTotal;
+
+      const hintEl = document.getElementById('salePriceHint');
+      if (hintEl) {
+        const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
+        const unitVal = Math.round(subtotal / qty);
+        if (frete > 0) {
+          hintEl.textContent = `Produtos (${qty}x): ${formatBRL(subtotal)} + Frete: ${formatBRL(frete)} ➔ Total a Pagar: ${formatBRL(grandTotal)}`;
+        } else {
+          hintEl.textContent = `Subtotal: ${formatBRL(unitVal)} cada un × ${qty} = ${formatBRL(subtotal)}`;
+        }
+      }
+      return { subtotal, frete, grandTotal };
     },
 
     updateSaleTotalPreview() {
@@ -1695,6 +1721,10 @@
       const isDose = document.getElementById('saleIsDose') && document.getElementById('saleIsDose').value === '1';
       const doseMg = Number(document.getElementById('saleDoseMg') ? document.getElementById('saleDoseMg').value : 0) || 0;
 
+      const freteVal = Math.max(0, Number(document.getElementById('saleShipping') ? document.getElementById('saleShipping').value : 0) || 0);
+      const subtotalVal = totalVal;
+      const totalComFrete = subtotalVal + freteVal;
+
       // Se for venda de dose fracionada
       if (isDose) {
         if (doseMg <= 0) {
@@ -1727,7 +1757,7 @@
 
         // Custo proporcional da dose
         const custoDose = Math.round(((p.custo || 600) / 120) * doseMg);
-        const lucroEst = totalVal - custoDose;
+        const lucroEst = subtotalVal - custoDose;
 
         const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
         const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
@@ -1744,7 +1774,9 @@
           estornada: false,
           origemAparelho: aparelhoOrigem,
           valorUnitario: unitVal,
-          valorTotal: totalVal,
+          valorProdutos: subtotalVal,
+          valorFrete: freteVal,
+          valorTotal: totalComFrete,
           formaPagamento: payLabel,
           cliente: client,
           telefone: phone,
@@ -1779,7 +1811,7 @@
       }
 
       // Registro de Venda com Valor Unitário explícito
-      const lucroEst = totalVal - (p.custo * qty);
+      const lucroEst = subtotalVal - (p.custo * qty);
       const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
       const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
 
@@ -1794,7 +1826,9 @@
         estornada: false,
         origemAparelho: aparelhoOrigem,
         valorUnitario: unitVal,
-        valorTotal: totalVal,
+        valorProdutos: subtotalVal,
+        valorFrete: freteVal,
+        valorTotal: totalComFrete,
         formaPagamento: payLabel,
         cliente: client,
         telefone: phone,
@@ -1819,6 +1853,9 @@
       const modal = document.getElementById('saleReceiptModal');
       const textarea = document.getElementById('saleReceiptText');
       const dataFmt = new Date(venda.data).toLocaleString('pt-BR');
+      const temFrete = (Number(venda.valorFrete) || 0) > 0;
+      const subtotalProdutos = venda.valorProdutos || (venda.valorUnitario * venda.qtd);
+      const isPix = String(venda.formaPagamento).toLowerCase().includes('pix');
 
       if (venda.isDose) {
         const lines = [
@@ -1827,12 +1864,15 @@
           `👤 *Paciente / Cliente:* ${venda.cliente}`,
           `🧪 *Medicamento:* ${venda.produtoNome}`,
           `💉 *Dosagem Aplicada:* *${venda.doseMg} mg* (Dose Individual)`,
-          `💰 *Valor Cobrado:* *${formatBRL(venda.valorTotal)}*`,
+          temFrete ? `💵 *Valor da Dose:* ${formatBRL(subtotalProdutos)}` : ``,
+          temFrete ? `🚚 *Taxa de Entrega / Deslocamento:* ${formatBRL(venda.valorFrete)}` : ``,
+          `💰 *TOTAL A PAGAR:* *${formatBRL(venda.valorTotal)}*`,
           `💳 *Forma de Pagamento:* ${venda.formaPagamento}`,
           `📅 *Data da Aplicação:* ${dataFmt}`,
           `📍 *Local:* Atendimento Pronta Entrega Belo Horizonte`,
           venda.obs ? `📝 *Observação:* ${venda.obs}` : ``,
           `━━━━━━━━━━━━━━━━━━━━━━━━━`,
+          isPix ? `💠 *Chave PIX (CNPJ):* 64.228.053/0001-47\n🏦 *Beneficiário:* BAXTI IMPORTADOS LTDA (Banco Inter)\n━━━━━━━━━━━━━━━━━━━━━━━━━` : ``,
           `🔒 *Procedência:* Medicamento 100% original com controle de pureza e diluição precisa.`,
           `Conte sempre com a Shape Total para alcançar sua melhor versão com saúde! 🚀💪`
         ].filter(Boolean);
@@ -1848,13 +1888,16 @@
         `━━━━━━━━━━━━━━━━━━━━━━━━━`,
         `👤 *Cliente:* ${venda.cliente}`,
         `📦 *Item:* ${venda.qtd}x *${venda.produtoNome}*`,
-        `💵 *Valor Unitário:* ${formatBRL(venda.valorUnitario)} cada`,
-        `💰 *Valor Total Cobrado:* ${formatBRL(venda.valorTotal)}`,
+        venda.qtd > 1 ? `💵 *Valor Unitário:* ${formatBRL(venda.valorUnitario)} cada` : ``,
+        temFrete ? `📦 *Subtotal Produtos:* ${formatBRL(subtotalProdutos)}` : ``,
+        temFrete ? `🚚 *Valor do Frete / Envio:* ${formatBRL(venda.valorFrete)}` : ``,
+        `💰 *TOTAL A PAGAR:* *${formatBRL(venda.valorTotal)}*`,
         `💳 *Forma de Pagamento:* ${venda.formaPagamento}`,
         `📅 *Data da Operação:* ${dataFmt}`,
-        `🚚 *Entrega:* Pronta Entrega Belo Horizonte (Retirada ou Motoboy)`,
-        venda.obs ? `📝 *Observação:* ${venda.obs}` : ``,
+        temFrete ? `🚚 *Entrega:* Envio express (Uber Flash / Motoboy / Sedex)` : `🚚 *Entrega:* Pronta Entrega Belo Horizonte (Retirada em mãos ou Motoboy)`,
+        venda.obs ? `📝 *Observação / Endereço:* ${venda.obs}` : ``,
         `━━━━━━━━━━━━━━━━━━━━━━━━━`,
+        isPix ? `💠 *Chave PIX (CNPJ):* 64.228.053/0001-47\n🏦 *Beneficiário:* BAXTI IMPORTADOS LTDA (Banco Inter)\n━━━━━━━━━━━━━━━━━━━━━━━━━` : ``,
         `🔒 *Garantia:* Medicamentos 100% originais com lacre e rastreio.`,
         `Agradecemos a confiança e preferência! 🚀💪`
       ].filter(Boolean);
@@ -1916,7 +1959,7 @@
               <td><b>${esc(v.produtoNome)}</b>${isEst ? ' <span style="font-size:10px; color:#f87171;">(Estornada)</span>' : ''}</td>
               <td style="text-align:center;"><b style="color:${isEst ? '#94a3b8' : '#34d399'};">${v.qtd}</b></td>
               <td style="color:#38bdf8;">${formatBRL(unitVal)}</td>
-              <td><b style="color:${isEst ? '#94a3b8' : '#34d399'};">${formatBRL(v.valorTotal)}</b></td>
+              <td><b style="color:${isEst ? '#94a3b8' : '#34d399'};">${formatBRL(v.valorTotal)}</b>${(Number(v.valorFrete) || 0) > 0 ? `<br><span style="font-size:10px; color:#fbbf24; font-weight:700;">(Frete: ${formatBRL(v.valorFrete)})</span>` : ''}</td>
               <td style="color:${isEst ? '#94a3b8' : '#fbbf24'};">${isEst ? '—' : '+' + formatBRL(v.lucro)}</td>
               <td>${esc(v.cliente)}</td>
               <td style="font-size:11px;">${esc(v.formaPagamento)}</td>
