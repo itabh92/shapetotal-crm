@@ -260,10 +260,45 @@
       }
     });
 
-    // Semeia o estoque físico de BH somente na primeira carga do aparelho
-    if (!temEstoqueSalvo) {
+    // Semeia o estoque físico de BH na primeira carga do aparelho
+    if (!temEstoqueSalvo || !state.meuEstoque || typeof state.meuEstoque !== 'object') {
       state.meuEstoque = JSON.parse(JSON.stringify(ESTOQUE_CANONICO_BH));
+      state._bhStockSyncKey = 'SYNC_BH_ESTOQUE_20261111_TG_V2';
       changed = true;
+    } else {
+      // Auto-migração inteligente: aparelhos com localStorage prévio recebem automaticamente
+      // os novos SKUs canônicos de BH (como a Ampola Avulsa de TG 9003 e Tirzec 60mg Única 2996)
+      const SYNC_KEY = 'SYNC_BH_ESTOQUE_20261111_TG_V2';
+      if (state._bhStockSyncKey !== SYNC_KEY) {
+        // Injeta ou garante TG 15mg avulsa (9003) com 3 un se ausente ou zerado
+        if (!state.meuEstoque[9003] || Number(state.meuEstoque[9003]) <= 0) {
+          state.meuEstoque[9003] = ESTOQUE_CANONICO_BH[9003] || 3;
+          changed = true;
+        }
+        // Injeta ou garante Tirzec 60mg ampola única (2996) com 2 un se ausente ou zerado
+        if (!state.meuEstoque[2996] || Number(state.meuEstoque[2996]) <= 0) {
+          state.meuEstoque[2996] = ESTOQUE_CANONICO_BH[2996] || 2;
+          changed = true;
+        }
+        // Atualiza caixas recebidas recentemente se o aparelho estiver com saldo defasado
+        if (Number(state.meuEstoque[2848] || 0) < ESTOQUE_CANONICO_BH[2848]) {
+          state.meuEstoque[2848] = ESTOQUE_CANONICO_BH[2848];
+          changed = true;
+        }
+        if (Number(state.meuEstoque[3207] || 0) < ESTOQUE_CANONICO_BH[3207]) {
+          state.meuEstoque[3207] = ESTOQUE_CANONICO_BH[3207];
+          changed = true;
+        }
+        // Garante que nenhum SKU canônico de pronta entrega BH fique faltando
+        Object.keys(ESTOQUE_CANONICO_BH).forEach(k => {
+          if (state.meuEstoque[k] === undefined) {
+            state.meuEstoque[k] = ESTOQUE_CANONICO_BH[k];
+            changed = true;
+          }
+        });
+        state._bhStockSyncKey = SYNC_KEY;
+        changed = true;
+      }
     }
     if (changed) saveState();
   }
@@ -1458,26 +1493,60 @@
       const modal = document.getElementById('saleModal');
       const selectContainer = document.getElementById('saleProdSelectContainer');
       const select = document.getElementById('saleProdSelect');
-      const inStockProds = rawCatalog.map(computeProduct).filter(p => ((state.meuEstoque || {})[p.id] || 0) > 0);
+      const allComputed = rawCatalog.map(computeProduct);
+      const inStockProds = allComputed.filter(p => ((state.meuEstoque || {})[p.id] || 0) > 0);
 
-      if (!inStockProds.length) {
-        showToast('Nenhum produto com estoque em BH no momento!');
-        return;
-      }
+      // Sempre exibe o seletor para permitir alternar entre produtos com 1 toque
+      selectContainer.style.display = 'block';
 
       let targetId = productId;
-      if (!targetId || !inStockProds.some(p => p.id === targetId)) {
-        targetId = inStockProds[0].id;
-        selectContainer.style.display = 'block';
-        select.innerHTML = inStockProds.map(p => `
-          <option value="${p.id}" ${p.id === targetId ? 'selected' : ''}>
-            ${p.nombre} (Disponível: ${state.meuEstoque[p.id]} un)
-          </option>
-        `).join('');
-      } else {
-        selectContainer.style.display = 'none';
+      const targetProd = allComputed.find(p => p.id === targetId);
+      if (!targetProd) {
+        targetId = (inStockProds.length > 0 ? inStockProds[0] : allComputed[0]).id;
       }
 
+      // Monta as opções do select com agrupamento claro e destaque para pronta entrega
+      let optionsHtml = '';
+      if (inStockProds.length > 0) {
+        optionsHtml += `<optgroup label="✅ Pronta Entrega BH (Em Estoque)">`;
+        optionsHtml += inStockProds.map(p => `
+          <option value="${p.id}" ${p.id === targetId ? 'selected' : ''}>
+            ${p.nombre} (Disponível: ${(state.meuEstoque || {})[p.id]} un)
+          </option>
+        `).join('');
+        optionsHtml += `</optgroup>`;
+
+        // Se o produto clicado não estiver com estoque > 0, adiciona grupo de destaque para ele
+        if (targetProd && !inStockProds.some(p => p.id === targetId)) {
+          optionsHtml = `
+            <optgroup label="⚡ Produto Selecionado">
+              <option value="${targetProd.id}" selected>
+                ${targetProd.nombre} (Disponível: ${(state.meuEstoque || {})[targetProd.id] || 0} un)
+              </option>
+            </optgroup>
+          ` + optionsHtml;
+        }
+
+        // Demais produtos do catálogo para venda flexível sem bloqueios
+        const outros = allComputed.filter(p => !inStockProds.some(ip => ip.id === p.id) && (!targetProd || p.id !== targetProd.id));
+        if (outros.length > 0) {
+          optionsHtml += `<optgroup label="📦 Outros Produtos (Estoque 0 ou Encomenda)">`;
+          optionsHtml += outros.slice(0, 40).map(p => `
+            <option value="${p.id}" ${p.id === targetId ? 'selected' : ''}>
+              ${p.nombre} (Disponível: 0 un)
+            </option>
+          `).join('');
+          optionsHtml += `</optgroup>`;
+        }
+      } else {
+        optionsHtml = allComputed.map(p => `
+          <option value="${p.id}" ${p.id === targetId ? 'selected' : ''}>
+            ${p.nombre} (Disponível: ${(state.meuEstoque || {})[p.id] || 0} un)
+          </option>
+        `).join('');
+      }
+
+      select.innerHTML = optionsHtml;
       window.CRM.setSaleModalData(targetId);
       modal.classList.add('open');
     },
@@ -1706,8 +1775,8 @@
 
       // Se for frasco/caixa fechada
       if (qty > currentStock) {
-        alert(`Quantidade solicitada (${qty}) é maior do que o estoque disponível em BH (${currentStock} un)!`);
-        return;
+        const prosseguir = confirm(`Atenção: A quantidade informada (${qty}) é maior do que o estoque registrado no aparelho (${currentStock} un).\n\nDeseja registrar a venda e ajustar o estoque mesmo assim?`);
+        if (!prosseguir) return;
       }
 
       // Baixa no estoque
