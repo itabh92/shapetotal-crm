@@ -92,6 +92,18 @@
 
   const PEDIDOS_TRANSITO_CANONICOS = [
     {
+      id: "PED-20261111-01",
+      data_compra: "11/11/2026",
+      fornecedor: "Jose do Carmo Alves Dantas (Pagseguro)",
+      status: "em_transito",
+      custo_total_reais: 3740.00,
+      comprovante: "E00416968202611111343Vo74dD1GsCc",
+      itens: [
+        { id_catalogo: 2848, nome: "INDUFAR T.G. TIRZEPATIDA X 15 MG. X 4 AMP. (60 MG)", qtd: 4, preco_venda_pix: 900, preco_venda_cartao: 1000 },
+        { id_catalogo: 3207, nome: "TIRZEC X 15 MG. X 4 AMPOLLAS (60 MG)", qtd: 2, preco_venda_pix: 900, preco_venda_cartao: 1000 }
+      ]
+    },
+    {
       id: "PED-20261110-01",
       data_compra: "10/11/2026",
       fornecedor: "Mega Servicos Digitais LTDA",

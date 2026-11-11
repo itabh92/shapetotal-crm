@@ -1,15 +1,44 @@
 {
-  "atualizado_em": "10/11/2026 às 16:00",
+  "atualizado_em": "11/11/2026 às 11:30",
   "resumo": {
-    "total_investido_reais": 10476.96,
-    "total_pedidos": 3,
-    "total_itens_a_chegar": 21,
-    "faturamento_previsto_pix": 18630.0,
-    "faturamento_previsto_cartao": 20730.0,
-    "lucro_liquido_previsto": 8153.04,
-    "roi_projetado_pct": 77.8
+    "total_investido_reais": 14216.96,
+    "total_pedidos": 4,
+    "total_itens_a_chegar": 27,
+    "faturamento_previsto_pix": 24030.0,
+    "faturamento_previsto_cartao": 26730.0,
+    "lucro_liquido_previsto": 9813.04,
+    "roi_projetado_pct": 69.0
   },
   "pedidos": [
+    {
+      "id": "PED-20261111-01",
+      "data_compra": "11/11/2026",
+      "horario": "10:44",
+      "fornecedor": "Jose do Carmo Alves Dantas (Pagseguro)",
+      "pagador": "BAXTI IMPORTADOS LTDA (Inter PJ)",
+      "status": "em_transito",
+      "custo_total_reais": 3740.0,
+      "moeda": "BRL",
+      "comprovante": "E00416968202611111343Vo74dD1GsCc",
+      "itens": [
+        {
+          "id_catalogo": 2848,
+          "nome": "INDUFAR T.G. TIRZEPATIDA X 15 MG. X 4 AMP. (60 MG)",
+          "qtd": 4,
+          "custo_unit_est": 623.33,
+          "preco_venda_pix": 900.0,
+          "preco_venda_cartao": 1000.0
+        },
+        {
+          "id_catalogo": 3207,
+          "nome": "TIRZEC X 15 MG. X 4 AMPOLLAS (60 MG)",
+          "qtd": 2,
+          "custo_unit_est": 623.33,
+          "preco_venda_pix": 900.0,
+          "preco_venda_cartao": 1000.0
+        }
+      ]
+    },
     {
       "id": "PED-20261110-01",
       "data_compra": "10/11/2026",
