@@ -201,6 +201,23 @@
   let currentEncomendaFilter = 'todas';
   let currentReceiptEncId = null;
   let currentReceiptPhone = '';
+  let novaEncomendaItens = [];
+
+  function getEncomendaItens(enc) {
+    if (!enc) return [];
+    if (Array.isArray(enc.itens) && enc.itens.length > 0) return enc.itens;
+    if (enc.produtoId) {
+      return [{
+        produtoId: enc.produtoId,
+        produtoNome: enc.produtoNome || 'Medicamento',
+        marca: enc.marca || '',
+        qtd: Number(enc.qtd) || 1,
+        precoUnit: Number(enc.precoUnit) || 0,
+        subtotal: enc.valorProdutos || (Number(enc.precoUnit || 0) * Number(enc.qtd || 1)) || Number(enc.valorTotal || 0)
+      }];
+    }
+    return [];
+  }
 
   function loadState() {
     // O estoque canônico só é semeado quando o aparelho nunca teve estoque salvo.
@@ -2835,7 +2852,10 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const chegou = encomendas.filter(e => e.status === 'chegou_bh');
       const entregues = encomendas.filter(e => e.status === 'entregue');
 
-      const totalCaixasLote = pendentes.reduce((acc, e) => acc + (Number(e.qtd) || 0), 0);
+      const totalCaixasLote = pendentes.reduce((acc, e) => {
+        const itens = getEncomendaItens(e);
+        return acc + itens.reduce((s, it) => s + (Number(it.qtd) || 0), 0);
+      }, 0);
       const bLote = document.getElementById('encCountLote');
       if (bLote) bLote.textContent = totalCaixasLote;
 
@@ -2866,26 +2886,28 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
       const grupos = {};
       pendentes.forEach(e => {
-        const pid = e.produtoId;
-        if (!grupos[pid]) {
-          grupos[pid] = {
-            produtoId: pid,
-            qtdTotal: 0,
-            valorVendaTotal: 0,
-            sinalTotal: 0,
-            clientes: [],
-            marca: e.marca || '',
-            nome: e.produtoNome || ''
-          };
-        }
-        grupos[pid].qtdTotal += Number(e.qtd) || 0;
-        grupos[pid].valorVendaTotal += Number(e.valorTotal) || 0;
-        grupos[pid].sinalTotal += Number(e.sinal) || 0;
-        grupos[pid].clientes.push({
-          cliente: e.cliente,
-          telefone: e.telefone,
-          qtd: e.qtd,
-          encId: e.id
+        const itens = getEncomendaItens(e);
+        itens.forEach(it => {
+          const pid = it.produtoId;
+          if (!grupos[pid]) {
+            grupos[pid] = {
+              produtoId: pid,
+              qtdTotal: 0,
+              valorVendaTotal: 0,
+              sinalTotal: 0,
+              clientes: [],
+              marca: it.marca || '',
+              nome: it.produtoNome || ''
+            };
+          }
+          grupos[pid].qtdTotal += Number(it.qtd) || 0;
+          grupos[pid].valorVendaTotal += Number(it.subtotal) || (it.qtd * it.precoUnit) || 0;
+          grupos[pid].clientes.push({
+            cliente: e.cliente,
+            telefone: e.telefone,
+            qtd: it.qtd,
+            encId: e.id
+          });
         });
       });
 
@@ -2985,12 +3007,26 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       }
 
       const rows = filtered.map(e => {
-        const raw = rawCatalog.find(p => p.id === e.produtoId) || { id: e.produtoId, nombre: e.produtoNome, marca: e.marca, foto: '' };
-        const p = computeProduct(raw);
-        const foto = p.localFoto || p.remoteFoto || '';
-        const imgTag = foto
-          ? `<img src="${foto}" class="tbl-thumb" style="width:36px;height:36px;object-fit:contain;border-radius:4px;background:#0f172a;cursor:pointer;border:1px solid #1e293b;" onclick="window.CRM.openFotoPreview('${foto}', '${escapeHtml(e.produtoNome)}')" onerror="this.parentElement.innerHTML='💊'">`
-          : '💊';
+        const itens = getEncomendaItens(e);
+        const itensHtml = itens.map(it => {
+          const rawIt = rawCatalog.find(p => p.id === it.produtoId) || { id: it.produtoId, nombre: it.produtoNome, marca: it.marca };
+          const pIt = computeProduct(rawIt);
+          const fotoIt = pIt.localFoto || pIt.remoteFoto || '';
+          const img = fotoIt
+            ? `<img src="${fotoIt}" class="tbl-thumb" style="width:34px;height:34px;object-fit:contain;border-radius:4px;background:#0f172a;cursor:pointer;border:1px solid #1e293b;" onclick="window.CRM.openFotoPreview('${fotoIt}', '${escapeHtml(it.produtoNome)}')" onerror="this.parentElement.innerHTML='💊'">`
+            : '💊';
+          return `
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; background:#020617; padding:4px 6px; border-radius:4px; border:1px solid #1e293b;">
+              <div style="width:34px; height:34px; min-width:34px; display:flex; align-items:center; justify-content:center;">
+                ${img}
+              </div>
+              <div style="min-width:0; overflow:hidden;">
+                <div style="font-weight:700; color:#fff; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(it.produtoNome)}</div>
+                <div style="font-size:11px; color:#fbbf24;"><b>${it.qtd} cx</b> · ${formatBRL(it.subtotal || (it.qtd * it.precoUnit))}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
 
         const dataStr = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
         const telLimpo = (e.telefone || '').replace(/\D/g, '');
@@ -3013,13 +3049,10 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
               ${e.telefone ? `<div style="font-size:11px; margin-top:2px;"><a href="${waLink}" target="_blank" style="color:#38bdf8; text-decoration:none;">📱 ${escapeHtml(e.telefone)}</a></div>` : ''}
               ${e.endereco ? `<div style="font-size:10.5px; color:#94a3b8; max-width:220px; white-space:normal; line-height:1.2; margin-top:3px;">📍 ${escapeHtml(e.endereco)}</div>` : ''}
             </td>
-            <td>
-              <div style="display:flex; align-items:center; gap:8px;">
-                ${imgTag}
-                <div>
-                  <div style="font-weight:700; color:#fff; font-size:12px;">${escapeHtml(e.produtoNome)}</div>
-                  <div style="font-size:11px; color:#fbbf24;"><b>${e.qtd} cx</b> · ${(e.formaPagamento === 'cartao' ? '💳 Cartão (até 12x)' : '💠 PIX')}</div>
-                </div>
+            <td style="min-width:220px;">
+              ${itensHtml}
+              <div style="font-size:10.5px; color:#94a3b8; margin-top:2px;">
+                Pagamento: <b style="color:#38bdf8;">${(e.formaPagamento === 'cartao' ? '💳 Cartão (até 12x)' : '💠 PIX')}</b>
               </div>
             </td>
             <td>
@@ -3074,16 +3107,19 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
       const grupos = {};
       pendentes.forEach(e => {
-        const pid = e.produtoId;
-        if (!grupos[pid]) {
-          grupos[pid] = {
-            produtoId: pid,
-            qtdTotal: 0,
-            nome: e.produtoNome || '',
-            marca: e.marca || ''
-          };
-        }
-        grupos[pid].qtdTotal += Number(e.qtd) || 0;
+        const itens = getEncomendaItens(e);
+        itens.forEach(it => {
+          const pid = it.produtoId;
+          if (!grupos[pid]) {
+            grupos[pid] = {
+              produtoId: pid,
+              qtdTotal: 0,
+              nome: it.produtoNome || '',
+              marca: it.marca || ''
+            };
+          }
+          grupos[pid].qtdTotal += Number(it.qtd) || 0;
+        });
       });
 
       const listaAgrupada = Object.values(grupos);
@@ -3161,10 +3197,34 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       modal.classList.add('open');
     },
 
+    populateEncClientesDatalist() {
+      const dl = document.getElementById('encClientesDatalist');
+      if (!dl) return;
+      const nomes = new Set();
+      (state.vendas || []).forEach(v => { if (v && v.cliente) nomes.add(v.cliente.trim()); });
+      (state.encomendas || []).forEach(e => { if (e && e.cliente) nomes.add(e.cliente.trim()); });
+      dl.innerHTML = Array.from(nomes).sort().map(n => `<option value="${escapeHtml(n)}"></option>`).join('');
+    },
+
+    onEncClienteSelect(val) {
+      const nome = (val || '').trim().toLowerCase();
+      if (!nome) return;
+      // Procura último cadastro com este cliente para autopreencher telefone e endereço
+      const all = [...(state.encomendas || []), ...(state.vendas || [])];
+      const match = all.find(x => (x.cliente || '').trim().toLowerCase() === nome);
+      if (match) {
+        const telInp = document.getElementById('encNovoTelefone');
+        const endInp = document.getElementById('encNovoEndereco');
+        if (telInp && !telInp.value && match.telefone) telInp.value = match.telefone;
+        if (endInp && !endInp.value && match.endereco) endInp.value = match.endereco;
+      }
+    },
+
     populateEncProdutosDropdown(selectedId = null) {
       const searchInp = document.getElementById('encNovoBuscaInput');
       if (searchInp) searchInp.value = '';
       window.CRM.filterEncProdutosSelect('', selectedId);
+      window.CRM.populateEncClientesDatalist();
     },
 
     filterEncProdutosSelect(query, selectedId = null) {
@@ -3218,16 +3278,30 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const modal = document.getElementById('encomendasModal');
       if (!modal) return;
       window.CRM.switchEncomendasTab('nova');
+      window.CRM.populateEncClientesDatalist();
+      novaEncomendaItens = [];
+
       if (productId) {
         const prod = rawCatalog.find(p => p.id === productId);
-        const searchInp = document.getElementById('encNovoBuscaInput');
-        if (searchInp && prod) {
-          searchInp.value = prod.nombre.split(' ')[0];
+        if (prod) {
+          const p = computeProduct(prod);
+          const pag = document.getElementById('encNovoPagamento') ? document.getElementById('encNovoPagamento').value : 'pix';
+          const precoUnit = Math.round(pag === 'cartao' ? p.precoCartao : p.precoFinal);
+          novaEncomendaItens.push({
+            produtoId: p.id,
+            produtoNome: p.nombre,
+            marca: p.marca || '',
+            qtd: 1,
+            precoUnit: precoUnit,
+            subtotal: precoUnit
+          });
         }
-        window.CRM.filterEncProdutosSelect(searchInp ? searchInp.value : '', productId);
+        window.CRM.populateEncProdutosDropdown(productId);
       } else {
         window.CRM.populateEncProdutosDropdown(null);
       }
+
+      window.CRM.renderNovaEncomendaItens();
       modal.classList.add('open');
     },
 
@@ -3236,57 +3310,198 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const raw = rawCatalog.find(p => p.id === pid);
       if (!raw) return;
       const p = computeProduct(raw);
-      const pag = document.getElementById('encNovoPagamento').value;
+      const pag = document.getElementById('encNovoPagamento') ? document.getElementById('encNovoPagamento').value : 'pix';
       const precoSugerido = pag === 'cartao' ? p.precoCartao : p.precoFinal;
 
-      document.getElementById('encNovoPrecoUnit').value = Math.round(precoSugerido);
-      window.CRM.onEncQtdPriceChange();
+      const pInp = document.getElementById('encNovoPrecoUnit');
+      if (pInp) pInp.value = Math.round(precoSugerido);
+      window.CRM.onEncTempItemCalc();
     },
 
     onEncPagamentoChange() {
       const pid = Number(document.getElementById('encNovoProdutoSelect').value);
       if (pid) window.CRM.onEncProdutoChange(pid);
+      // Recalcula preços dos itens já no carrinho se o usuário desejar
+      const pag = document.getElementById('encNovoPagamento').value;
+      novaEncomendaItens.forEach(it => {
+        const raw = rawCatalog.find(p => p.id === it.produtoId);
+        if (raw) {
+          const p = computeProduct(raw);
+          it.precoUnit = Math.round(pag === 'cartao' ? p.precoCartao : p.precoFinal);
+          it.subtotal = it.qtd * it.precoUnit;
+        }
+      });
+      window.CRM.renderNovaEncomendaItens();
     },
 
-    onEncQtdPriceChange() {
+    onEncTempItemCalc() {
       const qtd = Math.max(1, Number(document.getElementById('encNovoQtd').value) || 1);
       const preco = Math.max(0, Number(document.getElementById('encNovoPrecoUnit').value) || 0);
-      const frete = Math.max(0, Number(document.getElementById('encNovoFrete') ? document.getElementById('encNovoFrete').value : 0) || 0);
-      const subtotal = qtd * preco;
-      const total = subtotal + frete;
-      document.getElementById('encNovoValorTotal').value = total;
-
-      const hint = document.getElementById('encPriceHint');
-      if (hint) {
-        if (frete > 0) {
-          hint.textContent = `Produtos (${qtd}x): ${formatBRL(subtotal)} + Frete: ${formatBRL(frete)} = Total: ${formatBRL(total)}`;
-        } else {
-          hint.textContent = `Produtos (${qtd}x): ${formatBRL(subtotal)} (Frete grátis / retirada)`;
-        }
-      }
-      window.CRM.onEncSinalChange();
+      const subEl = document.getElementById('encNovoSubtotalItem');
+      if (subEl) subEl.value = qtd * preco;
     },
 
-    onEncSinalChange() {
-      const total = Number(document.getElementById('encNovoValorTotal').value) || 0;
-      const sinal = Math.max(0, Number(document.getElementById('encNovoSinal').value) || 0);
-      const saldo = Math.max(0, total - sinal);
-      document.getElementById('encNovoSaldoRestante').value = formatBRL(saldo);
+    addEncItemToOrder() {
+      const pid = Number(document.getElementById('encNovoProdutoSelect').value);
+      if (!pid) {
+        alert('Selecione um medicamento válido do catálogo.');
+        return;
+      }
+      const raw = rawCatalog.find(p => p.id === pid);
+      if (!raw) return;
+      const p = computeProduct(raw);
+
+      const qtd = Math.max(1, Number(document.getElementById('encNovoQtd').value) || 1);
+      const precoUnit = Math.max(0, Number(document.getElementById('encNovoPrecoUnit').value) || 0);
+      const subtotal = qtd * precoUnit;
+
+      const existing = novaEncomendaItens.find(x => x.produtoId === pid);
+      if (existing) {
+        existing.qtd += qtd;
+        existing.subtotal = existing.qtd * existing.precoUnit;
+      } else {
+        novaEncomendaItens.push({
+          produtoId: pid,
+          produtoNome: p.nombre,
+          marca: p.marca || '',
+          qtd: qtd,
+          precoUnit: precoUnit,
+          subtotal: subtotal
+        });
+      }
+
+      window.CRM.renderNovaEncomendaItens();
+      showToast(`+${qtd}x ${p.nombre} adicionado ao pedido!`);
+    },
+
+    removeEncItem(index) {
+      if (index >= 0 && index < novaEncomendaItens.length) {
+        novaEncomendaItens.splice(index, 1);
+        window.CRM.renderNovaEncomendaItens();
+      }
+    },
+
+    changeEncItemQty(index, delta) {
+      if (index >= 0 && index < novaEncomendaItens.length) {
+        const item = novaEncomendaItens[index];
+        item.qtd += delta;
+        if (item.qtd <= 0) {
+          novaEncomendaItens.splice(index, 1);
+        } else {
+          item.subtotal = item.qtd * item.precoUnit;
+        }
+        window.CRM.renderNovaEncomendaItens();
+      }
+    },
+
+    clearNovaEncomendaItens() {
+      if (!novaEncomendaItens.length) return;
+      if (confirm('Deseja limpar todos os medicamentos adicionados a este pedido?')) {
+        novaEncomendaItens = [];
+        window.CRM.renderNovaEncomendaItens();
+      }
+    },
+
+    renderNovaEncomendaItens() {
+      const container = document.getElementById('encNovoItensContainer');
+      const countBadge = document.getElementById('encItensCountBadge');
+      if (countBadge) countBadge.textContent = novaEncomendaItens.length;
+      if (!container) return;
+
+      if (!novaEncomendaItens.length) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:18px 10px; color:#94a3b8; font-size:12px;">
+            Nenhum medicamento adicionado a este pedido ainda.<br>
+            <span style="color:#38bdf8;">Escolha o produto acima e clique no botão azul <b>➕ Adicionar ao Pedido</b>.</span>
+          </div>
+        `;
+        window.CRM.recalcNovaEncomendaTotals();
+        return;
+      }
+
+      const rowsHtml = novaEncomendaItens.map((it, idx) => {
+        const raw = rawCatalog.find(p => p.id === it.produtoId) || {};
+        const p = computeProduct(raw);
+        const foto = p.localFoto || p.remoteFoto || '';
+        const imgTag = foto
+          ? `<img src="${foto}" style="width:36px; height:36px; object-fit:contain; border-radius:4px; background:#0f172a; border:1px solid #1e293b;" onerror="this.parentElement.innerHTML='💊'">`
+          : '💊';
+
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:#0f172a; padding:8px 10px; border-radius:6px; margin-bottom:6px; border:1px solid #1e293b; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+              <div style="width:36px; height:36px; min-width:36px; display:flex; align-items:center; justify-content:center;">
+                ${imgTag}
+              </div>
+              <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                <div style="font-size:12px; font-weight:800; color:#fff; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(it.produtoNome)}</div>
+                <div style="font-size:10.5px; color:#38bdf8;">${formatBRL(it.precoUnit)} cada un</div>
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div style="display:flex; align-items:center; gap:4px; background:#020617; border:1px solid #334155; border-radius:4px; padding:2px;">
+                <button type="button" class="btn" style="padding:1px 6px; font-size:11px; height:22px; min-width:22px;" onclick="window.CRM.changeEncItemQty(${idx}, -1)">-</button>
+                <b style="font-size:13px; color:#fbbf24; min-width:22px; text-align:center;">${it.qtd}</b>
+                <button type="button" class="btn" style="padding:1px 6px; font-size:11px; height:22px; min-width:22px;" onclick="window.CRM.changeEncItemQty(${idx}, 1)">+</button>
+              </div>
+
+              <div style="font-size:13px; font-weight:800; color:#34d399; min-width:80px; text-align:right;">
+                ${formatBRL(it.subtotal)}
+              </div>
+
+              <button type="button" class="btn btn-xs btn-danger" style="background:#dc2626; color:#fff; padding:2px 6px; font-size:11px;" title="Remover item" onclick="window.CRM.removeEncItem(${idx})">
+                ✖
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = rowsHtml;
+      window.CRM.recalcNovaEncomendaTotals();
+    },
+
+    recalcNovaEncomendaTotals() {
+      const subtotalProdutos = novaEncomendaItens.reduce((s, it) => s + (Number(it.subtotal) || 0), 0);
+      const subInp = document.getElementById('encNovoSubtotalProdutos');
+      if (subInp) subInp.value = formatBRL(subtotalProdutos);
+
+      const frete = Math.max(0, Number(document.getElementById('encNovoFrete') ? document.getElementById('encNovoFrete').value : 0) || 0);
+      const totalGeral = subtotalProdutos + frete;
+
+      const totInp = document.getElementById('encNovoValorTotal');
+      if (totInp) totInp.value = formatBRL(totalGeral);
+
+      const sinal = Math.max(0, Number(document.getElementById('encNovoSinal') ? document.getElementById('encNovoSinal').value : 0) || 0);
+      const saldoRestante = Math.max(0, totalGeral - sinal);
+
+      const salInp = document.getElementById('encNovoSaldoRestante');
+      if (salInp) salInp.value = formatBRL(saldoRestante);
+
+      // Prévia de Lucro Líquido Real e contagem de caixas
+      let custoTotalBrl = 0;
+      let totalCaixas = 0;
+      novaEncomendaItens.forEach(it => {
+        const raw = rawCatalog.find(p => p.id === it.produtoId) || {};
+        const p = computeProduct(raw);
+        custoTotalBrl += (p.custo || 0) * it.qtd;
+        totalCaixas += it.qtd;
+      });
+      const lucroEst = subtotalProdutos - custoTotalBrl;
+      const hintProfit = document.getElementById('encProfitPreviewHint');
+      const hintItems = document.getElementById('encItemsSummaryHint');
+      if (hintProfit) hintProfit.textContent = `Lucro previsto deste pedido: +${formatBRL(lucroEst)}`;
+      if (hintItems) hintItems.textContent = `${totalCaixas} caixas no pedido (${novaEncomendaItens.length} tipos de medicamentos)`;
     },
 
     saveNovaEncomenda(enviarWa = false) {
       const cliente = (document.getElementById('encNovoCliente').value || '').trim();
       const telefone = (document.getElementById('encNovoTelefone').value || '').trim();
       const endereco = (document.getElementById('encNovoEndereco').value || '').trim();
-      const pid = Number(document.getElementById('encNovoProdutoSelect').value);
-      const qtd = Math.max(1, Number(document.getElementById('encNovoQtd').value) || 1);
       const formaPagamento = document.getElementById('encNovoPagamento').value;
-      const precoUnit = Number(document.getElementById('encNovoPrecoUnit').value) || 0;
       const frete = Math.max(0, Number(document.getElementById('encNovoFrete') ? document.getElementById('encNovoFrete').value : 0) || 0);
-      const valorProdutos = qtd * precoUnit;
-      const valorTotal = valorProdutos + frete;
       const sinal = Number(document.getElementById('encNovoSinal').value) || 0;
-      const saldoRestante = Math.max(0, valorTotal - sinal);
       const obs = (document.getElementById('encNovoObs').value || '').trim();
 
       if (!cliente) {
@@ -3294,12 +3509,38 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         document.getElementById('encNovoCliente').focus();
         return;
       }
-      if (!pid) {
-        alert('Selecione um medicamento válido do catálogo.');
+
+      // Se não adicionou itens clicando no botão azul, mas selecionou um medicamento válido no seletor
+      if (!novaEncomendaItens.length) {
+        const pid = Number(document.getElementById('encNovoProdutoSelect').value);
+        if (pid) {
+          const raw = rawCatalog.find(p => p.id === pid);
+          if (raw) {
+            const p = computeProduct(raw);
+            const qtd = Math.max(1, Number(document.getElementById('encNovoQtd').value) || 1);
+            const precoUnit = Math.max(0, Number(document.getElementById('encNovoPrecoUnit').value) || 0);
+            novaEncomendaItens.push({
+              produtoId: pid,
+              produtoNome: p.nombre,
+              marca: p.marca || '',
+              qtd: qtd,
+              precoUnit: precoUnit,
+              subtotal: qtd * precoUnit
+            });
+          }
+        }
+      }
+
+      if (!novaEncomendaItens.length) {
+        alert('Adicione pelo menos 1 medicamento ao pedido clicando no botão "➕ Adicionar ao Pedido".');
         return;
       }
 
-      const raw = rawCatalog.find(p => p.id === pid) || {};
+      const subtotalProdutos = novaEncomendaItens.reduce((s, it) => s + (Number(it.subtotal) || 0), 0);
+      const valorTotal = subtotalProdutos + frete;
+      const saldoRestante = Math.max(0, valorTotal - sinal);
+
+      const primeiroItem = novaEncomendaItens[0];
       const newEnc = {
         id: 'ENC-' + Date.now().toString().slice(-6) + '-' + Math.random().toString(36).substr(2, 3),
         data: new Date().toISOString(),
@@ -3307,13 +3548,14 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         telefone,
         endereco,
         status: 'pendente',
-        produtoId: pid,
-        produtoNome: raw.nombre || 'Medicamento Encomendado',
-        marca: raw.marca || '',
-        qtd,
+        produtoId: primeiroItem.produtoId,
+        produtoNome: primeiroItem.produtoNome,
+        marca: primeiroItem.marca,
+        qtd: novaEncomendaItens.reduce((s, it) => s + it.qtd, 0),
+        precoUnit: primeiroItem.precoUnit,
+        itens: [...novaEncomendaItens],
         formaPagamento,
-        precoUnit,
-        valorProdutos,
+        valorProdutos: subtotalProdutos,
         frete,
         valorTotal,
         sinal,
@@ -3337,14 +3579,15 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (fInp) fInp.value = '0';
       const searchInp = document.getElementById('encNovoBuscaInput');
       if (searchInp) searchInp.value = '';
+      novaEncomendaItens = [];
 
       renderAll();
-      showToast('Encomenda cadastrada com sucesso!');
+      showToast('Pedido com múltiplos medicamentos cadastrado com sucesso!');
 
       if (enviarWa) {
         window.CRM.openEncomendaReceiptModal(newEnc.id);
       } else {
-        window.CRM.switchEncomendasTab('concentrador');
+        window.CRM.switchEncomendasTab('clientes');
       }
     },
 
@@ -3364,7 +3607,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       showToast(`Status atualizado para: ${novoStatus}`);
 
       if (novoStatus === 'chegou_bh') {
-        if (confirm(`O medicamento de ${enc.cliente} chegou em BH! Deseja abrir a mensagem de WhatsApp pronta para avisar o cliente agora?`)) {
+        if (confirm(`Os medicamentos de ${enc.cliente} chegaram em BH! Deseja abrir a mensagem de WhatsApp pronta para avisar o cliente agora?`)) {
           window.CRM.openAvisoChegadaWhatsApp(encId);
         }
       }
@@ -3379,62 +3622,68 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         return;
       }
 
-      const pid = enc.produtoId;
-      const raw = rawCatalog.find(p => p.id === pid) || {};
-      const p = computeProduct(raw);
-      const currentStock = Number((state.meuEstoque || {})[pid] || 0);
+      const itens = getEncomendaItens(enc);
+      if (!itens.length) {
+        alert('Nenhum medicamento encontrado nesta encomenda.');
+        return;
+      }
 
+      const itensResumo = itens.map(it => `• ${it.qtd}x ${it.produtoNome}`).join('\n');
       const confirmMsg = `📦 Confirmar entrega e dar baixa no estoque BH?\n\n` +
         `• Cliente: ${enc.cliente}\n` +
-        `• Produto: ${enc.qtd}x ${enc.produtoNome}\n` +
-        `• Total: ${formatBRL(enc.valorTotal)} ${enc.frete > 0 ? `(Frete: ${formatBRL(enc.frete)})` : ''}\n` +
-        `• Estoque físico atual em BH: ${currentStock} un\n\n` +
-        `Ao confirmar, ${enc.qtd} unidade(s) serão abatidas do seu estoque físico em BH e a venda oficial será registrada no CRM.`;
+        `${itensResumo}\n` +
+        `• Total: ${formatBRL(enc.valorTotal)} ${enc.frete > 0 ? `(Frete: ${formatBRL(enc.frete)})` : ''}\n\n` +
+        `Ao confirmar, os medicamentos serão abatidos do seu estoque físico em BH e a venda oficial será registrada no CRM.`;
 
       if (!confirm(confirmMsg)) {
         window.CRM.renderEncomendasClientes();
         return;
       }
 
-      if (enc.qtd > currentStock) {
-        const prosseguir = confirm(`Atenção: A quantidade da encomenda (${enc.qtd} un) é maior do que o seu estoque registrado no aparelho (${currentStock} un).\n\nDeseja registrar a entrega e a venda mesmo assim?`);
-        if (!prosseguir) {
-          window.CRM.renderEncomendasClientes();
-          return;
-        }
-      }
-
-      // 1. Abate estoque físico em BH
-      const nextStock = currentStock - enc.qtd;
+      // 1. Abate estoque físico em BH para cada item da encomenda
       if (!state.meuEstoque) state.meuEstoque = {};
-      if (nextStock <= 0) {
-        delete state.meuEstoque[pid];
-      } else {
-        state.meuEstoque[pid] = nextStock;
-      }
+      itens.forEach(it => {
+        const curStock = Number(state.meuEstoque[it.produtoId] || 0);
+        const nextStock = curStock - it.qtd;
+        if (nextStock <= 0) {
+          delete state.meuEstoque[it.produtoId];
+        } else {
+          state.meuEstoque[it.produtoId] = nextStock;
+        }
+      });
 
       // 2. Registro oficial de Venda no CRM
-      const valorProdutos = enc.valorProdutos || (enc.precoUnit * enc.qtd);
+      const valorProdutos = enc.valorProdutos || itens.reduce((s, it) => s + (it.subtotal || (it.precoUnit * it.qtd)), 0);
       const frete = Number(enc.frete || 0);
       const valorTotal = enc.valorTotal || (valorProdutos + frete);
-      const custoTotal = (p.custo || 0) * enc.qtd;
+      
+      let custoTotal = 0;
+      itens.forEach(it => {
+        const raw = rawCatalog.find(x => x.id === it.produtoId) || {};
+        const p = computeProduct(raw);
+        custoTotal += (p.custo || 0) * it.qtd;
+      });
       const lucroEst = valorProdutos - custoTotal;
 
       const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
       const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
 
+      const primeiroItem = itens[0] || {};
+      const nomesProdutos = itens.length === 1 ? primeiroItem.produtoNome : `${itens.length} medicamentos: ` + itens.map(it => `${it.qtd}x ${it.produtoNome}`).join(' + ');
+
       const venda = {
         id: saleId,
         data: new Date().toISOString(),
-        produtoId: p.id,
-        produtoNome: enc.produtoNome,
-        marca: enc.marca || p.marca || '',
-        qtd: enc.qtd,
+        produtoId: primeiroItem.produtoId || 0,
+        produtoNome: nomesProdutos,
+        marca: primeiroItem.marca || 'Shape Total',
+        qtd: itens.reduce((s, it) => s + it.qtd, 0),
+        itens: itens,
         isDose: false,
         doseMg: 0,
         estornada: false,
         origemAparelho: aparelhoOrigem,
-        valorUnitario: enc.precoUnit,
+        valorUnitario: enc.precoUnit || valorProdutos,
         valorProdutos: valorProdutos,
         valorFrete: frete,
         valorTotal: valorTotal,
@@ -3457,14 +3706,15 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       renderAll();
       window.CRM.renderEncomendas();
 
-      showToast(`✅ Baixa realizada! -${enc.qtd} un no Estoque BH e venda de ${formatBRL(valorTotal)} registrada.`);
-      window.CRM.showSaleReceipt(venda, p);
+      showToast(`✅ Baixa realizada! ${itens.length} medicamento(s) baixados e venda de ${formatBRL(valorTotal)} registrada.`);
+      const rawFirst = rawCatalog.find(x => x.id === primeiroItem.produtoId) || {};
+      window.CRM.showSaleReceipt(venda, computeProduct(rawFirst));
     },
 
     deleteEncomenda(encId) {
       const enc = (state.encomendas || []).find(e => e.id === encId);
       if (!enc) return;
-      if (!confirm(`Deseja realmente remover a encomenda de "${enc.cliente}" (${enc.qtd}x ${enc.produtoNome})?`)) return;
+      if (!confirm(`Deseja realmente remover a encomenda de "${enc.cliente}"?`)) return;
 
       state.encomendas = state.encomendas.filter(e => e.id !== encId);
       saveState();
@@ -3513,53 +3763,72 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const s = document.getElementById('encReceiptModalSub');
 
       if (vBox) vBox.style.display = 'block';
-      if (t) t.textContent = '🧾 Comprovante de Encomenda com Foto';
-      if (s) s.textContent = 'Recibo digital com foto do produto para conferência do cliente:';
+      if (t) t.textContent = '🧾 Comprovante de Encomenda Consolidado';
+      if (s) s.textContent = 'Recibo digital com fotos dos produtos para conferência do cliente:';
 
-      const raw = rawCatalog.find(p => p.id === enc.produtoId) || { id: enc.produtoId, nombre: enc.produtoNome, marca: enc.marca, foto: '' };
-      const p = computeProduct(raw);
-      const foto = p.localFoto || p.remoteFoto || '';
-      const fotoPublicUrl = p.localFoto ? `https://itabh92.github.io/shapetotal-crm/${p.localFoto}` : (p.remoteFoto || '');
+      const itens = getEncomendaItens(enc);
 
-      // Atualiza Card Visual
+      // Atualiza Cabeçalho do Card Visual
       document.getElementById('encReceiptClienteNome').textContent = enc.cliente;
       document.getElementById('encReceiptData').textContent = enc.data ? new Date(enc.data).toLocaleDateString('pt-BR') : '';
-      document.getElementById('encReceiptProdNome').textContent = enc.produtoNome;
-      document.getElementById('encReceiptProdSub').textContent = `${(enc.marca || '').toUpperCase()} · Cód #${enc.produtoId}`;
-      document.getElementById('encReceiptQtd').textContent = `${enc.qtd} cx`;
-      document.getElementById('encReceiptTotal').textContent = formatBRL(enc.valorTotal);
 
-      const sinal = Number(enc.sinal) || 0;
-      const saldo = Number(enc.saldoRestante) || Math.max(0, enc.valorTotal - sinal);
-      const frete = Number(enc.frete) || 0;
+      // Renderiza Galeria de Itens com Fotos
+      const gallery = document.getElementById('encReceiptItemsGallery');
+      if (gallery) {
+        gallery.innerHTML = itens.map(it => {
+          const rawIt = rawCatalog.find(x => x.id === it.produtoId) || { id: it.produtoId, nombre: it.produtoNome, marca: it.marca, foto: '' };
+          const pIt = computeProduct(rawIt);
+          const fotoIt = pIt.localFoto || pIt.remoteFoto || '';
+          return `
+            <div style="display:flex; gap:10px; align-items:center; background:#020617; padding:8px 10px; border-radius:8px; border:1px solid #1e293b;">
+              <div style="width:48px; height:48px; min-width:48px; border-radius:6px; background:#0b1120; border:1px solid #334155; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                ${fotoIt ? `<img src="${fotoIt}" style="max-width:100%; max-height:100%; object-fit:contain;" onerror="this.parentElement.innerHTML='💊'">` : '💊'}
+              </div>
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:12px; font-weight:800; color:#fff; line-height:1.25; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(it.produtoNome)}</div>
+                <div style="font-size:10.5px; color:#38bdf8;">${(it.marca || '').toUpperCase()} · Cód #${it.produtoId}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:12px; font-weight:800; color:#fbbf24;">${it.qtd} cx</div>
+                <div style="font-size:11px; font-weight:700; color:#34d399;">${formatBRL(it.subtotal || (it.precoUnit * it.qtd))}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
 
-      const fBox = document.getElementById('encReceiptFreteBox');
+      // Atualiza Valores do Resumo Financeiro
+      const subtotalProdutos = enc.valorProdutos || itens.reduce((s, it) => s + (it.subtotal || (it.precoUnit * it.qtd)), 0);
+      const frete = Number(enc.frete || 0);
+      const total = enc.valorTotal || (subtotalProdutos + frete);
+      const sinal = Number(enc.sinal || 0);
+      const saldo = Number(enc.saldoRestante) || Math.max(0, total - sinal);
+
+      document.getElementById('encReceiptSubtotal').textContent = formatBRL(subtotalProdutos);
+      document.getElementById('encReceiptTotal').textContent = formatBRL(total);
+
+      const fRow = document.getElementById('encReceiptFreteRow');
       if (frete > 0) {
-        if (fBox) fBox.style.display = 'block';
+        if (fRow) fRow.style.display = 'flex';
         document.getElementById('encReceiptFrete').textContent = formatBRL(frete);
       } else {
-        if (fBox) fBox.style.display = 'none';
+        if (fRow) fRow.style.display = 'none';
       }
 
-      const sBox = document.getElementById('encReceiptSinalBox');
-      const salBox = document.getElementById('encReceiptSaldoBox');
+      const sRow = document.getElementById('encReceiptSinalRow');
       if (sinal > 0) {
-        if (sBox) sBox.style.display = 'block';
+        if (sRow) sRow.style.display = 'flex';
         document.getElementById('encReceiptSinal').textContent = formatBRL(sinal);
       } else {
-        if (sBox) sBox.style.display = 'none';
-      }
-      if (saldo > 0) {
-        if (salBox) salBox.style.display = 'block';
-        document.getElementById('encReceiptSaldo').textContent = formatBRL(saldo);
-      } else {
-        if (salBox) salBox.style.display = 'none';
+        if (sRow) sRow.style.display = 'none';
       }
 
-      const imgEl = document.getElementById('encReceiptProdImg');
-      if (imgEl) {
-        imgEl.src = foto;
-        imgEl.onerror = () => { imgEl.src = p.remoteFoto || ''; };
+      const salRow = document.getElementById('encReceiptSaldoRow');
+      if (saldo > 0) {
+        if (salRow) salRow.style.display = 'flex';
+        document.getElementById('encReceiptSaldo').textContent = formatBRL(saldo);
+      } else {
+        if (salRow) salRow.style.display = 'none';
       }
 
       const endBox = document.getElementById('encReceiptEnderecoBox');
@@ -3570,29 +3839,38 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         if (endBox) endBox.style.display = 'none';
       }
 
-      // Monta texto formatado do WhatsApp
-      const valorProdutos = enc.valorProdutos || (enc.precoUnit * enc.qtd);
+      // Monta texto formatado do WhatsApp com itens numerados e fotos
       const lines = [
         `*RECIBO DE ENCOMENDA & RESERVA — SHAPE TOTAL BH* 📦✨`,
         `Data: ${new Date(enc.data).toLocaleDateString('pt-BR')}`,
         ``,
-        `Olá, *${enc.cliente}*! Sua encomenda foi registrada com sucesso:`,
+        `Olá, *${enc.cliente}*! Seu pedido foi registrado com sucesso:`,
         ``,
-        `💊 *Medicamento:* ${enc.produtoNome}`,
-        `📦 *Quantidade:* ${enc.qtd} caixa(s)`,
-        `💰 *Valor Produtos:* ${formatBRL(valorProdutos)}`
+        `📦 *Medicamentos Encomendados (${itens.length} ${itens.length === 1 ? 'item' : 'itens'}):*`
       ];
 
-      if (frete > 0) lines.push(`🚚 *Frete / Envio:* ${formatBRL(frete)}`);
-      lines.push(`💵 *Valor Total:* ${formatBRL(enc.valorTotal)} (${enc.formaPagamento === 'cartao' ? 'Cartão em até 12x s/ juros' : 'À vista no PIX'})`);
+      itens.forEach((it, idx) => {
+        const rawIt = rawCatalog.find(x => x.id === it.produtoId) || {};
+        const pIt = computeProduct(rawIt);
+        const fotoUrl = pIt.localFoto ? `https://itabh92.github.io/shapetotal-crm/${pIt.localFoto}` : (pIt.remoteFoto || '');
 
+        lines.push(`${idx + 1}️⃣ *${it.produtoNome}*`);
+        lines.push(`• Quantidade: *${it.qtd} caixa(s)*`);
+        lines.push(`• Valor: ${formatBRL(it.subtotal || (it.precoUnit * it.qtd))} (${formatBRL(it.precoUnit)} cada)`);
+        if (fotoUrl) lines.push(`📸 Foto: ${fotoUrl}`);
+        lines.push(``);
+      });
+
+      lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      lines.push(`📦 *Subtotal Medicamentos:* ${formatBRL(subtotalProdutos)}`);
+      if (frete > 0) lines.push(`🚚 *Frete / Envio (Uber Flash / Motoboy):* ${formatBRL(frete)}`);
+      lines.push(`💰 *VALOR TOTAL DO PEDIDO:* *${formatBRL(total)}* (${enc.formaPagamento === 'cartao' ? 'Cartão em até 12x s/ juros' : 'À vista no PIX'})`);
       if (sinal > 0) lines.push(`💵 *Sinal Pago Antecipado:* ${formatBRL(sinal)}`);
-      if (saldo > 0) lines.push(`📍 *Saldo a Pagar na Entrega:* ${formatBRL(saldo)}`);
+      if (saldo > 0) lines.push(`📍 *Saldo a Pagar na Entrega:* *${formatBRL(saldo)}*`);
       if (enc.endereco) lines.push(`📍 *Endereço de Entrega:* ${enc.endereco}`);
-      if (fotoPublicUrl) lines.push(`📸 *Foto do Produto Encomendado:* ${fotoPublicUrl}`);
-      lines.push(``);
+      lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━`);
       lines.push(`🚚 *Previsão de Chegada:* 7 a 10 dias úteis.`);
-      lines.push(`Assim que desembarcar em nosso estoque em Belo Horizonte, nossa equipe entra em contato com você para agendar o envio via Uber Flash / Motoboy ou retirada.`);
+      lines.push(`Assim que desembarcar em nosso estoque em Belo Horizonte, nossa equipe entra em contato com você para agendar o envio ou retirada.`);
       lines.push(``);
       lines.push(`Agradecemos pela preferência e confiança! Conte sempre conosco. ✨`);
 
@@ -3677,11 +3955,14 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
       const grupos = {};
       pendentes.forEach(e => {
-        const pid = e.produtoId;
-        if (!grupos[pid]) {
-          grupos[pid] = { produtoId: pid, qtdTotal: 0, nome: e.produtoNome, marca: e.marca };
-        }
-        grupos[pid].qtdTotal += Number(e.qtd) || 0;
+        const itens = getEncomendaItens(e);
+        itens.forEach(it => {
+          const pid = it.produtoId;
+          if (!grupos[pid]) {
+            grupos[pid] = { produtoId: pid, qtdTotal: 0, nome: it.produtoNome, marca: it.marca };
+          }
+          grupos[pid].qtdTotal += Number(it.qtd) || 0;
+        });
       });
 
       const lista = Object.values(grupos);
@@ -3726,11 +4007,14 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
       const grupos = {};
       pendentes.forEach(e => {
-        const pid = e.produtoId;
-        if (!grupos[pid]) {
-          grupos[pid] = { produtoId: pid, qtdTotal: 0, nome: e.produtoNome, marca: e.marca };
-        }
-        grupos[pid].qtdTotal += Number(e.qtd) || 0;
+        const itens = getEncomendaItens(e);
+        itens.forEach(it => {
+          const pid = it.produtoId;
+          if (!grupos[pid]) {
+            grupos[pid] = { produtoId: pid, qtdTotal: 0, nome: it.produtoNome, marca: it.marca };
+          }
+          grupos[pid].qtdTotal += Number(it.qtd) || 0;
+        });
       });
 
       const lista = Object.values(grupos);
