@@ -37,7 +37,7 @@
           <div class="brand-logo">ST</div>
           <div>
             <div class="brand-title">SHAPE TOTAL · CRM & ESTOQUE BH</div>
-            <div class="brand-sub">890 SKUs Oficiais · Gestão de Pronta Entrega BH, Compras em Trânsito & Baixa de Vendas</div>
+            <div class="brand-sub">891 SKUs Oficiais · Gestão de Pronta Entrega BH, Compras em Trânsito & Baixa de Vendas</div>
           </div>
         </div>
 
@@ -86,6 +86,8 @@
           <button id="btnViewMode" class="btn">📊 Ver Planilha</button>
           <button class="btn internal-only" style="background:#1e293b; color:#94a3b8; font-size:11px;" title="Restaura os 32 itens físicos canônicos de BH" onclick="window.CRM.resetEstoqueBase()">🔄 Reset Estoque (32 un)</button>
           <button class="btn internal-only" onclick="window.CRM.exportCSV()">📥 Excel/CSV</button>
+          <button class="btn internal-only" onclick="window.CRM.verLogAuditoria()" title="Ver log das últimas ações críticas">📜 Auditoria</button>
+          <button class="btn internal-only" onclick="window.CRM.alterarSenhaAcesso()" title="Alterar senha personalizada de acesso">🔑 Alterar Senha</button>
           <button class="btn" onclick="window.CRM.lockApp()" title="Bloquear tela">🔒 Sair</button>
         </div>
       </div>
@@ -109,7 +111,7 @@
     <section class="kpi-strip internal-only">
       <div class="kpi-card">
         <div id="kpiLabel1" class="kpi-label">Produtos Filtrados</div>
-        <div id="kpiCount" class="kpi-value">890 SKUs</div>
+        <div id="kpiCount" class="kpi-value">891 SKUs</div>
         <div id="kpiCountSub" class="kpi-sub">Carregando...</div>
       </div>
       <div class="kpi-card">
@@ -131,7 +133,7 @@
 
     <!-- Main Category Tabs requested by User -->
     <nav class="group-tabs">
-      <button class="group-tab active" data-group="todas">🌐 Todas <span class="tab-count">890</span></button>
+      <button class="group-tab active" data-group="todas">🌐 Todas <span class="tab-count">891</span></button>
       <button class="group-tab" data-group="anabolizantes">💪 Anabolizantes <span class="tab-count">456</span></button>
       <button class="group-tab" data-group="emagrecedores">🔥 Emagrecedores <span class="tab-count">172</span></button>
       <button class="group-tab" data-group="peptideos">🧬 Peptídeos & HGH <span class="tab-count">176</span></button>
@@ -495,7 +497,7 @@
         <div style="background:#0f172a; padding:12px; border-radius:8px; border:2px solid #38bdf8; margin-bottom:12px;">
           <div style="font-size:12px; font-weight:800; color:#38bdf8; text-transform:uppercase; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
             <span>➕ Escolher Medicamento para Adicionar ao Pedido</span>
-            <span id="encSearchCountBadge" style="font-size:11px; color:#94a3b8; font-weight:normal;">890 opções</span>
+            <span id="encSearchCountBadge" style="font-size:11px; color:#94a3b8; font-weight:normal;">891 opções</span>
           </div>
 
           <!-- Busca Rápida por Nome/Marca -->
@@ -953,7 +955,7 @@
         <div>
           <h3 style="font-size:17px; font-weight:800; color:#38bdf8;">➕ Incluir Produto no Estoque BH</h3>
           <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">
-            Adicione qualquer medicamento dos 890 SKUs diretamente à sua pronta entrega em Belo Horizonte.
+            Adicione qualquer medicamento dos 891 SKUs diretamente à sua pronta entrega em Belo Horizonte.
           </p>
         </div>
         <button class="btn" onclick="document.getElementById('addStockModal').classList.remove('open')">✖ Fechar</button>
@@ -1286,8 +1288,8 @@
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script src="dados_catalogo.js?v=20261112_1545"></script>
-  <script src="app.js?v=20261112_1545"></script>
+  <script src="dados_catalogo.js?v=20261112_1605"></script>
+  <script src="app.js?v=20261112_1605"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

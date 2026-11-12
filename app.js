@@ -195,9 +195,49 @@
     frascosDoses: {
       9006: { mgRestante: 120, totalAplicadasMg: 0 },
       9005: { mgRestante: 120, totalAplicadasMg: 0 }
-    }
+    },
+    cotacaoAtualizadaEm: new Date().toISOString(),
+    _bhStockSyncKey: ''
   };
 
+  const AUDIT_LOG_KEY = 'ST_AUDIT_LOG_v1';
+  const PASS_SALT = '|SHAPE_TOTAL_SALT_2026_v1|';
+  const VALID_PASS_HASHES = [
+    'e928dd10685d338a37bbb64597b818214569621b93d1607114734d32d552f6ad', // shape2026
+    'e4f85da8d5d37890ab3044efe4ef562b45e4e87b5f5e103f930d51098ba90490', // 1020
+    '03c037f6c96e56857dafe85e0510427246baf2f174319116a1f90664e30b5af2'  // italo2026
+  ];
+
+  async function hashPass(pass) {
+    const text = String(pass || '') + PASS_SALT;
+    if (window.crypto && window.crypto.subtle) {
+      const enc = new TextEncoder();
+      const buf = await window.crypto.subtle.digest('SHA-256', enc.encode(text));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    // Fallback determinístico caso esteja em contexto não-HTTPS (ex: file://)
+    let h = 2166136261;
+    for (let i = 0; i < text.length; i++) {
+      h ^= text.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return 'fb_' + (h >>> 0).toString(16).padStart(8, '0');
+  }
+
+  function logAuditoria(acao, detalhe) {
+    try {
+      const raw = localStorage.getItem(AUDIT_LOG_KEY);
+      const logs = raw ? JSON.parse(raw) : [];
+      logs.unshift({
+        data: new Date().toISOString(),
+        acao,
+        detalhe: String(detalhe || '').slice(0, 200)
+      });
+      localStorage.setItem(AUDIT_LOG_KEY, JSON.stringify(logs.slice(0, 50)));
+    } catch (e) {}
+  }
+
+  let renderLimit = 120;
   let currentEncomendaFilter = 'todas';
   let currentReceiptEncId = null;
   let currentReceiptPhone = '';
@@ -231,6 +271,8 @@
         temEstoqueSalvo = !!parsed.meuEstoque && typeof parsed.meuEstoque === 'object';
         state.canonVistos = Array.isArray(parsed.canonVistos) ? parsed.canonVistos.map(String) : [];
         state.cotacao = Number(parsed.cotacao) || 5.60;
+        state.cotacaoAtualizadaEm = parsed.cotacaoAtualizadaEm || new Date().toISOString();
+        state._bhStockSyncKey = parsed._bhStockSyncKey || '';
         state.fretePct = parsed.fretePct !== undefined ? Number(parsed.fretePct) : 30;
         state.taxaCartaoFixa = parsed.taxaCartaoFixa !== undefined ? Number(parsed.taxaCartaoFixa) : 100;
         state.activeTier = parsed.activeTier || 'rec';
@@ -298,20 +340,11 @@
       }
     });
 
-    // Semeia o estoque físico de BH na primeira carga do aparelho
+    // Semeia o estoque físico de BH apenas na primeira carga do aparelho (quando não há estoque salvo)
     if (!temEstoqueSalvo || !state.meuEstoque || typeof state.meuEstoque !== 'object') {
       state.meuEstoque = JSON.parse(JSON.stringify(ESTOQUE_CANONICO_BH));
       state._bhStockSyncKey = 'SYNC_BH_ESTOQUE_20261111_INVENTARIO_CONFIRMADO_V5';
       changed = true;
-    } else {
-      // Sincronização do inventário físico conferido por Italo em 11/11:
-      // (1 TG 4x15, 3 Lipoless 4x15, 2 Tirzec 4x15, 3 Tirzedral avulsas, 0 Tirzedral cx fechada)
-      const SYNC_KEY = 'SYNC_BH_ESTOQUE_20261111_INVENTARIO_CONFIRMADO_V5';
-      if (state._bhStockSyncKey !== SYNC_KEY) {
-        state.meuEstoque = JSON.parse(JSON.stringify(ESTOQUE_CANONICO_BH));
-        state._bhStockSyncKey = SYNC_KEY;
-        changed = true;
-      }
     }
     if (changed) saveState();
   }
@@ -322,10 +355,11 @@
     }[c]));
   }
 
-  // Dados que trafegam entre aparelhos (link de sync e arquivo de backup)
+  // Dados completos (para backup em arquivo JSON)
   function buildSyncData() {
     return {
       cotacao: state.cotacao,
+      cotacaoAtualizadaEm: state.cotacaoAtualizadaEm,
       fretePct: state.fretePct,
       taxaCartaoFixa: state.taxaCartaoFixa,
       activeTier: state.activeTier,
@@ -333,6 +367,23 @@
       vendas: state.vendas || [],
       encomendas: state.encomendas || [],
       pedidosTransito: state.pedidosTransito || [],
+      frascosDoses: state.frascosDoses || {},
+      overrides: state.overrides || {},
+      canonVistos: state.canonVistos || []
+    };
+  }
+
+  // Payload compacto (para link de sincronização e QR Code: limita às últimas 30 vendas/encomendas)
+  function buildCompactSyncData() {
+    return {
+      cotacao: state.cotacao,
+      fretePct: state.fretePct,
+      taxaCartaoFixa: state.taxaCartaoFixa,
+      activeTier: state.activeTier,
+      meuEstoque: state.meuEstoque,
+      vendas: (state.vendas || []).slice(0, 30),
+      encomendas: (state.encomendas || []).slice(0, 30),
+      pedidosTransito: (state.pedidosTransito || []).filter(p => p.status === 'em_transito'),
       frascosDoses: state.frascosDoses || {},
       overrides: state.overrides || {},
       canonVistos: state.canonVistos || []
@@ -521,9 +572,21 @@
       localStorage.setItem(BACKUP_KEY, JSON.stringify({ quando: new Date().toISOString(), estado: current }));
     }
 
+    const mergedEstoque = { ...(cur.meuEstoque || {}) };
+    if (imp.meuEstoque && typeof imp.meuEstoque === 'object') {
+      Object.keys(imp.meuEstoque).forEach(pid => {
+        const qImp = Number(imp.meuEstoque[pid]) || 0;
+        const qLoc = Number(mergedEstoque[pid]) || 0;
+        mergedEstoque[pid] = Math.max(qLoc, qImp);
+      });
+    }
+
     const nextState = {
       ...cur,
       ...imp,
+      meuEstoque: mergedEstoque,
+      _bhStockSyncKey: imp._bhStockSyncKey || cur._bhStockSyncKey || '',
+      cotacaoAtualizadaEm: imp.cotacaoAtualizadaEm || cur.cotacaoAtualizadaEm || '',
       vendas: mergedVendas,
       encomendas: mergedEncomendas,
       pedidosTransito: mergedPedidos,
@@ -538,6 +601,8 @@
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         cotacao: state.cotacao,
+        cotacaoAtualizadaEm: state.cotacaoAtualizadaEm || '',
+        _bhStockSyncKey: state._bhStockSyncKey || '',
         fretePct: state.fretePct,
         taxaCartaoFixa: state.taxaCartaoFixa,
         activeTier: state.activeTier,
@@ -603,15 +668,12 @@
     let precoMax = Math.ceil(custo * (1 + maxPct / 100));
     const isSpecialFixed = SPECIAL_FIXED_REC[p.id];
     if (isSpecialFixed) {
-      precoRec = isSpecialFixed.rec;
-      const pisoMin = Math.max(Math.ceil(custo * 1.18), Math.round(precoRec * 0.90));
-      if (precoMin >= precoRec || precoMin < Math.round(precoRec * 0.85)) {
-        precoMin = Math.min(precoRec - 20, pisoMin);
-      }
-      const tetoMax = isSpecialFixed.cartao || Math.ceil(precoRec * 1.12);
-      if (precoMax <= precoRec) {
-        precoMax = Math.max(tetoMax, precoRec + 50);
-      }
+      const fixedRec = isSpecialFixed.rec;
+      const fixedCartao = isSpecialFixed.cartao || (fixedRec + state.taxaCartaoFixa);
+      precoRec = fixedRec;
+      const pisoMin = Math.min(Math.ceil(custo * 1.18), fixedRec - 20);
+      precoMin = Math.min(precoMin, pisoMin, fixedRec - 10);
+      precoMax = Math.max(precoMax, fixedCartao, fixedRec + 50);
       if (custo > 0) {
         minPct = Math.round(((precoMin - custo) / custo) * 100);
         recPct = Math.round(((precoRec - custo) / custo) * 100);
@@ -991,11 +1053,16 @@
     const avgPrice = withStock.length ? withStock.reduce((s, p) => s + p.precoFinal, 0) / withStock.length : 0;
     const avgProfit = withStock.length ? withStock.reduce((s, p) => s + p.lucroFinal, 0) / withStock.length : 0;
     const mult = (state.cotacao * (1 + state.fretePct / 100)).toFixed(2);
+    let cotacaoAlerta = '';
+    if (state.cotacaoAtualizadaEm) {
+      const diffDias = Math.floor((Date.now() - new Date(state.cotacaoAtualizadaEm).getTime()) / 86400000);
+      if (diffDias >= 3) cotacaoAlerta = ` · ⚠️ Cotação há ${diffDias}d`;
+    }
 
     document.getElementById('kpiCount').textContent = `${filtered.length} SKUs`;
     document.getElementById('kpiCountSub').textContent = `${withStock.length} com estoque imediato`;
     document.getElementById('kpiMult').textContent = `R$ ${mult}`;
-    document.getElementById('kpiMultSub').textContent = `Dólar R$ ${state.cotacao.toFixed(2)} + ${state.fretePct}% frete`;
+    document.getElementById('kpiMultSub').textContent = `Dólar R$ ${state.cotacao.toFixed(2)} + ${state.fretePct}% frete${cotacaoAlerta}`;
     document.getElementById('kpiAvgPrice').textContent = formatBRL(avgPrice);
     document.getElementById('kpiAvgCost').textContent = `Custo médio: ${formatBRL(avgCost)}`;
     document.getElementById('kpiAvgProfit').textContent = formatBRL(avgProfit);
@@ -1009,9 +1076,17 @@
       return;
     }
 
+    const visible = filtered.slice(0, renderLimit);
+    const hasMore = filtered.length > renderLimit;
+    const loadMoreBtnHtml = hasMore
+      ? `<div style="grid-column:1 / -1; display:flex; justify-content:center; padding:18px 0;">
+           <button class="btn btn-primary" style="padding:10px 22px; font-weight:800;" onclick="window.CRM.loadMore()">Carregar mais (${filtered.length - renderLimit} restantes)</button>
+         </div>`
+      : '';
+
     if (state.viewMode === 'grid') {
       container.className = 'product-grid';
-      container.innerHTML = filtered.map(p => {
+      container.innerHTML = visible.map(p => {
         const meuQtd = Number((state.meuEstoque || {})[p.id] || 0);
         const hasAnyStock = p.stockTotal > 0 || meuQtd > 0;
         const stockBadgeLabel = (meuQtd > 0 && p.stockTotal > 0)
@@ -1109,7 +1184,7 @@
             </div>
           </div>
         `;
-      }).join('');
+      }).join('') + loadMoreBtnHtml;
     } else {
       container.className = 'table-wrap';
       container.innerHTML = `
@@ -1133,7 +1208,7 @@
             </tr>
           </thead>
           <tbody>
-            ${filtered.map(p => `
+            ${visible.map(p => `
               <tr>
                 <td>
                   ${p.localFoto ? `<img class="tbl-thumb" src="${p.localFoto}" onerror="this.src='${p.remoteFoto}'" onclick="window.CRM.openEditModal(${p.id})">` : '💊'}
@@ -1188,6 +1263,7 @@
             `).join('')}
           </tbody>
         </table>
+        ${loadMoreBtnHtml}
       `;
     }
   }
@@ -1311,25 +1387,75 @@
   // Public actions
   window.CRM = {
 
-    checkPassword() {
+    async checkPassword() {
       const input = document.getElementById('authInput');
       const err = document.getElementById('authError');
       const val = (input.value || '').trim();
-      const customPass = localStorage.getItem('ST_CUSTOM_PASS');
-      const validPasses = ['shape2026', '1020', 'italo2026'];
-      if (customPass) validPasses.push(customPass);
+      if (!val) {
+        err.style.display = 'block';
+        input.select();
+        return;
+      }
 
-      if (validPasses.includes(val)) {
+      const validHashes = [...VALID_PASS_HASHES];
+      const legacyCustom = localStorage.getItem('ST_CUSTOM_PASS');
+      if (legacyCustom) {
+        const migratedHash = await hashPass(legacyCustom);
+        localStorage.setItem('ST_CUSTOM_HASH', migratedHash);
+        localStorage.removeItem('ST_CUSTOM_PASS');
+      }
+      const customHash = localStorage.getItem('ST_CUSTOM_HASH');
+      if (customHash) validHashes.push(customHash);
+
+      const enteredHash = await hashPass(val);
+      if (validHashes.includes(enteredHash)) {
         localStorage.setItem('ST_AUTH', 'true');
         sessionStorage.setItem('ST_AUTH', 'true');
         document.getElementById('authOverlay').style.display = 'none';
         err.style.display = 'none';
         input.value = '';
+        logAuditoria('login', 'Acesso liberado');
         showToast('Acesso liberado com sucesso!');
       } else {
         err.style.display = 'block';
         input.select();
       }
+    },
+
+    async alterarSenhaAcesso() {
+      const nova = prompt('Digite a nova senha de acesso personalizada (mínimo 4 caracteres):');
+      if (nova === null) return;
+      const clean = nova.trim();
+      if (clean.length < 4) {
+        showToast('Senha muito curta. Use pelo menos 4 caracteres.');
+        return;
+      }
+      const confirmacao = prompt('Confirme a nova senha:');
+      if (confirmacao === null || confirmacao.trim() !== clean) {
+        showToast('As senhas não conferem. Alteração cancelada.');
+        return;
+      }
+      const hash = await hashPass(clean);
+      localStorage.setItem('ST_CUSTOM_HASH', hash);
+      localStorage.removeItem('ST_CUSTOM_PASS');
+      logAuditoria('alterar_senha', 'Senha personalizada atualizada (SHA-256)');
+      showToast('Senha personalizada salva com segurança (SHA-256)!');
+    },
+
+    verLogAuditoria() {
+      let logs = [];
+      try {
+        logs = JSON.parse(localStorage.getItem(AUDIT_LOG_KEY) || '[]');
+      } catch (e) { logs = []; }
+      if (!logs.length) {
+        alert('Nenhum registro no log de auditoria ainda.');
+        return;
+      }
+      const texto = logs.slice(0, 30).map((l, idx) => {
+        const dt = l.ts ? new Date(l.ts).toLocaleString('pt-BR') : '-';
+        return `${idx + 1}. [${dt}] ${l.acao}: ${l.detalhe || ''}`;
+      }).join('\n');
+      alert(`📜 LOG DE AUDITORIA (Últimas ${Math.min(logs.length, 30)} ações)\n\n${texto}`);
     },
 
     lockApp() {
@@ -1419,6 +1545,11 @@
       showToast('Restaurado para a regra do grupo!');
     },
 
+    loadMore() {
+      renderLimit += 100;
+      renderAll();
+    },
+
     changeMeuEstoque(id, delta) {
       if (!state.meuEstoque) state.meuEstoque = {};
       const current = Number(state.meuEstoque[id] || 0);
@@ -1428,6 +1559,7 @@
       } else {
         state.meuEstoque[id] = next;
       }
+      logAuditoria('ajuste_estoque', `SKU ${id}: ${current} -> ${next}`);
       saveState();
       renderAll();
       showToast(next > 0 ? `Estoque BH: ${next} un` : `Removido do estoque BH`);
@@ -1954,6 +2086,7 @@
         state.encomendas.unshift(novaEnc);
 
         saveState();
+        logAuditoria('venda_dose', `${p.nombre} (${doseMg}mg) - ${client} - ${formatBRL(totalComFrete)}`);
 
         document.getElementById('saleModal').classList.remove('open');
         renderAll();
@@ -1963,10 +2096,15 @@
       }
 
       // Se for frasco/caixa fechada
+      if (currentStock <= 0) {
+        alert('Item sem estoque físico em BH! Cadastre a entrada no Estoque BH ou registre como Encomenda.');
+        return;
+      }
       if (qty > currentStock) {
         const prosseguir = confirm(`Atenção: A quantidade informada (${qty}) é maior do que o estoque registrado no aparelho (${currentStock} un).\n\nDeseja registrar a venda e ajustar o estoque mesmo assim?`);
         if (!prosseguir) return;
       }
+      logAuditoria('venda_caixa', `${p.nombre} x${qty} - ${client} - ${formatBRL(totalComFrete)}`);
 
       // Baixa no estoque
       const nextStock = currentStock - qty;
@@ -2299,6 +2437,7 @@
         // Soft delete (append-only) para preservar histórico na sincronização entre Mac e iPhone
         v.estornada = true;
         v.estornadaEm = new Date().toISOString();
+        logAuditoria('estorno_venda', `${v.produtoNome} - ${v.cliente} (${formatBRL(v.valorTotal || 0)})`);
 
         saveState();
         renderAll();
@@ -2829,7 +2968,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
     openSyncModal() {
       const modal = document.getElementById('syncModal');
-      const jsonStr = JSON.stringify(buildSyncData());
+      const jsonStr = JSON.stringify(buildCompactSyncData());
       const b64 = btoa(encodeURIComponent(jsonStr));
       const baseUrl = window.location.origin + window.location.pathname;
       const syncUrl = `${baseUrl}#sync=${b64}`;
@@ -5028,6 +5167,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
     cotInput.addEventListener('input', e => {
       state.cotacao = Number(e.target.value) || 0;
+      state.cotacaoAtualizadaEm = new Date().toISOString();
       saveState();
       renderAll();
     });
@@ -5059,6 +5199,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         state.mainGroup = tab.getAttribute('data-group');
         state.subCat = 'todas';
         document.getElementById('subCatSelect').value = 'todas';
+        renderLimit = 120;
         renderAll();
       });
     });
@@ -5071,32 +5212,38 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (searchClearBtn) {
         searchClearBtn.style.display = state.search ? 'flex' : 'none';
       }
+      renderLimit = 120;
       clearTimeout(searchTimer);
-      searchTimer = setTimeout(renderAll, 150);
+      searchTimer = setTimeout(renderAll, 300);
     });
 
     document.getElementById('subCatSelect').addEventListener('change', e => {
       state.subCat = e.target.value;
+      renderLimit = 120;
       renderAll();
     });
 
     document.getElementById('brandSelect').addEventListener('change', e => {
       state.brand = e.target.value;
+      renderLimit = 120;
       renderAll();
     });
 
     document.getElementById('stockSelect').addEventListener('change', e => {
       state.stockFilter = e.target.value;
+      renderLimit = 120;
       renderAll();
     });
 
     document.getElementById('branchSelect').addEventListener('change', e => {
       state.branchFilter = e.target.value;
+      renderLimit = 120;
       renderAll();
     });
 
     document.getElementById('sortSelect').addEventListener('change', e => {
       state.sortBy = e.target.value;
+      renderLimit = 120;
       renderAll();
     });
 
