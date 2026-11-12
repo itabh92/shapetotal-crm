@@ -4196,13 +4196,21 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
       if (textarea) textarea.value = lines.join('\n');
 
-      // Atualiza texto do botão de envio do WhatsApp
+      // Atualiza texto dos botões de envio do WhatsApp
       const btnWa = document.getElementById('btnOpenEncWa');
+      const btnDirectPhone = document.getElementById('btnOpenEncWaDirectPhone');
+
       if (btnWa) {
-        if (enc.telefone) {
-          btnWa.textContent = `📲 Enviar no WhatsApp (${enc.telefone})`;
+        btnWa.textContent = `📲 Escolher Contato no WhatsApp`;
+      }
+
+      if (btnDirectPhone) {
+        const telLimpo = (enc.telefone || '').replace(/\D/g, '');
+        if (telLimpo && telLimpo !== '31972191092' && telLimpo !== '5531972191092') {
+          btnDirectPhone.style.display = 'inline-block';
+          btnDirectPhone.textContent = `💬 Direto no (${enc.telefone})`;
         } else {
-          btnWa.textContent = `📲 Abrir no WhatsApp`;
+          btnDirectPhone.style.display = 'none';
         }
       }
 
@@ -4252,18 +4260,26 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (textarea) textarea.value = lines.join('\n');
 
       const btnWa = document.getElementById('btnOpenEncWa');
+      const btnDirectPhone = document.getElementById('btnOpenEncWaDirectPhone');
+
       if (btnWa) {
-        if (enc.telefone) {
-          btnWa.textContent = `📲 Enviar Aviso WhatsApp (${enc.telefone})`;
+        btnWa.textContent = `📲 Escolher Contato no WhatsApp`;
+      }
+
+      if (btnDirectPhone) {
+        const telLimpo = (enc.telefone || '').replace(/\D/g, '');
+        if (telLimpo && telLimpo !== '31972191092' && telLimpo !== '5531972191092') {
+          btnDirectPhone.style.display = 'inline-block';
+          btnDirectPhone.textContent = `💬 Direto no (${enc.telefone})`;
         } else {
-          btnWa.textContent = `📲 Abrir no WhatsApp`;
+          btnDirectPhone.style.display = 'none';
         }
       }
 
       modal.classList.add('open');
     },
 
-    openEncomendaWhatsAppDirect() {
+    openEncomendaWhatsAppDirect(useDirectPhone = false) {
       const textarea = document.getElementById('encReceiptText');
       const text = textarea ? textarea.value : '';
       if (!text) {
@@ -4277,12 +4293,15 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         }
       } catch (e) {}
 
-      let telLimpo = (currentReceiptPhone || '').replace(/\D/g, '');
       let url = 'https://api.whatsapp.com/send?';
-      if (telLimpo) {
+      let telLimpo = (currentReceiptPhone || '').replace(/\D/g, '');
+
+      // Só inclui o telefone se o usuário clicar explicitamente em "Direto no telefone" E não for o número pessoal
+      if (useDirectPhone && telLimpo && telLimpo !== '31972191092' && telLimpo !== '5531972191092') {
         if (!telLimpo.startsWith('55')) telLimpo = '55' + telLimpo;
         url += `phone=${telLimpo}&`;
       }
+      // Sem o parâmetro phone, o WhatsApp abre a tela nativa para ESCOLHER A PESSOA/CONTATO!
       url += `text=${encodeURIComponent(text)}`;
 
       // Se for mobile (iPhone / Android), dispara window.location.href direto
@@ -4294,7 +4313,23 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
           window.location.href = url;
         }
       }
-      showToast('Abrindo WhatsApp...');
+      showToast('Abrindo WhatsApp para você escolher a pessoa...');
+    },
+
+    shareEncomendaReceiptNative() {
+      const textarea = document.getElementById('encReceiptText');
+      const text = textarea ? textarea.value : '';
+      if (!text) return;
+      if (navigator.share) {
+        navigator.share({
+          title: 'Recibo Shape Total / Baxti',
+          text: text
+        }).catch(() => {
+          window.CRM.openEncomendaWhatsAppDirect(false);
+        });
+      } else {
+        window.CRM.openEncomendaWhatsAppDirect(false);
+      }
     },
 
     copyEncomendaReceiptText() {
