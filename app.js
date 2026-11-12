@@ -190,12 +190,17 @@
     meuEstoque: {}, // { [id]: qty }
     cart: {}, // { [id]: qty }
     vendas: [], // [ { id, data, produtoId, produtoNome, qtd, valorUnitario, valorTotal, pagamento, cliente, telefone, obs, lucro } ]
+    encomendas: [], // [ { id, data, cliente, telefone, endereco, status, produtoId, produtoNome, marca, qtd, precoUnit, valorTotal, formaPagamento, sinal, obs } ]
     pedidosTransito: [], // [ { id, data_compra, status, custo_total_reais, itens: [ { id_catalogo, nome, qtd, ... } ] } ]
     frascosDoses: {
       9006: { mgRestante: 120, totalAplicadasMg: 0 },
       9005: { mgRestante: 120, totalAplicadasMg: 0 }
     }
   };
+
+  let currentEncomendaFilter = 'todas';
+  let currentReceiptEncId = null;
+  let currentReceiptPhone = '';
 
   function loadState() {
     // O estoque canônico só é semeado quando o aparelho nunca teve estoque salvo.
@@ -221,6 +226,7 @@
         state.overrides = parsed.overrides || {};
         state.meuEstoque = parsed.meuEstoque || {};
         state.vendas = Array.isArray(parsed.vendas) ? parsed.vendas : [];
+        state.encomendas = Array.isArray(parsed.encomendas) ? parsed.encomendas : [];
         state.pedidosTransito = Array.isArray(parsed.pedidosTransito) ? parsed.pedidosTransito : [];
         state.frascosDoses = parsed.frascosDoses || {
           9006: { mgRestante: 120, totalAplicadasMg: 0 },
@@ -307,6 +313,7 @@
       activeTier: state.activeTier,
       meuEstoque: state.meuEstoque,
       vendas: state.vendas || [],
+      encomendas: state.encomendas || [],
       pedidosTransito: state.pedidosTransito || [],
       frascosDoses: state.frascosDoses || {},
       overrides: state.overrides || {},
@@ -354,6 +361,29 @@
         telefone: String(v.telefone || ''),
         obs: String(v.obs || '')
       })).filter(v => v.id);
+    }
+    if (Array.isArray(imp.encomendas)) {
+      const num = x => Number(x) || 0;
+      out.encomendas = imp.encomendas.filter(isObj).map(e => ({
+        ...e,
+        id: String(e.id || ''),
+        data: String(e.data || ''),
+        cliente: String(e.cliente || ''),
+        telefone: String(e.telefone || ''),
+        endereco: String(e.endereco || ''),
+        status: String(e.status || 'pendente'),
+        produtoId: num(e.produtoId),
+        produtoNome: String(e.produtoNome || ''),
+        marca: String(e.marca || ''),
+        qtd: Math.max(1, num(e.qtd)),
+        formaPagamento: String(e.formaPagamento || 'pix'),
+        precoUnit: num(e.precoUnit),
+        valorTotal: num(e.valorTotal),
+        sinal: num(e.sinal),
+        saldoRestante: num(e.saldoRestante),
+        obs: String(e.obs || ''),
+        loteId: e.loteId ? String(e.loteId) : null
+      })).filter(e => e.id);
     }
     if (Array.isArray(imp.pedidosTransito)) {
       out.pedidosTransito = imp.pedidosTransito.filter(isObj).map(p => ({
@@ -433,14 +463,36 @@
     impPedidos.forEach(p => { if (p && p.id) pedidosMap.set(String(p.id), p); });
     const mergedPedidos = Array.from(pedidosMap.values());
 
-    // 3. Merge de canonVistos
+    // 3. Merge de encomendas de clientes
+    const curEncomendas = Array.isArray(cur.encomendas) ? cur.encomendas : [];
+    const impEncomendas = Array.isArray(imp.encomendas) ? imp.encomendas : [];
+    const encMap = new Map();
+    curEncomendas.forEach(e => { if (e && e.id) encMap.set(String(e.id), e); });
+    impEncomendas.forEach(e => {
+      if (!e || !e.id) return;
+      const eid = String(e.id);
+      if (encMap.has(eid)) {
+        const local = encMap.get(eid);
+        encMap.set(eid, { ...local, ...e });
+      } else {
+        encMap.set(eid, e);
+      }
+    });
+    const mergedEncomendas = Array.from(encMap.values()).sort((a, b) => {
+      const da = new Date(a.data || 0).getTime();
+      const db = new Date(b.data || 0).getTime();
+      return db - da;
+    });
+
+    // 4. Merge de canonVistos
     const canonSet = new Set([...(cur.canonVistos || []), ...(imp.canonVistos || [])]);
 
     const soma = o => Object.values(o || {}).reduce((s, v) => s + (Number(v) || 0), 0);
     const msg = `Sincronizar dados (${origem})?\n\n` +
       `📦 Estoque BH: ${soma(imp.meuEstoque !== undefined ? imp.meuEstoque : cur.meuEstoque)} un\n` +
-      `🧾 Vendas: ${curVendas.length} locais + ${novasVendasCount} novas = ${mergedVendas.length} total histórico\n\n` +
-      `As vendas de ambos os aparelhos serão unidas sem perder nenhum lançamento. Uma cópia do estado atual fica salva para desfazer.`;
+      `🧾 Vendas: ${curVendas.length} locais + ${novasVendasCount} novas = ${mergedVendas.length} total histórico\n` +
+      `📝 Encomendas: ${mergedEncomendas.length} cadastradas\n\n` +
+      `Os dados de ambos os aparelhos serão unidos sem perda. Uma cópia do estado atual fica salva para desfazer.`;
 
     if (!confirm(msg)) return false;
 
@@ -452,6 +504,7 @@
       ...cur,
       ...imp,
       vendas: mergedVendas,
+      encomendas: mergedEncomendas,
       pedidosTransito: mergedPedidos,
       canonVistos: Array.from(canonSet)
     };
@@ -471,6 +524,7 @@
         overrides: state.overrides,
         meuEstoque: state.meuEstoque,
         vendas: state.vendas || [],
+        encomendas: state.encomendas || [],
         pedidosTransito: state.pedidosTransito || [],
         frascosDoses: state.frascosDoses || {},
         canonVistos: state.canonVistos || []
@@ -823,6 +877,10 @@
     const badgeTransito = document.getElementById('countTransitoBadge');
     if (badgeTransito) badgeTransito.textContent = totalItensTransito;
 
+    const badgeEncomendas = document.getElementById('countEncomendasBadge');
+    const encPendentes = (state.encomendas || []).filter(e => e.status === 'pendente');
+    if (badgeEncomendas) badgeEncomendas.textContent = encPendentes.length;
+
     const bhPanel = document.getElementById('bhExecutivePanel');
     const pyFilters = ['subCatSelect', 'brandSelect', 'stockSelect', 'branchSelect'];
 
@@ -1012,6 +1070,7 @@
 
               <div class="p-actions">
                 <button class="btn btn-primary" onclick="window.CRM.addToCart(${p.id})">➕ Orçamento</button>
+                <button class="btn internal-only" style="background:#312e81; color:#c7d2fe; font-weight:700; border:1px solid #4338ca;" title="Registrar encomenda deste produto para cliente" onclick="window.CRM.openNovaEncomendaModal(${p.id})">📝 Encomendar</button>
                 <button class="btn" onclick="window.CRM.copySingleWhatsApp(${p.id})">📲 Copiar Linha</button>
                 <button class="btn internal-only" title="Editar preço/descrição" onclick="window.CRM.openEditModal(${p.id})">✏️</button>
               </div>
@@ -1087,6 +1146,7 @@
                 <td>
                   <div style="display:flex;gap:4px">
                     ${((state.meuEstoque || {})[p.id] || 0) > 0 ? `<button class="btn btn-green internal-only" style="background:#059669; color:#fff; font-weight:800;" title="Dar Baixa / Registrar Venda" onclick="window.CRM.openSaleModal(${p.id})">💰</button>` : ''}
+                    <button class="btn internal-only" style="background:#312e81; color:#c7d2fe; font-weight:700; border:1px solid #4338ca;" title="Cadastrar Encomenda p/ Cliente" onclick="window.CRM.openNovaEncomendaModal(${p.id})">📝</button>
                     <button class="btn btn-primary" onclick="window.CRM.addToCart(${p.id})">➕</button>
                     <button class="btn" onclick="window.CRM.copySingleWhatsApp(${p.id})">📲</button>
                     <button class="btn internal-only" onclick="window.CRM.openEditModal(${p.id})">✏️</button>
@@ -2607,6 +2667,825 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (confirm('Deseja recarregar a versão mais recente do CRM limpando o cache local?')) {
         window.location.reload(true);
       }
+    },
+
+    // ==========================================
+    // MÓDULO DE ENCOMENDAS & CONCENTRADOR P/ FORNECEDOR
+    // ==========================================
+
+    openEncomendasModal(tab = 'concentrador') {
+      const modal = document.getElementById('encomendasModal');
+      if (!modal) return;
+      window.CRM.switchEncomendasTab(tab);
+      window.CRM.renderEncomendas();
+      modal.classList.add('open');
+    },
+
+    switchEncomendasTab(tab) {
+      const tConc = document.getElementById('encTabContentConcentrador');
+      const tCli = document.getElementById('encTabContentClientes');
+      const tNova = document.getElementById('encTabContentNova');
+
+      const bConc = document.getElementById('tabBtnConcentrador');
+      const bCli = document.getElementById('tabBtnClientes');
+      const bNova = document.getElementById('tabBtnNova');
+
+      if (tConc) tConc.style.display = tab === 'concentrador' ? 'block' : 'none';
+      if (tCli) tCli.style.display = tab === 'clientes' ? 'block' : 'none';
+      if (tNova) tNova.style.display = tab === 'nova' ? 'block' : 'none';
+
+      if (bConc) {
+        bConc.className = tab === 'concentrador' ? 'btn btn-primary' : 'btn';
+        bConc.style.background = tab === 'concentrador' ? '#4f46e5' : '';
+        bConc.style.borderColor = tab === 'concentrador' ? '#818cf8' : '';
+      }
+      if (bCli) {
+        bCli.className = tab === 'clientes' ? 'btn btn-primary' : 'btn';
+        bCli.style.background = tab === 'clientes' ? '#4f46e5' : '';
+        bCli.style.borderColor = tab === 'clientes' ? '#818cf8' : '';
+      }
+      if (bNova) {
+        bNova.className = tab === 'nova' ? 'btn btn-green' : 'btn';
+        bNova.style.background = tab === 'nova' ? '#059669' : '';
+      }
+
+      if (tab === 'nova') {
+        window.CRM.populateEncProdutosDropdown();
+      } else {
+        window.CRM.renderEncomendas();
+      }
+    },
+
+    filterEncomendas(status, btnElement) {
+      currentEncomendaFilter = status;
+      document.querySelectorAll('.enc-filter-btn').forEach(b => b.classList.remove('active'));
+      if (btnElement) btnElement.classList.add('active');
+      window.CRM.renderEncomendasClientes();
+    },
+
+    renderEncomendas() {
+      const encomendas = Array.isArray(state.encomendas) ? state.encomendas : [];
+      const pendentes = encomendas.filter(e => e.status === 'pendente');
+      const transito = encomendas.filter(e => e.status === 'pedido_ao_fornecedor');
+      const chegou = encomendas.filter(e => e.status === 'chegou_bh');
+      const entregues = encomendas.filter(e => e.status === 'entregue');
+
+      const totalCaixasLote = pendentes.reduce((acc, e) => acc + (Number(e.qtd) || 0), 0);
+      const bLote = document.getElementById('encCountLote');
+      if (bLote) bLote.textContent = totalCaixasLote;
+
+      const bCli = document.getElementById('encCountClientes');
+      if (bCli) bCli.textContent = encomendas.length;
+
+      const fTodas = document.getElementById('countFiltroTodas');
+      if (fTodas) fTodas.textContent = encomendas.length;
+      const fPend = document.getElementById('countFiltroPendente');
+      if (fPend) fPend.textContent = pendentes.length;
+      const fTrans = document.getElementById('countFiltroTransito');
+      if (fTrans) fTrans.textContent = transito.length;
+      const fCheg = document.getElementById('countFiltroChegou');
+      if (fCheg) fCheg.textContent = chegou.length;
+      const fEntr = document.getElementById('countFiltroEntregue');
+      if (fEntr) fEntr.textContent = entregues.length;
+
+      const badgeTop = document.getElementById('countEncomendasBadge');
+      if (badgeTop) badgeTop.textContent = pendentes.length;
+
+      window.CRM.renderEncomendasConcentrador();
+      window.CRM.renderEncomendasClientes();
+    },
+
+    renderEncomendasConcentrador() {
+      const encomendas = Array.isArray(state.encomendas) ? state.encomendas : [];
+      const pendentes = encomendas.filter(e => e.status === 'pendente');
+
+      const grupos = {};
+      pendentes.forEach(e => {
+        const pid = e.produtoId;
+        if (!grupos[pid]) {
+          grupos[pid] = {
+            produtoId: pid,
+            qtdTotal: 0,
+            valorVendaTotal: 0,
+            sinalTotal: 0,
+            clientes: [],
+            marca: e.marca || '',
+            nome: e.produtoNome || ''
+          };
+        }
+        grupos[pid].qtdTotal += Number(e.qtd) || 0;
+        grupos[pid].valorVendaTotal += Number(e.valorTotal) || 0;
+        grupos[pid].sinalTotal += Number(e.sinal) || 0;
+        grupos[pid].clientes.push({
+          cliente: e.cliente,
+          telefone: e.telefone,
+          qtd: e.qtd,
+          encId: e.id
+        });
+      });
+
+      const listaAgrupada = Object.values(grupos);
+      let totalPecas = 0;
+      let custoTotalUsd = 0;
+      let custoTotalBrl = 0;
+      let faturamentoTotal = 0;
+      let sinalTotal = 0;
+
+      const tbody = document.getElementById('encConcentradorTableBody');
+      if (!tbody) return;
+
+      if (!listaAgrupada.length) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:28px 14px; color:#94a3b8;">Nenhuma encomenda pendente no momento. Clique em <b>➕ Nova Encomenda</b> ou use o botão <b>📝 Encomendar</b> nos produtos do catálogo para cadastrar pedidos de clientes!</td></tr>`;
+        document.getElementById('encKpiTotalPecas').textContent = '0 caixas';
+        document.getElementById('encKpiTotalClientes').textContent = '0 clientes aguardando';
+        document.getElementById('encKpiCustoTotal').textContent = 'US$ 0 / R$ 0,00';
+        document.getElementById('encKpiFaturamento').textContent = 'R$ 0,00';
+        document.getElementById('encKpiSinalRecebido').textContent = 'R$ 0,00 recebido em sinais';
+        document.getElementById('encKpiLucro').textContent = '+R$ 0,00';
+        document.getElementById('encKpiRoi').textContent = 'ROI projetado: 0%';
+        return;
+      }
+
+      const rows = listaAgrupada.map(g => {
+        const raw = rawCatalog.find(p => p.id === g.produtoId) || { id: g.produtoId, nombre: g.nome, marca: g.marca, precio: 0 };
+        const p = computeProduct(raw);
+
+        totalPecas += g.qtdTotal;
+        const itemCustoUsd = (p.usd || 0) * g.qtdTotal;
+        const itemCustoBrl = (p.custo || 0) * g.qtdTotal;
+        custoTotalUsd += itemCustoUsd;
+        custoTotalBrl += itemCustoBrl;
+        faturamentoTotal += g.valorVendaTotal;
+        sinalTotal += g.sinalTotal;
+        const itemLucro = g.valorVendaTotal - itemCustoBrl;
+
+        const foto = p.localFoto || p.remoteFoto || '';
+        const imgTag = foto
+          ? `<img src="${foto}" class="tbl-thumb" style="width:40px;height:40px;object-fit:contain;border-radius:6px;background:#0f172a;cursor:pointer;border:1px solid #1e293b;" onclick="window.CRM.openFotoPreview('${foto}', '${escapeHtml(p.nombre)}')" onerror="this.parentElement.innerHTML='💊'">`
+          : '💊';
+
+        const clientesTags = g.clientes.map(c => 
+          `<span style="background:#1e293b; color:#38bdf8; padding:2px 6px; border-radius:4px; font-size:10.5px; border:1px solid #334155; display:inline-block; margin:2px;" title="${c.telefone}">👤 ${escapeHtml(c.cliente)}: <b>${c.qtd} cx</b></span>`
+        ).join('');
+
+        return `
+          <tr>
+            <td style="text-align:center;">${imgTag}</td>
+            <td>
+              <div style="font-weight:700; color:#fff; font-size:12.5px;">${p.nombre}</div>
+              <div style="font-size:11px; color:#38bdf8;">${(p.marca || '').toUpperCase()} · Cód: #${p.id}</div>
+            </td>
+            <td style="text-align:center;">
+              <span class="badge" style="background:#b45309; color:#fef3c7; font-size:14px; font-weight:800; padding:4px 10px; border-radius:6px; border:1px solid #fbbf24;">
+                ${g.qtdTotal} cx
+              </span>
+            </td>
+            <td>US$ ${(p.usd || 0).toFixed(2)}</td>
+            <td style="color:#f87171; font-weight:700;">${formatBRL(itemCustoBrl)}</td>
+            <td style="color:#34d399; font-weight:700;">${formatBRL(g.valorVendaTotal)}</td>
+            <td style="color:#38bdf8; font-weight:700;">+${formatBRL(itemLucro)}</td>
+            <td>${clientesTags}</td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = rows;
+
+      const clientesUnicos = new Set(pendentes.map(e => (e.cliente || '').trim().toLowerCase())).size;
+      const lucroTotal = faturamentoTotal - custoTotalBrl;
+      const roi = custoTotalBrl > 0 ? ((lucroTotal / custoTotalBrl) * 100).toFixed(1) : 0;
+
+      document.getElementById('encKpiTotalPecas').textContent = `${totalPecas} caixas`;
+      document.getElementById('encKpiTotalClientes').textContent = `${clientesUnicos} clientes aguardando`;
+      document.getElementById('encKpiCustoTotal').textContent = `US$ ${custoTotalUsd.toFixed(2)} / ${formatBRL(custoTotalBrl)}`;
+      document.getElementById('encKpiFaturamento').textContent = formatBRL(faturamentoTotal);
+      document.getElementById('encKpiSinalRecebido').textContent = `${formatBRL(sinalTotal)} recebido em sinais`;
+      document.getElementById('encKpiLucro').textContent = `+${formatBRL(lucroTotal)}`;
+      document.getElementById('encKpiRoi').textContent = `ROI projetado: ${roi}%`;
+    },
+
+    renderEncomendasClientes() {
+      const tbody = document.getElementById('encClientesTableBody');
+      if (!tbody) return;
+
+      const encomendas = Array.isArray(state.encomendas) ? state.encomendas : [];
+      let filtered = encomendas;
+      if (currentEncomendaFilter !== 'todas') {
+        filtered = encomendas.filter(e => e.status === currentEncomendaFilter);
+      }
+
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:28px 14px; color:#94a3b8;">Nenhuma encomenda encontrada com o filtro selecionado.</td></tr>`;
+        return;
+      }
+
+      const rows = filtered.map(e => {
+        const raw = rawCatalog.find(p => p.id === e.produtoId) || { id: e.produtoId, nombre: e.produtoNome, marca: e.marca, foto: '' };
+        const p = computeProduct(raw);
+        const foto = p.localFoto || p.remoteFoto || '';
+        const imgTag = foto
+          ? `<img src="${foto}" class="tbl-thumb" style="width:36px;height:36px;object-fit:contain;border-radius:4px;background:#0f172a;cursor:pointer;border:1px solid #1e293b;" onclick="window.CRM.openFotoPreview('${foto}', '${escapeHtml(e.produtoNome)}')" onerror="this.parentElement.innerHTML='💊'">`
+          : '💊';
+
+        const dataStr = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
+        const telLimpo = (e.telefone || '').replace(/\D/g, '');
+        const waLink = telLimpo ? `https://wa.me/55${telLimpo.replace(/^55/, '')}` : null;
+
+        const statusColors = {
+          'pendente': { bg: '#b45309', color: '#fef3c7', text: '🟡 Aguardando Lote' },
+          'pedido_ao_fornecedor': { bg: '#0369a1', color: '#e0f2fe', text: '🚚 A Caminho' },
+          'chegou_bh': { bg: '#059669', color: '#d1fae5', text: '🟢 Chegou em BH' },
+          'entregue': { bg: '#334155', color: '#cbd5e1', text: '✅ Entregue' },
+          'cancelado': { bg: '#dc2626', color: '#fee2e2', text: '❌ Cancelado' }
+        };
+        const stInfo = statusColors[e.status] || { bg: '#334155', color: '#fff', text: e.status };
+
+        return `
+          <tr>
+            <td style="font-size:11px; color:#94a3b8; white-space:nowrap;">${dataStr}</td>
+            <td>
+              <div style="font-weight:700; color:#fff; font-size:13px;">${escapeHtml(e.cliente)}</div>
+              ${e.telefone ? `<div style="font-size:11px; margin-top:2px;"><a href="${waLink}" target="_blank" style="color:#38bdf8; text-decoration:none;">📱 ${escapeHtml(e.telefone)}</a></div>` : ''}
+              ${e.endereco ? `<div style="font-size:10.5px; color:#94a3b8; max-width:220px; white-space:normal; line-height:1.2; margin-top:3px;">📍 ${escapeHtml(e.endereco)}</div>` : ''}
+            </td>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                ${imgTag}
+                <div>
+                  <div style="font-weight:700; color:#fff; font-size:12px;">${escapeHtml(e.produtoNome)}</div>
+                  <div style="font-size:11px; color:#fbbf24;"><b>${e.qtd} cx</b> · ${(e.formaPagamento === 'cartao' ? '💳 Cartão (até 12x)' : '💠 PIX')}</div>
+                </div>
+              </div>
+            </td>
+            <td style="font-weight:800; color:#34d399; font-size:13px;">${formatBRL(e.valorTotal)}</td>
+            <td>
+              <div style="font-size:11px;">Sinal: <b style="color:#fbbf24;">${formatBRL(e.sinal || 0)}</b></div>
+              <div style="font-size:11px;">Saldo: <b style="color:#cbd5e1;">${formatBRL(e.saldoRestante || (e.valorTotal - (e.sinal || 0)))}</b></div>
+            </td>
+            <td>
+              <select class="filter-select" style="font-size:11px; padding:3px 6px; font-weight:700; background:${stInfo.bg}; color:${stInfo.color}; border:1px solid rgba(255,255,255,0.2);" onchange="window.CRM.changeStatusEncomenda('${e.id}', this.value)">
+                <option value="pendente" ${e.status === 'pendente' ? 'selected' : ''}>🟡 Aguardando Lote</option>
+                <option value="pedido_ao_fornecedor" ${e.status === 'pedido_ao_fornecedor' ? 'selected' : ''}>🚚 A Caminho</option>
+                <option value="chegou_bh" ${e.status === 'chegou_bh' ? 'selected' : ''}>🟢 Chegou em BH</option>
+                <option value="entregue" ${e.status === 'entregue' ? 'selected' : ''}>✅ Entregue</option>
+                <option value="cancelado" ${e.status === 'cancelado' ? 'selected' : ''}>❌ Cancelado</option>
+              </select>
+            </td>
+            <td style="text-align:center;">
+              <div style="display:flex; gap:4px; justify-content:center; flex-wrap:wrap;">
+                <button class="btn btn-xs btn-primary" style="background:#4f46e5; border-color:#818cf8; font-size:11px;" title="Ver Comprovante com Foto" onclick="window.CRM.openEncomendaReceiptModal('${e.id}')">
+                  🧾 Recibo c/ Foto
+                </button>
+                ${e.status === 'chegou_bh' ? `
+                  <button class="btn btn-xs btn-green" style="background:#059669; color:#fff; font-size:11px;" title="Avisar no WhatsApp que chegou em BH" onclick="window.CRM.openAvisoChegadaWhatsApp('${e.id}')">
+                    🎉 Avisar Chegada
+                  </button>
+                ` : ''}
+                <button class="btn btn-xs btn-danger" style="background:#dc2626; color:#fff; font-size:11px;" title="Excluir Encomenda" onclick="window.CRM.deleteEncomenda('${e.id}')">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = rows;
+    },
+
+    openOrdemCompraVisualModal() {
+      const encomendas = Array.isArray(state.encomendas) ? state.encomendas : [];
+      const pendentes = encomendas.filter(e => e.status === 'pendente');
+
+      const grupos = {};
+      pendentes.forEach(e => {
+        const pid = e.produtoId;
+        if (!grupos[pid]) {
+          grupos[pid] = {
+            produtoId: pid,
+            qtdTotal: 0,
+            nome: e.produtoNome || '',
+            marca: e.marca || ''
+          };
+        }
+        grupos[pid].qtdTotal += Number(e.qtd) || 0;
+      });
+
+      const listaAgrupada = Object.values(grupos);
+      const container = document.getElementById('ordemCompraVisualGrid');
+      const modal = document.getElementById('ordemCompraVisualModal');
+      if (!container || !modal) return;
+
+      let totalPecas = 0;
+      let custoTotalUsd = 0;
+      let custoTotalBrl = 0;
+
+      if (!listaAgrupada.length) {
+        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:#94a3b8; font-size:14px;">Nenhuma encomenda pendente no momento para gerar ordem de compra com fotos.</div>`;
+        document.getElementById('ocvTotalCaixas').textContent = '0';
+        document.getElementById('ocvTotalItens').textContent = '0 medicamentos diferentes';
+        document.getElementById('ocvCustoTotal').textContent = 'US$ 0.00 / R$ 0,00';
+        modal.classList.add('open');
+        return;
+      }
+
+      const cardsHtml = listaAgrupada.map(g => {
+        const raw = rawCatalog.find(p => p.id === g.produtoId) || { id: g.produtoId, nombre: g.nome, marca: g.marca, precio: 0, foto: '' };
+        const p = computeProduct(raw);
+        totalPecas += g.qtdTotal;
+        const itemCustoUsd = (p.usd || 0) * g.qtdTotal;
+        const itemCustoBrl = (p.custo || 0) * g.qtdTotal;
+        custoTotalUsd += itemCustoUsd;
+        custoTotalBrl += itemCustoBrl;
+
+        const foto = p.localFoto || p.remoteFoto || '';
+        const imgTag = foto
+          ? `<img src="${foto}" alt="${escapeHtml(p.nombre)}" style="width:100%; height:140px; object-fit:contain; border-radius:6px; background:#020617; border:1px solid #1e293b;" onerror="this.parentElement.innerHTML='<div style=\\'height:140px;display:flex;align-items:center;justify-content:center;background:#020617;font-size:32px;\\'>💊</div>';">`
+          : `<div style="height:140px; display:flex; align-items:center; justify-content:center; background:#020617; font-size:32px; border-radius:6px; border:1px solid #1e293b;">💊</div>`;
+
+        return `
+          <div style="background:#0f172a; border:2px solid #334155; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 4px 6px -1px rgba(0,0,0,0.3);">
+            <div>
+              <div style="position:relative; margin-bottom:10px;">
+                ${imgTag}
+                <div style="position:absolute; top:6px; right:6px; background:#b45309; color:#fef3c7; border:2px solid #fbbf24; font-size:16px; font-weight:900; padding:4px 10px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.5);">
+                  ${g.qtdTotal} cx
+                </div>
+              </div>
+              <div style="font-size:11px; font-weight:800; color:#38bdf8; text-transform:uppercase; margin-bottom:2px;">
+                ${(p.marca || '').toUpperCase()} · CÓD #${p.id}
+              </div>
+              <div style="font-size:13px; font-weight:800; color:#fff; line-height:1.3; margin-bottom:6px;">
+                ${escapeHtml(p.nombre)}
+              </div>
+              ${p.composicion ? `<div style="font-size:11px; color:#94a3b8; line-height:1.2; margin-bottom:6px;">${escapeHtml(p.composicion)}</div>` : ''}
+            </div>
+
+            <div style="margin-top:10px; padding-top:8px; border-top:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+              <span style="color:#94a3b8;">Custo est.: US$ ${(p.usd || 0).toFixed(2)}</span>
+              <span style="color:#f87171; font-weight:700;">Subtotal: ${formatBRL(itemCustoBrl)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = cardsHtml;
+      document.getElementById('ocvTotalCaixas').textContent = totalPecas;
+      document.getElementById('ocvTotalItens').textContent = `${listaAgrupada.length} medicamentos diferentes`;
+      document.getElementById('ocvCustoTotal').textContent = `US$ ${custoTotalUsd.toFixed(2)} / ${formatBRL(custoTotalBrl)}`;
+      modal.classList.add('open');
+    },
+
+    openFotoPreview(url, title) {
+      const modal = document.getElementById('fotoPreviewModal');
+      const img = document.getElementById('fotoPreviewImg');
+      const t = document.getElementById('fotoPreviewTitle');
+      if (!modal || !img) return;
+      img.src = url || '';
+      if (t) t.textContent = title || 'Foto do Medicamento';
+      modal.classList.add('open');
+    },
+
+    populateEncProdutosDropdown(selectedId = null) {
+      const sel = document.getElementById('encNovoProdutoSelect');
+      if (!sel) return;
+
+      const sorted = [...rawCatalog].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+      sel.innerHTML = sorted.map(p => {
+        return `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${p.nombre} — ${(p.marca || '').toUpperCase()}</option>`;
+      }).join('');
+
+      const targetId = selectedId || Number(sel.value) || (sorted[0] ? sorted[0].id : null);
+      if (targetId) window.CRM.onEncProdutoChange(targetId);
+    },
+
+    openNovaEncomendaModal(productId = null) {
+      const modal = document.getElementById('encomendasModal');
+      if (!modal) return;
+      window.CRM.switchEncomendasTab('nova');
+      window.CRM.populateEncProdutosDropdown(productId);
+      modal.classList.add('open');
+    },
+
+    onEncProdutoChange(val) {
+      const pid = Number(val);
+      const raw = rawCatalog.find(p => p.id === pid);
+      if (!raw) return;
+      const p = computeProduct(raw);
+      const pag = document.getElementById('encNovoPagamento').value;
+      const precoSugerido = pag === 'cartao' ? p.precoCartao : p.precoFinal;
+
+      document.getElementById('encNovoPrecoUnit').value = Math.round(precoSugerido);
+      window.CRM.onEncQtdPriceChange();
+    },
+
+    onEncPagamentoChange() {
+      const pid = Number(document.getElementById('encNovoProdutoSelect').value);
+      if (pid) window.CRM.onEncProdutoChange(pid);
+    },
+
+    onEncQtdPriceChange() {
+      const qtd = Math.max(1, Number(document.getElementById('encNovoQtd').value) || 1);
+      const preco = Math.max(0, Number(document.getElementById('encNovoPrecoUnit').value) || 0);
+      const total = qtd * preco;
+      document.getElementById('encNovoValorTotal').value = total;
+      window.CRM.onEncSinalChange();
+    },
+
+    onEncSinalChange() {
+      const total = Number(document.getElementById('encNovoValorTotal').value) || 0;
+      const sinal = Math.max(0, Number(document.getElementById('encNovoSinal').value) || 0);
+      const saldo = Math.max(0, total - sinal);
+      document.getElementById('encNovoSaldoRestante').value = formatBRL(saldo);
+    },
+
+    saveNovaEncomenda(enviarWa = false) {
+      const cliente = (document.getElementById('encNovoCliente').value || '').trim();
+      const telefone = (document.getElementById('encNovoTelefone').value || '').trim();
+      const endereco = (document.getElementById('encNovoEndereco').value || '').trim();
+      const pid = Number(document.getElementById('encNovoProdutoSelect').value);
+      const qtd = Math.max(1, Number(document.getElementById('encNovoQtd').value) || 1);
+      const formaPagamento = document.getElementById('encNovoPagamento').value;
+      const precoUnit = Number(document.getElementById('encNovoPrecoUnit').value) || 0;
+      const valorTotal = Number(document.getElementById('encNovoValorTotal').value) || 0;
+      const sinal = Number(document.getElementById('encNovoSinal').value) || 0;
+      const saldoRestante = Math.max(0, valorTotal - sinal);
+      const obs = (document.getElementById('encNovoObs').value || '').trim();
+
+      if (!cliente) {
+        alert('Por favor, informe o Nome do Cliente para cadastrar a encomenda.');
+        document.getElementById('encNovoCliente').focus();
+        return;
+      }
+      if (!pid) {
+        alert('Selecione um medicamento válido do catálogo.');
+        return;
+      }
+
+      const raw = rawCatalog.find(p => p.id === pid) || {};
+      const newEnc = {
+        id: 'ENC-' + Date.now().toString().slice(-6) + '-' + Math.random().toString(36).substr(2, 3),
+        data: new Date().toISOString(),
+        cliente,
+        telefone,
+        endereco,
+        status: 'pendente',
+        produtoId: pid,
+        produtoNome: raw.nombre || 'Medicamento Encomendado',
+        marca: raw.marca || '',
+        qtd,
+        formaPagamento,
+        precoUnit,
+        valorTotal,
+        sinal,
+        saldoRestante,
+        obs,
+        loteId: null
+      };
+
+      if (!Array.isArray(state.encomendas)) state.encomendas = [];
+      state.encomendas.unshift(newEnc);
+      saveState();
+
+      // Limpa campos
+      document.getElementById('encNovoCliente').value = '';
+      document.getElementById('encNovoTelefone').value = '';
+      document.getElementById('encNovoEndereco').value = '';
+      document.getElementById('encNovoSinal').value = '0';
+      document.getElementById('encNovoObs').value = '';
+
+      renderAll();
+      showToast('Encomenda cadastrada com sucesso!');
+
+      if (enviarWa) {
+        window.CRM.openEncomendaReceiptModal(newEnc.id);
+      } else {
+        window.CRM.switchEncomendasTab('concentrador');
+      }
+    },
+
+    changeStatusEncomenda(encId, novoStatus) {
+      const enc = (state.encomendas || []).find(e => e.id === encId);
+      if (!enc) return;
+      enc.status = novoStatus;
+      saveState();
+      renderAll();
+      window.CRM.renderEncomendas();
+      showToast(`Status atualizado para: ${novoStatus}`);
+
+      if (novoStatus === 'chegou_bh') {
+        if (confirm(`O medicamento de ${enc.cliente} chegou em BH! Deseja abrir a mensagem de WhatsApp pronta para avisar o cliente agora?`)) {
+          window.CRM.openAvisoChegadaWhatsApp(encId);
+        }
+      }
+    },
+
+    deleteEncomenda(encId) {
+      const enc = (state.encomendas || []).find(e => e.id === encId);
+      if (!enc) return;
+      if (!confirm(`Deseja realmente remover a encomenda de "${enc.cliente}" (${enc.qtd}x ${enc.produtoNome})?`)) return;
+
+      state.encomendas = state.encomendas.filter(e => e.id !== encId);
+      saveState();
+      renderAll();
+      window.CRM.renderEncomendas();
+      showToast('Encomenda removida!');
+    },
+
+    openScriptColetaWhatsApp() {
+      const modal = document.getElementById('encomendaReceiptModal');
+      const textarea = document.getElementById('encReceiptText');
+      const vBox = document.getElementById('encReceiptVisualBox');
+      const t = document.getElementById('encReceiptModalTitle');
+      const s = document.getElementById('encReceiptModalSub');
+
+      if (vBox) vBox.style.display = 'none';
+      if (t) t.textContent = '📋 Script Coleta de Dados do Cliente';
+      if (s) s.textContent = 'Envie este texto rápido para o cliente preencher seus dados de entrega e emissão de recibo:';
+
+      currentReceiptPhone = '';
+      textarea.value = [
+        `Olá! Para formalizar a sua encomenda e emitir o comprovante de reserva, por gentileza preencha os dados abaixo:`,
+        ``,
+        `👤 *Nome completo:* `,
+        `📱 *Telefone / WhatsApp:* `,
+        `📍 *Endereço de entrega:* (Rua, Número, Bairro, CEP e Cidade)`,
+        `📌 *Ponto de referência:* `,
+        `💳 *Forma de pagamento preferida (PIX à vista ou Cartão em até 12x):* `,
+        ``,
+        `Assim que responder, já confirmamos a sua reserva com o prazo estimado de entrega! 📦✨`
+      ].join('\n');
+
+      modal.classList.add('open');
+    },
+
+    openEncomendaReceiptModal(encId) {
+      const enc = (state.encomendas || []).find(e => e.id === encId);
+      if (!enc) return;
+      currentReceiptEncId = encId;
+      currentReceiptPhone = enc.telefone || '';
+
+      const modal = document.getElementById('encomendaReceiptModal');
+      const textarea = document.getElementById('encReceiptText');
+      const vBox = document.getElementById('encReceiptVisualBox');
+      const t = document.getElementById('encReceiptModalTitle');
+      const s = document.getElementById('encReceiptModalSub');
+
+      if (vBox) vBox.style.display = 'block';
+      if (t) t.textContent = '🧾 Comprovante de Encomenda com Foto';
+      if (s) s.textContent = 'Recibo digital com foto do produto para conferência do cliente:';
+
+      const raw = rawCatalog.find(p => p.id === enc.produtoId) || { id: enc.produtoId, nombre: enc.produtoNome, marca: enc.marca, foto: '' };
+      const p = computeProduct(raw);
+      const foto = p.localFoto || p.remoteFoto || '';
+      const fotoPublicUrl = p.localFoto ? `https://itabh92.github.io/shapetotal-crm/${p.localFoto}` : (p.remoteFoto || '');
+
+      // Atualiza Card Visual
+      document.getElementById('encReceiptClienteNome').textContent = enc.cliente;
+      document.getElementById('encReceiptData').textContent = enc.data ? new Date(enc.data).toLocaleDateString('pt-BR') : '';
+      document.getElementById('encReceiptProdNome').textContent = enc.produtoNome;
+      document.getElementById('encReceiptProdSub').textContent = `${(enc.marca || '').toUpperCase()} · Cód #${enc.produtoId}`;
+      document.getElementById('encReceiptQtd').textContent = `${enc.qtd} cx`;
+      document.getElementById('encReceiptTotal').textContent = formatBRL(enc.valorTotal);
+
+      const sinal = Number(enc.sinal) || 0;
+      const saldo = Number(enc.saldoRestante) || Math.max(0, enc.valorTotal - sinal);
+
+      const sBox = document.getElementById('encReceiptSinalBox');
+      const salBox = document.getElementById('encReceiptSaldoBox');
+      if (sinal > 0) {
+        if (sBox) sBox.style.display = 'block';
+        document.getElementById('encReceiptSinal').textContent = formatBRL(sinal);
+      } else {
+        if (sBox) sBox.style.display = 'none';
+      }
+      if (saldo > 0) {
+        if (salBox) salBox.style.display = 'block';
+        document.getElementById('encReceiptSaldo').textContent = formatBRL(saldo);
+      } else {
+        if (salBox) salBox.style.display = 'none';
+      }
+
+      const imgEl = document.getElementById('encReceiptProdImg');
+      if (imgEl) {
+        imgEl.src = foto;
+        imgEl.onerror = () => { imgEl.src = p.remoteFoto || ''; };
+      }
+
+      const endBox = document.getElementById('encReceiptEnderecoBox');
+      if (enc.endereco) {
+        if (endBox) endBox.style.display = 'flex';
+        document.getElementById('encReceiptEndereco').textContent = enc.endereco;
+      } else {
+        if (endBox) endBox.style.display = 'none';
+      }
+
+      // Monta texto formatado do WhatsApp
+      const lines = [
+        `*RECIBO DE ENCOMENDA & RESERVA — SHAPE TOTAL BH* 📦✨`,
+        `Data: ${new Date(enc.data).toLocaleDateString('pt-BR')}`,
+        ``,
+        `Olá, *${enc.cliente}*! Sua encomenda foi registrada com sucesso:`,
+        ``,
+        `💊 *Medicamento:* ${enc.produtoNome}`,
+        `📦 *Quantidade:* ${enc.qtd} caixa(s)`,
+        `💰 *Valor Total:* ${formatBRL(enc.valorTotal)} (${enc.formaPagamento === 'cartao' ? 'Cartão em até 12x s/ juros' : 'À vista no PIX'})`
+      ];
+
+      if (sinal > 0) lines.push(`💵 *Sinal Pago Antecipado:* ${formatBRL(sinal)}`);
+      if (saldo > 0) lines.push(`📍 *Saldo a Pagar na Entrega:* ${formatBRL(saldo)}`);
+      if (enc.endereco) lines.push(`📍 *Endereço de Entrega:* ${enc.endereco}`);
+      if (fotoPublicUrl) lines.push(`📸 *Foto do Produto Encomendado:* ${fotoPublicUrl}`);
+      lines.push(``);
+      lines.push(`🚚 *Previsão de Chegada:* 7 a 10 dias úteis.`);
+      lines.push(`Assim que desembarcar em nosso estoque em Belo Horizonte, nossa equipe entra em contato com você para agendar o envio via Uber Flash / Motoboy ou retirada.`);
+      lines.push(``);
+      lines.push(`Agradecemos pela preferência e confiança! Conte sempre conosco. ✨`);
+
+      textarea.value = lines.join('\n');
+      modal.classList.add('open');
+    },
+
+    openAvisoChegadaWhatsApp(encId) {
+      const enc = (state.encomendas || []).find(e => e.id === encId);
+      if (!enc) return;
+      currentReceiptEncId = encId;
+      currentReceiptPhone = enc.telefone || '';
+
+      const modal = document.getElementById('encomendaReceiptModal');
+      const textarea = document.getElementById('encReceiptText');
+      const vBox = document.getElementById('encReceiptVisualBox');
+      const t = document.getElementById('encReceiptModalTitle');
+      const s = document.getElementById('encReceiptModalSub');
+
+      if (vBox) vBox.style.display = 'block';
+      if (t) t.textContent = '🎉 Aviso de Chegada em BH';
+      if (s) s.textContent = 'Mensagem comemorativa avisando o cliente que o medicamento acabou de desembarcar:';
+
+      const raw = rawCatalog.find(p => p.id === enc.produtoId) || { id: enc.produtoId, nombre: enc.produtoNome, marca: enc.marca, foto: '' };
+      const p = computeProduct(raw);
+      const foto = p.localFoto || p.remoteFoto || '';
+      const fotoPublicUrl = p.localFoto ? `https://itabh92.github.io/shapetotal-crm/${p.localFoto}` : (p.remoteFoto || '');
+
+      const saldo = Number(enc.saldoRestante) || Math.max(0, enc.valorTotal - (Number(enc.sinal) || 0));
+
+      const lines = [
+        `*BOA NOTÍCIA! SEU PEDIDO CHEGOU EM BH* 🎉📦`,
+        ``,
+        `Olá, *${enc.cliente}*!`,
+        `A sua encomenda de *${enc.produtoNome}* (${enc.qtd} cx) acabou de desembarcar em nosso estoque em Belo Horizonte.`,
+        ``
+      ];
+
+      if (saldo > 0) lines.push(`💰 *Saldo a acertar na entrega:* ${formatBRL(saldo)}`);
+      if (enc.endereco) lines.push(`📍 *Endereço cadastrado:* ${enc.endereco}`);
+      if (fotoPublicUrl) lines.push(`📸 *Foto do Produto:* ${fotoPublicUrl}`);
+      lines.push(``);
+      lines.push(`Podemos agendar a sua entrega hoje mesmo via Uber Flash / Motoboy ou prefere retirar em mãos? Me avise por aqui! ✨`);
+
+      textarea.value = lines.join('\n');
+      modal.classList.add('open');
+    },
+
+    openEncomendaWhatsAppDirect() {
+      const textarea = document.getElementById('encReceiptText');
+      const text = textarea ? textarea.value : '';
+      if (!text) {
+        showToast('Nada para enviar!');
+        return;
+      }
+      navigator.clipboard.writeText(text);
+
+      let url = 'https://api.whatsapp.com/send?';
+      if (currentReceiptPhone) {
+        const telLimpo = currentReceiptPhone.replace(/\D/g, '');
+        if (telLimpo) url += `phone=55${telLimpo.replace(/^55/, '')}&`;
+      }
+      url += `text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+      showToast('Abrindo WhatsApp com mensagem pronta...');
+    },
+
+    copyEncomendaReceiptText() {
+      const textarea = document.getElementById('encReceiptText');
+      if (textarea) {
+        navigator.clipboard.writeText(textarea.value);
+        showToast('Comprovante copiado para o WhatsApp!');
+      }
+    },
+
+    copyPedidoFornecedorWhatsApp() {
+      const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente');
+      if (!pendentes.length) {
+        alert('Nenhuma encomenda pendente no momento para enviar ao fornecedor.');
+        return;
+      }
+
+      const grupos = {};
+      pendentes.forEach(e => {
+        const pid = e.produtoId;
+        if (!grupos[pid]) {
+          grupos[pid] = { produtoId: pid, qtdTotal: 0, nome: e.produtoNome, marca: e.marca };
+        }
+        grupos[pid].qtdTotal += Number(e.qtd) || 0;
+      });
+
+      const lista = Object.values(grupos);
+      let totalCaixas = 0;
+      const dataHoje = new Date().toLocaleDateString('pt-BR');
+
+      const lines = [
+        `*PEDIDO CONSOLIDADO — SHAPE TOTAL / BAXTI* 📦🇵🇾`,
+        `Data: ${dataHoje}`,
+        ``,
+        `Olá! Segue o pedido consolidado de importação para o próximo envio:`,
+        ``
+      ];
+
+      lista.forEach((g, idx) => {
+        const raw = rawCatalog.find(p => p.id === g.produtoId) || { id: g.produtoId, nombre: g.nome, marca: g.marca, foto: '' };
+        const p = computeProduct(raw);
+        totalCaixas += g.qtdTotal;
+        const fotoUrl = p.localFoto ? `https://itabh92.github.io/shapetotal-crm/${p.localFoto}` : (p.remoteFoto || '');
+
+        lines.push(`${idx + 1}️⃣ *${p.nombre}*`);
+        lines.push(`• Quantidade: *${g.qtdTotal} caixas*`);
+        lines.push(`• Marca: ${(p.marca || '').toUpperCase()} | Cód: #${p.id}`);
+        if (fotoUrl) lines.push(`📸 Foto: ${fotoUrl}`);
+        lines.push(``);
+      });
+
+      lines.push(`📦 *Total consolidado: ${totalCaixas} caixas.*`);
+      lines.push(`Por favor confirmar a disponibilidade dos itens e o valor total para liberação do PIX. Obrigado! 🤝`);
+
+      const textoFinal = lines.join('\n');
+      navigator.clipboard.writeText(textoFinal);
+      alert(`✅ Pedido do fornecedor com links de fotos copiado com sucesso! (${totalCaixas} caixas somadas).\n\nCole diretamente na conversa do fornecedor no WhatsApp.`);
+    },
+
+    criarLoteTransitoDeEncomendas() {
+      const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente');
+      if (!pendentes.length) {
+        alert('Nenhuma encomenda pendente para criar carga em trânsito.');
+        return;
+      }
+
+      const grupos = {};
+      pendentes.forEach(e => {
+        const pid = e.produtoId;
+        if (!grupos[pid]) {
+          grupos[pid] = { produtoId: pid, qtdTotal: 0, nome: e.produtoNome, marca: e.marca };
+        }
+        grupos[pid].qtdTotal += Number(e.qtd) || 0;
+      });
+
+      const lista = Object.values(grupos);
+      let totalCustoBrl = 0;
+      const itensTransito = [];
+
+      lista.forEach(g => {
+        const raw = rawCatalog.find(p => p.id === g.produtoId) || { id: g.produtoId, nombre: g.nome, marca: g.marca, precio: 0 };
+        const p = computeProduct(raw);
+        const subCusto = (p.custo || 0) * g.qtdTotal;
+        totalCustoBrl += subCusto;
+
+        itensTransito.push({
+          id_catalogo: p.id,
+          nome: p.nombre,
+          marca: p.marca || '',
+          categoria: p.categoria || '',
+          qtd: g.qtdTotal,
+          custo_unit_usd: p.usd || 0,
+          custo_unit_reais: p.custo || 0,
+          preco_venda_pix: p.precoFinal || 0,
+          preco_venda_cartao: p.precoCartao || 0
+        });
+      });
+
+      const loteId = 'PED-' + Date.now().toString().slice(-6);
+      const novoPedidoTransito = {
+        id: loteId,
+        data_compra: new Date().toLocaleDateString('pt-BR'),
+        fornecedor: 'Shape Total / Importação Paraguai (Lote Encomendas)',
+        status: 'em_transito',
+        custo_total_reais: Math.round(totalCustoBrl),
+        itens: itensTransito
+      };
+
+      if (!Array.isArray(state.pedidosTransito)) state.pedidosTransito = [];
+      state.pedidosTransito.unshift(novoPedidoTransito);
+
+      // Marca todas as encomendas pendentes como "pedido_ao_fornecedor" com o loteId
+      pendentes.forEach(e => {
+        e.status = 'pedido_ao_fornecedor';
+        e.loteId = loteId;
+      });
+
+      saveState();
+      renderAll();
+      window.CRM.renderEncomendas();
+
+      alert(`🚚 Carga em Trânsito criada com sucesso! (${loteId})\n\n${itensTransito.reduce((a, b) => a + b.qtd, 0)} caixas adicionadas ao módulo "🚚 A Chegar". As encomendas foram atualizadas para o status "A Caminho".`);
     }
   };
 
