@@ -1543,10 +1543,12 @@
         document.getElementById('saleTotalValue').value = unitVal;
         document.getElementById('saleQty').value = 1;
         document.getElementById('salePriceHint').textContent = `Frasco Fechado 120mg (${isCartao ? (isGlpProduct(p) ? 'Cartão até 12x s/ juros' : 'Cartão até 6x') : 'PIX'}): ${formatBRL(unitVal)}`;
+        window.CRM.updateSaleGrandTotal();
       } else if (mode === 'custom') {
         document.getElementById('saleIsDose').value = '1';
         document.getElementById('saleDoseCustomContainer').style.display = 'grid';
         document.getElementById('saleCustomDoseMg').focus();
+        window.CRM.updateSaleGrandTotal();
       }
     },
 
@@ -1558,6 +1560,7 @@
       document.getElementById('saleTotalValue').value = dosePreco;
       document.getElementById('saleQty').value = 1;
       document.getElementById('salePriceHint').textContent = `Dose Individual Oficial: ${doseMg} mg ➔ ${formatBRL(dosePreco)}`;
+      window.CRM.updateSaleGrandTotal();
     },
 
     onCustomDoseChange() {
@@ -1570,6 +1573,7 @@
       document.getElementById('saleUnitPrice').value = preco;
       document.getElementById('saleTotalValue').value = preco;
       document.getElementById('salePriceHint').textContent = `Dose Personalizada: ${document.getElementById('saleDoseMg').value} mg ➔ ${formatBRL(preco)}`;
+      window.CRM.updateSaleGrandTotal();
     },
 
     openSaleModal(productId) {
@@ -1658,9 +1662,13 @@
         if (phoneInp && !phoneInp.value && match.telefone) {
           phoneInp.value = match.telefone;
         }
+        const addrInp = document.getElementById('saleClientAddress');
+        if (addrInp && !addrInp.value && match.endereco) {
+          addrInp.value = match.endereco;
+        }
         const notesInp = document.getElementById('saleNotes');
-        if (notesInp && !notesInp.value && match.endereco) {
-          notesInp.value = `Entrega: ${match.endereco}`;
+        if (notesInp && !notesInp.value && match.obs) {
+          notesInp.value = match.obs;
         }
       }
     },
@@ -1692,6 +1700,7 @@
 
       document.getElementById('saleClientName').value = '';
       document.getElementById('saleClientPhone').value = '';
+      if (document.getElementById('saleClientAddress')) document.getElementById('saleClientAddress').value = '';
       document.getElementById('saleNotes').value = '';
       document.getElementById('salePayment').value = 'pix';
       const shipInput = document.getElementById('saleShipping');
@@ -1838,6 +1847,7 @@
       const payLabel = payLabelMap[pay] || pay;
       const client = document.getElementById('saleClientName').value.trim() || 'Cliente';
       const phone = document.getElementById('saleClientPhone').value.trim();
+      const address = (document.getElementById('saleClientAddress') ? document.getElementById('saleClientAddress').value.trim() : '');
       const notes = document.getElementById('saleNotes').value.trim();
       const dateVal = document.getElementById('saleDate').value || new Date().toISOString();
 
@@ -1883,6 +1893,7 @@
         const lucroEst = subtotalVal - custoDose;
 
         const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        const encId = 'enc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
         const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
 
         const venda = {
@@ -1903,6 +1914,7 @@
           formaPagamento: payLabel,
           cliente: client,
           telefone: phone,
+          endereco: address,
           obs: notes,
           custoTotal: custoDose,
           lucro: lucroEst
@@ -1910,12 +1922,43 @@
 
         if (!state.vendas) state.vendas = [];
         state.vendas.unshift(venda);
+
+        const novaEnc = {
+          id: encId,
+          data: dateVal,
+          tipoOperacao: 'pronta_entrega',
+          status: 'entregue',
+          cliente: client,
+          telefone: phone,
+          endereco: address,
+          formaPagamento: pay,
+          frete: freteVal,
+          valorProdutos: subtotalVal,
+          valorTotal: totalComFrete,
+          sinal: totalComFrete,
+          saldoRestante: 0,
+          obs: notes,
+          vendaId: saleId,
+          itens: [
+            {
+              produtoId: p.id,
+              produtoNome: `${p.nombre} (Dose ${doseMg}mg)`,
+              marca: p.marca || '',
+              qtd: 1,
+              precoUnit: unitVal,
+              subtotal: subtotalVal
+            }
+          ]
+        };
+        if (!Array.isArray(state.encomendas)) state.encomendas = [];
+        state.encomendas.unshift(novaEnc);
+
         saveState();
 
         document.getElementById('saleModal').classList.remove('open');
         renderAll();
-        showToast(`Dose de ${doseMg} mg registrada! Restam ${frascoAtual.mgRestante} mg no frasco.`);
-        window.CRM.showSaleReceipt(venda, p);
+        showToast(`✅ Dose de ${doseMg} mg confirmada! Restam ${frascoAtual.mgRestante} mg no frasco.`);
+        window.CRM.openEncomendaReceiptModal(encId);
         return;
       }
 
@@ -1936,6 +1979,7 @@
       // Registro de Venda com Valor Unitário explícito
       const lucroEst = subtotalVal - (p.custo * qty);
       const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      const encId = 'enc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
       const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
 
       const venda = {
@@ -1955,6 +1999,7 @@
         formaPagamento: payLabel,
         cliente: client,
         telefone: phone,
+        endereco: address,
         obs: notes,
         custoTotal: p.custo * qty,
         lucro: lucroEst
@@ -1962,14 +2007,45 @@
 
       if (!state.vendas) state.vendas = [];
       state.vendas.unshift(venda);
+
+      const novaEnc = {
+        id: encId,
+        data: dateVal,
+        tipoOperacao: 'pronta_entrega',
+        status: 'entregue',
+        cliente: client,
+        telefone: phone,
+        endereco: address,
+        formaPagamento: pay,
+        frete: freteVal,
+        valorProdutos: subtotalVal,
+        valorTotal: totalComFrete,
+        sinal: totalComFrete,
+        saldoRestante: 0,
+        obs: notes,
+        vendaId: saleId,
+        itens: [
+          {
+            produtoId: p.id,
+            produtoNome: p.nombre,
+            marca: p.marca || '',
+            qtd: qty,
+            precoUnit: unitVal,
+            subtotal: subtotalVal
+          }
+        ]
+      };
+      if (!Array.isArray(state.encomendas)) state.encomendas = [];
+      state.encomendas.unshift(novaEnc);
+
       saveState();
 
       document.getElementById('saleModal').classList.remove('open');
       renderAll();
-      showToast(`Venda registrada! Baixa de ${qty} un efetuada.`);
+      showToast(`✅ Venda registrada! Baixa de ${qty} un efetuada.`);
 
-      // Abre comprovante / recibo
-      window.CRM.showSaleReceipt(venda, p);
+      // Abre comprovante / recibo consolidado na mesma ação
+      window.CRM.openEncomendaReceiptModal(encId);
     },
 
     showSaleReceipt(venda, p) {
@@ -1992,7 +2068,7 @@
           `💰 *TOTAL A PAGAR:* *${formatBRL(venda.valorTotal)}*`,
           `💳 *Forma de Pagamento:* ${venda.formaPagamento}`,
           `📅 *Data da Aplicação:* ${dataFmt}`,
-          `📍 *Local:* Atendimento Pronta Entrega Belo Horizonte`,
+          venda.endereco ? `📍 *Endereço de Entrega:* ${venda.endereco}` : `📍 *Local:* Atendimento Pronta Entrega Belo Horizonte`,
           venda.obs ? `📝 *Observação:* ${venda.obs}` : ``,
           `━━━━━━━━━━━━━━━━━━━━━━━━━`,
           isPix ? `💠 *Chave PIX (CNPJ):* 64.228.053/0001-47\n🏦 *Beneficiário:* BAXTI IMPORTADOS LTDA (Banco Inter)\n━━━━━━━━━━━━━━━━━━━━━━━━━` : ``,
@@ -2017,8 +2093,8 @@
         `💰 *TOTAL A PAGAR:* *${formatBRL(venda.valorTotal)}*`,
         `💳 *Forma de Pagamento:* ${venda.formaPagamento}`,
         `📅 *Data da Operação:* ${dataFmt}`,
-        temFrete ? `🚚 *Entrega:* Envio express (Uber Flash / Motoboy / Sedex)` : `🚚 *Entrega:* Pronta Entrega Belo Horizonte (Retirada em mãos ou Motoboy)`,
-        venda.obs ? `📝 *Observação / Endereço:* ${venda.obs}` : ``,
+        venda.endereco ? `📍 *Endereço de Entrega:* ${venda.endereco}` : (temFrete ? `🚚 *Entrega:* Envio express (Uber Flash / Motoboy / Sedex)` : `🚚 *Entrega:* Pronta Entrega Belo Horizonte (Retirada em mãos ou Motoboy)`),
+        venda.obs ? `📝 *Observação:* ${venda.obs}` : ``,
         `━━━━━━━━━━━━━━━━━━━━━━━━━`,
         isPix ? `💠 *Chave PIX (CNPJ):* 64.228.053/0001-47\n🏦 *Beneficiário:* BAXTI IMPORTADOS LTDA (Banco Inter)\n━━━━━━━━━━━━━━━━━━━━━━━━━` : ``,
         `🔒 *Garantia:* Medicamentos 100% originais com lacre e rastreio.`,
@@ -2030,16 +2106,40 @@
       modal.classList.add('open');
     },
 
-    openReceiptWhatsApp() {
+    openReceiptWhatsApp(useDirectPhone = false) {
       const text = document.getElementById('saleReceiptText').value;
       const phone = (window._lastReceiptPhone || '').replace(/\D/g, '');
-      if (phone) {
+      let url = 'https://api.whatsapp.com/send?';
+      if (useDirectPhone && phone && phone !== '31972191092' && phone !== '5531972191092') {
         const fullPhone = phone.startsWith('55') ? phone : `55${phone}`;
-        window.open(`https://api.whatsapp.com/send?phone=${fullPhone}&text=${encodeURIComponent(text)}`, '_blank');
-      } else {
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        url += `phone=${fullPhone}&`;
       }
-      showToast('Abrindo WhatsApp com o comprovante...');
+      url += `text=${encodeURIComponent(text)}`;
+
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        window.location.href = url;
+      } else {
+        const win = window.open(url, '_blank');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+          window.location.href = url;
+        }
+      }
+      showToast('Abrindo WhatsApp para você escolher a pessoa...');
+    },
+
+    shareReceiptNative() {
+      const text = document.getElementById('saleReceiptText').value;
+      if (!text) return;
+      if (navigator.share) {
+        navigator.share({
+          title: 'Comprovante Shape Total / Baxti',
+          text: text
+        }).catch(() => {
+          window.CRM.openReceiptWhatsApp(false);
+        });
+      } else {
+        window.CRM.openReceiptWhatsApp(false);
+      }
     },
 
     copyReceiptText() {
@@ -3942,8 +4042,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       window.CRM.renderEncomendas();
 
       showToast(`✅ Baixa realizada! ${itens.length} medicamento(s) baixados e venda de ${formatBRL(valorTotal)} registrada.`);
-      const rawFirst = rawCatalog.find(x => x.id === primeiroItem.produtoId) || {};
-      window.CRM.showSaleReceipt(venda, computeProduct(rawFirst));
+      window.CRM.openEncomendaReceiptModal(enc.id);
     },
 
     estornarEncomendaEntregue(encId) {

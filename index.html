@@ -1107,6 +1107,11 @@
         </div>
       </div>
 
+      <div class="m-field" style="margin-bottom:14px;">
+        <label style="color:#cbd5e1; font-weight:700;">📍 Endereço de Entrega (Rua, Número, Bairro, Cidade)</label>
+        <input id="saleClientAddress" type="text" placeholder="Ex: Rua Itapoá, 176 - Bairro Itapoá, Ribeirão das Neves" style="text-align:left;" />
+      </div>
+
       <div class="m-field" style="margin-bottom:18px;">
         <label>Observação / Forma de Entrega</label>
         <input id="saleNotes" type="text" placeholder="Ex: Entregue via Uber Flash / Retirada no local" style="text-align:left;" />
@@ -1114,14 +1119,9 @@
 
       <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
         <button class="btn" onclick="document.getElementById('saleModal').classList.remove('open')">Cancelar</button>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-blue" style="background:#2563eb; color:#fff; font-weight:800; padding:10px 14px; font-size:13px; border:1px solid #60a5fa;" onclick="window.CRM.previewSaleWhatsAppQuote()" title="Gerar proposta pronta com valor total e frete somados para enviar ao cliente no WhatsApp">
-            📲 Gerar Mensagem WhatsApp (c/ Frete)
-          </button>
-          <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; padding:10px 18px; font-size:14px; border:1px solid #34d399;" onclick="window.CRM.confirmSale()">
-            ✅ Confirmar Venda & Dar Baixa
-          </button>
-        </div>
+        <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; padding:12px 22px; font-size:14px; border:1px solid #34d399;" onclick="window.CRM.confirmSale()">
+          ✅ Confirmar Venda, Dar Baixa & Gerar WhatsApp
+        </button>
       </div>
     </div>
   </div>
@@ -1202,9 +1202,10 @@
         Envie este comprovante para o cliente no WhatsApp com todos os detalhes da entrega:
       </p>
       <textarea id="saleReceiptText" class="wa-textarea" style="height:190px;"></textarea>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
-        <button id="btnOpenReceiptWa" class="btn btn-green" onclick="window.CRM.openReceiptWhatsApp()">📲 Abrir WhatsApp do Cliente</button>
-        <button id="btnCopyReceipt" class="btn btn-primary" onclick="window.CRM.copyReceiptText()">📋 Copiar Recibo</button>
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center;">
+        <button id="btnOpenReceiptWa" class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; font-size:13px; padding:10px 16px; border:1px solid #34d399;" onclick="window.CRM.openReceiptWhatsApp(false)">📲 Escolher Contato no WhatsApp</button>
+        <button class="btn" style="background:#1e293b; color:#38bdf8; font-weight:700; font-size:12px; border:1px solid #334155;" onclick="window.CRM.shareReceiptNative()">📤 Compartilhar</button>
+        <button id="btnCopyReceipt" class="btn btn-primary" style="font-size:12px; font-weight:700;" onclick="window.CRM.copyReceiptText()">📋 Copiar Recibo</button>
       </div>
     </div>
   </div>
@@ -1285,8 +1286,8 @@
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script src="dados_catalogo.js?v=20261112_1250"></script>
-  <script src="app.js?v=20261112_1250"></script>
+  <script src="dados_catalogo.js?v=20261112_1545"></script>
+  <script src="app.js?v=20261112_1545"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
