@@ -208,6 +208,52 @@
     '03c037f6c96e56857dafe85e0510427246baf2f174319116a1f90664e30b5af2'  // italo2026
   ];
 
+  function sha256Pure(ascii) {
+    const rightRotate = (v, a) => (v >>> a) | (v << (32 - a));
+    const mathPow = Math.pow, maxWord = mathPow(2, 32);
+    let result = '';
+    const words = [], asciiBitLength = ascii.length * 8;
+    let hash = [], k = [], primeCounter = 0;
+    const isComposite = {};
+    for (let candidate = 2; primeCounter < 64; candidate++) {
+      if (!isComposite[candidate]) {
+        for (let i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+        hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+        k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+      }
+    }
+    ascii += '\x80';
+    while (ascii.length % 64 - 56) ascii += '\x00';
+    for (let i = 0; i < ascii.length; i++) {
+      const j = ascii.charCodeAt(i);
+      if (j >> 8) return '';
+      words[i >> 2] |= j << ((3 - i) % 4) * 8;
+    }
+    words[words.length] = ((asciiBitLength / maxWord) | 0);
+    words[words.length] = (asciiBitLength);
+    for (let j = 0; j < words.length;) {
+      const w = words.slice(j, j += 16);
+      const oldHash = hash.slice(0);
+      for (let i = 0; i < 64; i++) {
+        const w15 = w[i - 15], w2 = w[i - 2];
+        const a = hash[0], e = hash[4];
+        const temp1 = hash[7] + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25)) + ((e & hash[5]) ^ ((~e) & hash[6])) + k[i] + (w[i] = (i < 16) ? w[i] : (w[i - 16] + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3)) + w[i - 7] + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))) | 0);
+        const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22)) + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+        hash = [(temp1 + temp2) | 0].concat(hash);
+        hash[4] = (hash[4] + temp1) | 0;
+        hash.pop();
+      }
+      for (let i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+    }
+    for (let i = 0; i < 8; i++) {
+      for (let j = 3; j + 1; j--) {
+        const b = (hash[i] >> (j * 8)) & 255;
+        result += ((b < 16) ? 0 : '') + b.toString(16);
+      }
+    }
+    return result;
+  }
+
   async function hashPass(pass) {
     const text = String(pass || '') + PASS_SALT;
     if (window.crypto && window.crypto.subtle) {
@@ -215,13 +261,8 @@
       const buf = await window.crypto.subtle.digest('SHA-256', enc.encode(text));
       return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
-    // Fallback determinístico caso esteja em contexto não-HTTPS (ex: file://)
-    let h = 2166136261;
-    for (let i = 0; i < text.length; i++) {
-      h ^= text.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return 'fb_' + (h >>> 0).toString(16).padStart(8, '0');
+    const utf8 = unescape(encodeURIComponent(text));
+    return sha256Pure(utf8);
   }
 
   function logAuditoria(acao, detalhe) {
@@ -1377,7 +1418,46 @@
     }).join('');
   }
 
+  function updateTabCounts() {
+    const counts = {
+      todas: rawCatalog.length,
+      anabolizantes: 0,
+      emagrecedores: 0,
+      peptideos: 0,
+      estetico_outros: 0,
+      saude_mental: 0,
+      meu_estoque: 0
+    };
+    const estoque = state.meuEstoque || {};
+    rawCatalog.forEach(p => {
+      if (p.colecao_id === '2_anabolizantes') counts.anabolizantes++;
+      else if (p.colecao_id === '1_emagrecedores') counts.emagrecedores++;
+      else if (p.colecao_id === '3_hgh_peptideos') counts.peptideos++;
+      else if (p.colecao_id === '4_estetica') counts.estetico_outros++;
+      else if (p.colecao_id === '5_saude_mental_suporte') counts.saude_mental++;
+      else {
+        const c = (p.categoria || '').toLowerCase();
+        const txt = ((p.nombre || '') + ' ' + (p.composicion || '')).toLowerCase();
+        if (c === 'anabolizante' || c === 'sarms' || c === 'post ciclo' || c === 'hcg') counts.anabolizantes++;
+        else if (c === 'emagrecedores' || c === 'queimador') counts.emagrecedores++;
+        else if (c === 'saude mental' || txt.includes('semax') || txt.includes('selank') || txt.includes('cbl') || txt.includes('dsip')) counts.saude_mental++;
+        else if (c === 'peptideo' || c === 'hgh' || Boolean(p.desc_comercial)) counts.peptideos++;
+        else counts.estetico_outros++;
+      }
+      const qBh = Number(estoque[p.id] || 0);
+      if (qBh > 0) counts.meu_estoque += qBh;
+    });
+    document.querySelectorAll('.group-tab').forEach(tab => {
+      const grp = tab.getAttribute('data-group');
+      const badge = tab.querySelector('.tab-count');
+      if (badge && Object.prototype.hasOwnProperty.call(counts, grp)) {
+        badge.textContent = String(counts[grp]);
+      }
+    });
+  }
+
   function renderAll() {
+    updateTabCounts();
     const filtered = getFilteredProducts();
     renderKPIs(filtered);
     renderProducts(filtered);
@@ -1452,7 +1532,8 @@
         return;
       }
       const texto = logs.slice(0, 30).map((l, idx) => {
-        const dt = l.ts ? new Date(l.ts).toLocaleString('pt-BR') : '-';
+        const rawDate = l.data || l.ts;
+        const dt = rawDate ? new Date(rawDate).toLocaleString('pt-BR') : '-';
         return `${idx + 1}. [${dt}] ${l.acao}: ${l.detalhe || ''}`;
       }).join('\n');
       alert(`📜 LOG DE AUDITORIA (Últimas ${Math.min(logs.length, 30)} ações)\n\n${texto}`);
