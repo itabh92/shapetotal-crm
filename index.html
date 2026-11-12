@@ -587,16 +587,11 @@
           </div>
         </div>
       </div>
-              📲 Salvar & Enviar Recibo WhatsApp
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
   <!-- Modal: Comprovante de Encomenda do Cliente (Visual com Foto + Script WhatsApp) -->
-  <div id="encomendaReceiptModal" class="modal-backdrop">
+  <div id="encomendaReceiptModal" class="modal-backdrop" style="z-index: 500;">
     <div class="modal-box" style="max-width:620px;">
       <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:10px; margin-bottom:12px;">
         <div>
@@ -607,7 +602,7 @@
             Recibo digital completo para o cliente conferir o produto encomendado com imagem e valores.
           </p>
         </div>
-        <button class="btn" onclick="document.getElementById('encomendaReceiptModal').classList.remove('open')">✖ Fechar</button>
+        <button class="btn" onclick="document.getElementById('encomendaReceiptModal').classList.remove('open'); window.CRM.switchEncomendasTab('clientes'); document.getElementById('encomendasModal').classList.add('open');">✖ Voltar p/ Pedidos</button>
       </div>
 
       <!-- Card Visual do Recibo do Cliente com Foto -->
@@ -1121,8 +1116,8 @@
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script src="dados_catalogo.js?v=20261112_1130"></script>
-  <script src="app.js?v=20261112_1130"></script>
+  <script src="dados_catalogo.js?v=20261112_1142"></script>
+  <script src="app.js?v=20261112_1142"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

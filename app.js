@@ -690,6 +690,16 @@
     };
   }
 
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function formatBRL(v) {
     return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
@@ -3499,26 +3509,31 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const cliente = (document.getElementById('encNovoCliente').value || '').trim();
       const telefone = (document.getElementById('encNovoTelefone').value || '').trim();
       const endereco = (document.getElementById('encNovoEndereco').value || '').trim();
-      const formaPagamento = document.getElementById('encNovoPagamento').value;
+      const formaPagamento = document.getElementById('encNovoPagamento') ? document.getElementById('encNovoPagamento').value : 'pix';
       const frete = Math.max(0, Number(document.getElementById('encNovoFrete') ? document.getElementById('encNovoFrete').value : 0) || 0);
-      const sinal = Number(document.getElementById('encNovoSinal').value) || 0;
-      const obs = (document.getElementById('encNovoObs').value || '').trim();
+      const sinal = Number(document.getElementById('encNovoSinal') ? document.getElementById('encNovoSinal').value : 0) || 0;
+      const obs = (document.getElementById('encNovoObs') ? document.getElementById('encNovoObs').value : '').trim();
 
       if (!cliente) {
         alert('Por favor, informe o Nome do Cliente para cadastrar a encomenda.');
-        document.getElementById('encNovoCliente').focus();
+        const cInp = document.getElementById('encNovoCliente');
+        if (cInp) cInp.focus();
         return;
       }
 
-      // Se não adicionou itens clicando no botão azul, mas selecionou um medicamento válido no seletor
+      // Se o usuário selecionou o produto no catálogo mas não clicou no botão "➕ Adicionar ao Pedido"
       if (!novaEncomendaItens.length) {
-        const pid = Number(document.getElementById('encNovoProdutoSelect').value);
+        const sel = document.getElementById('encNovoProdutoSelect');
+        const pid = Number(sel ? sel.value : 0);
         if (pid) {
           const raw = rawCatalog.find(p => p.id === pid);
           if (raw) {
             const p = computeProduct(raw);
-            const qtd = Math.max(1, Number(document.getElementById('encNovoQtd').value) || 1);
-            const precoUnit = Math.max(0, Number(document.getElementById('encNovoPrecoUnit').value) || 0);
+            const qtd = Math.max(1, Number(document.getElementById('encNovoQtd') ? document.getElementById('encNovoQtd').value : 1) || 1);
+            let precoUnit = Number(document.getElementById('encNovoPrecoUnit') ? document.getElementById('encNovoPrecoUnit').value : 0) || 0;
+            if (precoUnit <= 0) {
+              precoUnit = Math.round(formaPagamento === 'cartao' ? p.precoCartao : p.precoFinal);
+            }
             novaEncomendaItens.push({
               produtoId: pid,
               produtoNome: p.nombre,
@@ -3532,7 +3547,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       }
 
       if (!novaEncomendaItens.length) {
-        alert('Adicione pelo menos 1 medicamento ao pedido clicando no botão "➕ Adicionar ao Pedido".');
+        alert('Por favor, selecione um medicamento e clique em "➕ Adicionar ao Pedido" antes de salvar.');
         return;
       }
 
@@ -3569,12 +3584,17 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       state.encomendas.unshift(newEnc);
       saveState();
 
-      // Limpa campos
-      document.getElementById('encNovoCliente').value = '';
-      document.getElementById('encNovoTelefone').value = '';
-      document.getElementById('encNovoEndereco').value = '';
-      document.getElementById('encNovoSinal').value = '0';
-      document.getElementById('encNovoObs').value = '';
+      // Limpa formulário
+      const cInp = document.getElementById('encNovoCliente');
+      if (cInp) cInp.value = '';
+      const tInp = document.getElementById('encNovoTelefone');
+      if (tInp) tInp.value = '';
+      const eInp = document.getElementById('encNovoEndereco');
+      if (eInp) eInp.value = '';
+      const sInp = document.getElementById('encNovoSinal');
+      if (sInp) sInp.value = '0';
+      const oInp = document.getElementById('encNovoObs');
+      if (oInp) oInp.value = '';
       const fInp = document.getElementById('encNovoFrete');
       if (fInp) fInp.value = '0';
       const searchInp = document.getElementById('encNovoBuscaInput');
@@ -3582,12 +3602,20 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       novaEncomendaItens = [];
 
       renderAll();
-      showToast('Pedido com múltiplos medicamentos cadastrado com sucesso!');
+      showToast('✅ Pedido salvo com sucesso!');
+
+      // Fecha o modal de cadastro para não sobrepor telas
+      const mEnc = document.getElementById('encomendasModal');
+      if (mEnc) mEnc.classList.remove('open');
 
       if (enviarWa) {
         window.CRM.openEncomendaReceiptModal(newEnc.id);
+        if (newEnc.telefone) {
+          showToast('✅ Abrindo recibo para envio no WhatsApp...');
+        }
       } else {
         window.CRM.switchEncomendasTab('clientes');
+        if (mEnc) mEnc.classList.add('open');
       }
     },
 
@@ -3756,6 +3784,10 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       currentReceiptEncId = encId;
       currentReceiptPhone = enc.telefone || '';
 
+      // Fecha o modal de central de encomendas para evitar sobreposição de telas
+      const mEnc = document.getElementById('encomendasModal');
+      if (mEnc) mEnc.classList.remove('open');
+
       const modal = document.getElementById('encomendaReceiptModal');
       const textarea = document.getElementById('encReceiptText');
       const vBox = document.getElementById('encReceiptVisualBox');
@@ -3769,8 +3801,10 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const itens = getEncomendaItens(enc);
 
       // Atualiza Cabeçalho do Card Visual
-      document.getElementById('encReceiptClienteNome').textContent = enc.cliente;
-      document.getElementById('encReceiptData').textContent = enc.data ? new Date(enc.data).toLocaleDateString('pt-BR') : '';
+      const cNomeEl = document.getElementById('encReceiptClienteNome');
+      if (cNomeEl) cNomeEl.textContent = enc.cliente;
+      const dEl = document.getElementById('encReceiptData');
+      if (dEl) dEl.textContent = enc.data ? new Date(enc.data).toLocaleDateString('pt-BR') : '';
 
       // Renderiza Galeria de Itens com Fotos
       const gallery = document.getElementById('encReceiptItemsGallery');
@@ -3804,13 +3838,16 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const sinal = Number(enc.sinal || 0);
       const saldo = Number(enc.saldoRestante) || Math.max(0, total - sinal);
 
-      document.getElementById('encReceiptSubtotal').textContent = formatBRL(subtotalProdutos);
-      document.getElementById('encReceiptTotal').textContent = formatBRL(total);
+      const subEl = document.getElementById('encReceiptSubtotal');
+      if (subEl) subEl.textContent = formatBRL(subtotalProdutos);
+      const totEl = document.getElementById('encReceiptTotal');
+      if (totEl) totEl.textContent = formatBRL(total);
 
       const fRow = document.getElementById('encReceiptFreteRow');
       if (frete > 0) {
         if (fRow) fRow.style.display = 'flex';
-        document.getElementById('encReceiptFrete').textContent = formatBRL(frete);
+        const fEl = document.getElementById('encReceiptFrete');
+        if (fEl) fEl.textContent = formatBRL(frete);
       } else {
         if (fRow) fRow.style.display = 'none';
       }
@@ -3818,7 +3855,8 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const sRow = document.getElementById('encReceiptSinalRow');
       if (sinal > 0) {
         if (sRow) sRow.style.display = 'flex';
-        document.getElementById('encReceiptSinal').textContent = formatBRL(sinal);
+        const sEl = document.getElementById('encReceiptSinal');
+        if (sEl) sEl.textContent = formatBRL(sinal);
       } else {
         if (sRow) sRow.style.display = 'none';
       }
@@ -3826,7 +3864,8 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const salRow = document.getElementById('encReceiptSaldoRow');
       if (saldo > 0) {
         if (salRow) salRow.style.display = 'flex';
-        document.getElementById('encReceiptSaldo').textContent = formatBRL(saldo);
+        const salEl = document.getElementById('encReceiptSaldo');
+        if (salEl) salEl.textContent = formatBRL(saldo);
       } else {
         if (salRow) salRow.style.display = 'none';
       }
@@ -3834,7 +3873,8 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const endBox = document.getElementById('encReceiptEnderecoBox');
       if (enc.endereco) {
         if (endBox) endBox.style.display = 'flex';
-        document.getElementById('encReceiptEndereco').textContent = enc.endereco;
+        const endEl = document.getElementById('encReceiptEndereco');
+        if (endEl) endEl.textContent = enc.endereco;
       } else {
         if (endBox) endBox.style.display = 'none';
       }
@@ -3869,12 +3909,25 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (saldo > 0) lines.push(`📍 *Saldo a Pagar na Entrega:* *${formatBRL(saldo)}*`);
       if (enc.endereco) lines.push(`📍 *Endereço de Entrega:* ${enc.endereco}`);
       lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      lines.push(`🔑 *Chave PIX (BAXTI):* pix@baxti.com.br`);
+      lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━`);
       lines.push(`🚚 *Previsão de Chegada:* 7 a 10 dias úteis.`);
       lines.push(`Assim que desembarcar em nosso estoque em Belo Horizonte, nossa equipe entra em contato com você para agendar o envio ou retirada.`);
       lines.push(``);
       lines.push(`Agradecemos pela preferência e confiança! Conte sempre conosco. ✨`);
 
-      textarea.value = lines.join('\n');
+      if (textarea) textarea.value = lines.join('\n');
+
+      // Atualiza texto do botão de envio do WhatsApp
+      const btnWa = document.getElementById('btnOpenEncWa');
+      if (btnWa) {
+        if (enc.telefone) {
+          btnWa.textContent = `📲 Enviar no WhatsApp (${enc.telefone})`;
+        } else {
+          btnWa.textContent = `📲 Abrir no WhatsApp`;
+        }
+      }
+
       modal.classList.add('open');
     },
 
@@ -3883,6 +3936,9 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (!enc) return;
       currentReceiptEncId = encId;
       currentReceiptPhone = enc.telefone || '';
+
+      const mEnc = document.getElementById('encomendasModal');
+      if (mEnc) mEnc.classList.remove('open');
 
       const modal = document.getElementById('encomendaReceiptModal');
       const textarea = document.getElementById('encReceiptText');
@@ -3915,7 +3971,17 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       lines.push(``);
       lines.push(`Podemos agendar a sua entrega hoje mesmo via Uber Flash / Motoboy ou prefere retirar em mãos? Me avise por aqui! ✨`);
 
-      textarea.value = lines.join('\n');
+      if (textarea) textarea.value = lines.join('\n');
+
+      const btnWa = document.getElementById('btnOpenEncWa');
+      if (btnWa) {
+        if (enc.telefone) {
+          btnWa.textContent = `📲 Enviar Aviso WhatsApp (${enc.telefone})`;
+        } else {
+          btnWa.textContent = `📲 Abrir no WhatsApp`;
+        }
+      }
+
       modal.classList.add('open');
     },
 
@@ -3926,16 +3992,31 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         showToast('Nada para enviar!');
         return;
       }
-      navigator.clipboard.writeText(text);
+      
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).catch(() => {});
+        }
+      } catch (e) {}
 
+      let telLimpo = (currentReceiptPhone || '').replace(/\D/g, '');
       let url = 'https://api.whatsapp.com/send?';
-      if (currentReceiptPhone) {
-        const telLimpo = currentReceiptPhone.replace(/\D/g, '');
-        if (telLimpo) url += `phone=55${telLimpo.replace(/^55/, '')}&`;
+      if (telLimpo) {
+        if (!telLimpo.startsWith('55')) telLimpo = '55' + telLimpo;
+        url += `phone=${telLimpo}&`;
       }
       url += `text=${encodeURIComponent(text)}`;
-      window.open(url, '_blank');
-      showToast('Abrindo WhatsApp com mensagem pronta...');
+
+      // Se for mobile (iPhone / Android), dispara window.location.href direto
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        window.location.href = url;
+      } else {
+        const win = window.open(url, '_blank');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+          window.location.href = url;
+        }
+      }
+      showToast('Abrindo WhatsApp...');
     },
 
     copyEncomendaReceiptText() {
