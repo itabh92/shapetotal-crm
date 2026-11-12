@@ -44,6 +44,7 @@
         <div class="topbar-quick-actions">
           <button class="btn btn-green internal-only" style="background:#059669; color:#ffffff; font-weight:800; border:1px solid #34d399;" onclick="window.CRM.openSaleModal()">⚡ Nova Venda</button>
           <button class="btn internal-only" style="background:#4f46e5; color:#ffffff; font-weight:800; border:1px solid #818cf8;" onclick="window.CRM.openEncomendasModal()" title="Gerenciar Encomendas de Clientes & Concentrar Pedido p/ Fornecedor">📝 Encomendas (<span id="countEncomendasBadge">0</span>)</button>
+          <button class="btn internal-only" style="background:#047857; color:#ffffff; font-weight:800; border:1px solid #10b981;" onclick="window.CRM.openPedidoFornecedorModal()" title="Montar lista de compras e reserva para enviar ao fornecedor no WhatsApp">🇵🇾 Pedido Fornecedor</button>
           <button class="btn btn-blue internal-only" style="font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">📋 Vendas (<span id="countVendasBadge">0</span>)</button>
           <button class="btn btn-amber internal-only" style="font-weight:800; border:1px solid #fbbf24; background:#b45309; color:#fff;" onclick="window.CRM.openTransitoModal()">🚚 A Chegar (<span id="countTransitoBadge">27</span>)</button>
           <button class="btn internal-only" style="background:#0284c7; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openSyncModal()" title="Sincronize estoque, vendas e doses entre celular e computador">☁️ Sincronizar</button>
@@ -371,6 +372,9 @@
             📦 Lista somada de todos os clientes para enviar ao fornecedor:
           </span>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-green" style="background:#047857; color:#fff; font-weight:800; font-size:12px; border:1px solid #10b981;" onclick="window.CRM.openPedidoFornecedorModal()" title="Abrir montador completo de pedido/reserva para fornecedor com fotos">
+              🇵🇾 Solicitar ao Fornecedor
+            </button>
             <button class="btn btn-blue" style="background:#2563eb; color:#fff; font-weight:800; font-size:12px; border-color:#60a5fa;" onclick="window.CRM.openOrdemCompraVisualModal()" title="Visualizar cartões de compra com fotos grandes dos produtos para o fornecedor">
               🖼️ Ordem de Compra c/ Fotos
             </button>
@@ -396,6 +400,7 @@
                 <th>Venda Total (R$)</th>
                 <th>Lucro Est.</th>
                 <th>Clientes que Pediram</th>
+                <th style="text-align:center; width:95px;">Ações</th>
               </tr>
             </thead>
             <tbody id="encConcentradorTableBody">
@@ -725,6 +730,124 @@
         <button class="btn btn-xs" onclick="document.getElementById('fotoPreviewModal').classList.remove('open')">✖</button>
       </div>
       <img id="fotoPreviewImg" src="" alt="Produto" style="width:100%; max-height:360px; object-fit:contain; border-radius:8px; background:#020617; border:1px solid #1e293b;" />
+    </div>
+  </div>
+
+  <!-- Modal: Solicitar Encomenda / Reserva para Fornecedor Paraguai -->
+  <div id="pedidoFornecedorModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:760px; max-height:92vh; display:flex; flex-direction:column;">
+      <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:12px; margin-bottom:14px;">
+        <div>
+          <h3 style="font-size:18px; font-weight:800; color:#34d399; display:flex; align-items:center; gap:8px;">
+            🇵🇾 Solicitar Encomenda & Reserva ao Fornecedor
+          </h3>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">
+            Monte sua lista de compras com fotos e quantidades para enviar diretamente no WhatsApp do seu fornecedor/importador.
+          </p>
+        </div>
+        <button class="btn" onclick="document.getElementById('pedidoFornecedorModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+
+      <div style="overflow-y:auto; flex:1; padding-right:4px;">
+        <!-- Barra de Ações Rápidas: Puxar encomendas pendentes de clientes -->
+        <div style="background:#0b1329; border:1px solid #38bdf8; border-radius:8px; padding:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div>
+            <div style="font-size:12px; font-weight:800; color:#38bdf8;">📥 Importar de Clientes:</div>
+            <div style="font-size:11px; color:#94a3b8;">Puxe automaticamente todos os pedidos de clientes que ainda não foram encomendados ao fornecedor.</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="btn btn-blue" style="background:#2563eb; color:#fff; font-size:12px; font-weight:800; padding:6px 12px; border:1px solid #60a5fa;" onclick="window.CRM.carregarEncomendasClientesNoPedidoFornecedor()">
+              📥 Puxar Encomendas Pendentes
+            </button>
+            <button type="button" class="btn btn-xs" style="background:#334155; color:#cbd5e1; font-size:11px;" onclick="window.CRM.limparPedidoFornecedor()">
+              🗑️ Limpar Lista
+            </button>
+          </div>
+        </div>
+
+        <!-- Seção: Adicionar Medicamento Avulso ao Pedido -->
+        <div style="background:#0f172a; border:1px solid #1e293b; border-radius:8px; padding:12px; margin-bottom:14px;">
+          <div style="font-size:12px; font-weight:800; color:#fbbf24; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+            ➕ Adicionar Medicamento Avulso (Reposição ou Reserva)
+          </div>
+
+          <!-- Busca Instantânea com Atalhos -->
+          <div style="margin-bottom:8px;">
+            <input id="pedFornBuscaInput" type="text" placeholder="🔍 Digite para pesquisar: ex: Retatrutida, TG, Tirzec, Lipoless, Enanbolic, Cipionato..." style="width:100%; box-sizing:border-box; background:#020617; border:1px solid #38bdf8; color:#fff; border-radius:6px; padding:8px 12px; font-size:13px;" oninput="window.CRM.filtrarProdutosPedidoFornecedor(this.value)" />
+          </div>
+
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
+            <span style="font-size:10px; color:#94a3b8; align-self:center;">Atalhos:</span>
+            <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchPedForn('retatrutide')">Retatrutida</button>
+            <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchPedForn('tg')">TG 15mg</button>
+            <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchPedForn('tirzec')">Tirzec</button>
+            <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchPedForn('lipoless')">Lipoless</button>
+            <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchPedForn('enanbolic')">Enanbolic</button>
+            <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchPedForn('cipionato')">Cipionato</button>
+            <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchPedForn('oxandrolona')">Oxandrolona</button>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 100px 140px; gap:8px; align-items:flex-end;">
+            <div class="m-field" style="margin:0;">
+              <label style="font-size:11px;">Selecione o Produto</label>
+              <select id="pedFornSelectProd" class="filter-select" style="width:100%; font-size:12.5px;"></select>
+            </div>
+            <div class="m-field" style="margin:0;">
+              <label style="font-size:11px;">Qtd Caixas</label>
+              <input id="pedFornQty" type="number" min="1" value="1" style="font-size:14px; font-weight:800; text-align:center; padding:6px;" />
+            </div>
+            <div>
+              <button type="button" class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; font-size:12.5px; padding:8px 12px; width:100%; height:38px; border:1px solid #34d399;" onclick="window.CRM.adicionarItemPedidoFornecedorManual()">
+                ➕ Adicionar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seção: Lista de Itens do Pedido Atual -->
+        <div style="margin-bottom:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:12px; font-weight:800; color:#cbd5e1;">📦 Medicamentos neste Pedido (<span id="pedFornCountItens">0 itens</span>):</span>
+            <span id="pedFornTotaisBadge" class="badge" style="background:#064e3b; color:#a7f3d0; font-size:11px; font-weight:800; padding:4px 8px;">0 caixas · Custo: US$ 0 / R$ 0,00</span>
+          </div>
+
+          <div id="pedFornItensList" style="max-height:220px; overflow-y:auto; border:1px solid #1e293b; border-radius:8px; background:#0b1120; padding:6px;">
+            <!-- Itens gerados dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Seção: Configuração e Pré-visualização da Mensagem para WhatsApp -->
+        <div style="background:#0f172a; border:1px solid #1e293b; border-radius:8px; padding:12px; margin-bottom:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+            <b style="font-size:12px; color:#38bdf8; display:flex; align-items:center; gap:6px;">
+              📲 Mensagem Formatada para o Fornecedor (com Fotos Automáticas)
+            </b>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <label style="font-size:11px; color:#94a3b8; font-weight:700;">WhatsApp Fornecedor:</label>
+              <input id="pedFornTelefone" type="text" placeholder="Ex: 59598... ou (31) 9..." style="font-size:12px; padding:4px 8px; width:160px; background:#020617; border:1px solid #334155; color:#fff; border-radius:4px;" />
+              <button type="button" class="btn btn-xs" style="font-size:11px; background:#1e293b; color:#38bdf8;" onclick="window.CRM.salvarTelefoneFornecedor()">💾 Salvar</button>
+            </div>
+          </div>
+
+          <textarea id="pedFornMensagemText" rows="7" style="width:100%; box-sizing:border-box; background:#020617; border:1px solid #334155; color:#e2e8f0; font-family:monospace; font-size:12px; padding:10px; border-radius:6px; resize:vertical; line-height:1.4;" readonly></textarea>
+        </div>
+      </div>
+
+      <!-- Rodapé com Botões de Ação -->
+      <div style="border-top:1px solid #1e293b; padding-top:12px; margin-top:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+        <button class="btn" onclick="document.getElementById('pedidoFornecedorModal').classList.remove('open')">Fechar</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-blue" style="background:#2563eb; color:#fff; font-weight:800; font-size:12.5px; border:1px solid #60a5fa;" onclick="window.CRM.copiarMensagemPedidoFornecedor()">
+            📋 Copiar Mensagem
+          </button>
+          <button type="button" class="btn btn-amber" style="background:#b45309; color:#fff; font-weight:800; font-size:12.5px; border:1px solid #fbbf24;" onclick="window.CRM.salvarPedidoFornecedorComoTransito()" title="Cria um lote no módulo 'A Chegar' com estes medicamentos">
+            🚚 Salvar como Carga em Trânsito
+          </button>
+          <button type="button" class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; font-size:13px; padding:10px 18px; border:1px solid #34d399;" onclick="window.CRM.enviarPedidoFornecedorWhatsApp()">
+            📲 Enviar no WhatsApp do Fornecedor
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1152,8 +1275,8 @@
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script src="dados_catalogo.js?v=20261112_1205"></script>
-  <script src="app.js?v=20261112_1205"></script>
+  <script src="dados_catalogo.js?v=20261112_1235"></script>
+  <script src="app.js?v=20261112_1235"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

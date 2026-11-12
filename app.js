@@ -1102,6 +1102,7 @@
               <div class="p-actions">
                 <button class="btn btn-primary" onclick="window.CRM.addToCart(${p.id})">➕ Orçamento</button>
                 <button class="btn internal-only" style="background:#312e81; color:#c7d2fe; font-weight:700; border:1px solid #4338ca;" title="Registrar encomenda deste produto para cliente" onclick="window.CRM.openNovaEncomendaModal(${p.id})">📝 Encomendar</button>
+                <button class="btn internal-only" style="background:#064e3b; color:#a7f3d0; font-weight:700; border:1px solid #059669;" title="Adicionar este produto ao pedido do fornecedor no Paraguai" onclick="window.CRM.adicionarAoPedidoFornecedor(${p.id})">🇵🇾 Pedir PY</button>
                 <button class="btn" onclick="window.CRM.copySingleWhatsApp(${p.id})">📲 Copiar Linha</button>
                 <button class="btn internal-only" title="Editar preço/descrição" onclick="window.CRM.openEditModal(${p.id})">✏️</button>
               </div>
@@ -2976,7 +2977,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (!tbody) return;
 
       if (!listaAgrupada.length) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:28px 14px; color:#94a3b8;">Nenhuma encomenda pendente no momento. Clique em <b>➕ Nova Encomenda</b> ou use o botão <b>📝 Encomendar</b> nos produtos do catálogo para cadastrar pedidos de clientes!</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:28px 14px; color:#94a3b8;">Nenhuma encomenda pendente no momento. Clique em <b>➕ Nova Encomenda</b> ou use o botão <b>📝 Encomendar</b> nos produtos do catálogo para cadastrar pedidos de clientes!</td></tr>`;
         document.getElementById('encKpiTotalPecas').textContent = '0 caixas';
         document.getElementById('encKpiTotalClientes').textContent = '0 clientes aguardando';
         document.getElementById('encKpiCustoTotal').textContent = 'US$ 0 / R$ 0,00';
@@ -3006,7 +3007,10 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
           : '💊';
 
         const clientesTags = g.clientes.map(c => 
-          `<span style="background:#1e293b; color:#38bdf8; padding:2px 6px; border-radius:4px; font-size:10.5px; border:1px solid #334155; display:inline-block; margin:2px;" title="${c.telefone}">👤 ${escapeHtml(c.cliente)}: <b>${c.qtd} cx</b></span>`
+          `<span style="background:#1e293b; color:#38bdf8; padding:3px 7px; border-radius:5px; font-size:11px; border:1px solid #334155; display:inline-flex; align-items:center; gap:5px; margin:2px;" title="${c.telefone}">
+            <span>👤 ${escapeHtml(c.cliente)}: <b>${c.qtd} cx</b></span>
+            <button type="button" class="btn btn-xs" style="background:#7f1d1d; color:#fca5a5; padding:0 4px; font-size:10px; height:18px; line-height:16px; border:1px solid #dc2626; border-radius:3px; cursor:pointer;" title="Desistir / Cancelar encomenda de ${escapeHtml(c.cliente)}" onclick="event.stopPropagation(); window.CRM.deleteEncomenda('${c.encId}')">✖</button>
+          </span>`
         ).join('');
 
         return `
@@ -3026,6 +3030,11 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
             <td style="color:#34d399; font-weight:700;">${formatBRL(g.valorVendaTotal)}</td>
             <td style="color:#38bdf8; font-weight:700;">+${formatBRL(itemLucro)}</td>
             <td>${clientesTags}</td>
+            <td style="text-align:center;">
+              <button type="button" class="btn btn-xs btn-danger" style="background:#dc2626; color:#fff; font-size:11px; font-weight:700; padding:4px 8px; border-radius:4px; border:1px solid #ef4444;" title="Cancelar e remover encomendas deste medicamento" onclick="window.CRM.cancelarEncomendasProduto(${p.id})">
+                🗑️ Cancelar
+              </button>
+            </td>
           </tr>
         `;
       }).join('');
@@ -3982,13 +3991,35 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
     deleteEncomenda(encId) {
       const enc = (state.encomendas || []).find(e => e.id === encId);
       if (!enc) return;
-      if (!confirm(`Deseja realmente remover a encomenda de "${enc.cliente}"?`)) return;
+      const itens = getEncomendaItens(enc);
+      const totalQtd = itens.reduce((s, it) => s + (Number(it.qtd) || 1), 0);
+
+      let msg = `⚠️ Deseja realmente cancelar/excluir a encomenda de "${enc.cliente}"?\n\n• Medicamentos: ${totalQtd} caixa(s)\n• Valor: ${formatBRL(enc.valorTotal)}`;
+      if (enc.status === 'entregue') {
+        msg += `\n\nATENÇÃO: Este pedido já havia sido dado baixa. Ao excluir, as ${totalQtd} caixas voltarão automaticamente para o estoque físico de BH.`;
+      }
+
+      if (!confirm(msg)) return;
+
+      if (enc.status === 'entregue') {
+        if (!state.meuEstoque) state.meuEstoque = {};
+        itens.forEach(it => {
+          state.meuEstoque[it.produtoId] = (Number(state.meuEstoque[it.produtoId]) || 0) + (Number(it.qtd) || 1);
+        });
+        if (enc.vendaId && Array.isArray(state.vendas)) {
+          const v = state.vendas.find(x => String(x.id) === String(enc.vendaId));
+          if (v) {
+            v.estornada = true;
+            v.estornadaEm = new Date().toISOString();
+          }
+        }
+      }
 
       state.encomendas = state.encomendas.filter(e => e.id !== encId);
       saveState();
       renderAll();
       window.CRM.renderEncomendas();
-      showToast('Encomenda removida!');
+      showToast(`Encomenda de "${enc.cliente}" cancelada com sucesso!`);
     },
 
     openScriptColetaWhatsApp() {
@@ -4133,8 +4164,8 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       itens.forEach((it, idx) => {
         const rawIt = rawCatalog.find(x => x.id === it.produtoId) || {};
         const pIt = computeProduct(rawIt);
-        // Utiliza a URL oficial neutra de catálogo do laboratório/distribuidor, sem menção ao site pessoal
-        const fotoUrl = pIt.remoteFoto || (pIt.localFoto ? `https://shapetotal.com/${pIt.localFoto}` : '');
+        // Link público oficial do GitHub Pages: garante anexo e miniatura automática gerada pelo WhatsApp no balão da mensagem
+        const fotoUrl = pIt.localFoto ? `https://itabh92.github.io/shapetotal-crm/${pIt.localFoto}` : (pIt.remoteFoto || '');
 
         lines.push(`${idx + 1}️⃣ *${it.produtoNome}*`);
         lines.push(`• Quantidade: *${it.qtd} caixa(s)*`);
@@ -4392,6 +4423,391 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       window.CRM.renderEncomendas();
 
       alert(`🚚 Carga em Trânsito criada com sucesso! (${loteId})\n\n${itensTransito.reduce((a, b) => a + b.qtd, 0)} caixas adicionadas ao módulo "🚚 A Chegar". As encomendas foram atualizadas para o status "A Caminho".`);
+    },
+
+    cancelarEncomendasProduto(produtoId) {
+      const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente');
+      const afetadas = pendentes.filter(e => {
+        const itens = getEncomendaItens(e);
+        return itens.some(it => it.produtoId === produtoId);
+      });
+
+      if (!afetadas.length) {
+        alert('Nenhuma encomenda pendente para este medicamento.');
+        return;
+      }
+
+      const raw = rawCatalog.find(p => p.id === produtoId) || {};
+      const nomeProd = raw.nombre || 'este medicamento';
+
+      if (afetadas.length === 1) {
+        window.CRM.deleteEncomenda(afetadas[0].id);
+        return;
+      }
+
+      const clientesNomes = afetadas.map(e => `• ${e.cliente} (${e.id})`).join('\n');
+      if (confirm(`Existem ${afetadas.length} clientes com encomenda de "${nomeProd}":\n\n${clientesNomes}\n\nDeseja cancelar e remover as encomendas de TODOS esses clientes?`)) {
+        const idsToRemove = new Set(afetadas.map(e => e.id));
+        state.encomendas = state.encomendas.filter(e => !idsToRemove.has(e.id));
+        saveState();
+        renderAll();
+        window.CRM.renderEncomendas();
+        showToast(`Encomendas de ${nomeProd} canceladas!`);
+      }
+    },
+
+    openPedidoFornecedorModal(produtoIdAdicionar = null) {
+      const modal = document.getElementById('pedidoFornecedorModal');
+      if (!modal) return;
+
+      // Se o usuário não tiver itens no rascunho e houver encomendas pendentes de clientes, carrega-as automaticamente
+      if (!Array.isArray(state.pedidoFornecedorItens) || state.pedidoFornecedorItens.length === 0) {
+        state.pedidoFornecedorItens = [];
+        const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente');
+        if (pendentes.length > 0) {
+          const grupos = {};
+          pendentes.forEach(e => {
+            const itens = getEncomendaItens(e);
+            itens.forEach(it => {
+              const pid = it.produtoId;
+              if (!grupos[pid]) {
+                grupos[pid] = { produtoId: pid, qtd: 0, origem: 'encomenda_cliente' };
+              }
+              grupos[pid].qtd += Number(it.qtd) || 1;
+            });
+          });
+          state.pedidoFornecedorItens = Object.values(grupos);
+        }
+      }
+
+      // Se foi passado um produtoId específico para adicionar imediatamente
+      if (produtoIdAdicionar) {
+        const exist = state.pedidoFornecedorItens.find(x => x.produtoId === produtoIdAdicionar);
+        if (exist) {
+          exist.qtd = (Number(exist.qtd) || 0) + 1;
+        } else {
+          state.pedidoFornecedorItens.push({ produtoId: produtoIdAdicionar, qtd: 1, origem: 'manual' });
+        }
+      }
+
+      // Carrega telefone salvo do fornecedor se houver
+      const telInput = document.getElementById('pedFornTelefone');
+      if (telInput) {
+        telInput.value = state.telefoneFornecedor || '';
+      }
+
+      // Popula o select de produtos para adição manual
+      window.CRM.filtrarProdutosPedidoFornecedor('');
+
+      // Renderiza itens e texto
+      window.CRM.renderItensPedidoFornecedor();
+      modal.classList.add('open');
+    },
+
+    filtrarProdutosPedidoFornecedor(query) {
+      const select = document.getElementById('pedFornSelectProd');
+      if (!select) return;
+      const q = (query || '').toLowerCase().trim();
+      const all = rawCatalog.map(computeProduct);
+
+      let filtered = all;
+      if (q) {
+        filtered = all.filter(p => {
+          const txt = `${p.id} ${p.nombre || ''} ${p.marca || ''} ${p.composicion || ''} ${p.categoria || ''}`.toLowerCase();
+          return txt.includes(q);
+        });
+      }
+
+      if (!filtered.length) {
+        select.innerHTML = `<option value="">Nenhum medicamento encontrado com "${escapeHtml(q)}"</option>`;
+        return;
+      }
+
+      select.innerHTML = filtered.slice(0, 80).map(p => `
+        <option value="${p.id}">#${p.id} - ${escapeHtml(p.nombre)} (${(p.marca || '').toUpperCase()}) · Custo: US$ ${(p.usd || 0).toFixed(2)} / R$ ${(p.custo || 0).toFixed(0)}</option>
+      `).join('');
+    },
+
+    quickSearchPedForn(term) {
+      const inp = document.getElementById('pedFornBuscaInput');
+      if (inp) inp.value = term;
+      window.CRM.filtrarProdutosPedidoFornecedor(term);
+    },
+
+    adicionarItemPedidoFornecedorManual() {
+      const sel = document.getElementById('pedFornSelectProd');
+      const qtyInp = document.getElementById('pedFornQty');
+      if (!sel || !sel.value) {
+        alert('Selecione um produto para adicionar ao pedido.');
+        return;
+      }
+      const pid = Number(sel.value);
+      const qtd = Math.max(1, Number(qtyInp ? qtyInp.value : 1) || 1);
+
+      if (!Array.isArray(state.pedidoFornecedorItens)) state.pedidoFornecedorItens = [];
+      const exist = state.pedidoFornecedorItens.find(x => x.produtoId === pid);
+      if (exist) {
+        exist.qtd = (Number(exist.qtd) || 0) + qtd;
+      } else {
+        state.pedidoFornecedorItens.push({ produtoId: pid, qtd, origem: 'manual' });
+      }
+
+      saveState();
+      window.CRM.renderItensPedidoFornecedor();
+      showToast('Medicamento adicionado ao pedido do fornecedor!');
+    },
+
+    adicionarAoPedidoFornecedor(produtoId, qtd = 1) {
+      window.CRM.openPedidoFornecedorModal(produtoId);
+      showToast('Medicamento adicionado ao pedido do fornecedor!');
+    },
+
+    carregarEncomendasClientesNoPedidoFornecedor() {
+      const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente');
+      if (!pendentes.length) {
+        alert('Nenhuma encomenda pendente de cliente no momento.');
+        return;
+      }
+
+      if (!Array.isArray(state.pedidoFornecedorItens)) state.pedidoFornecedorItens = [];
+      let adicionados = 0;
+
+      pendentes.forEach(e => {
+        const itens = getEncomendaItens(e);
+        itens.forEach(it => {
+          const pid = it.produtoId;
+          const exist = state.pedidoFornecedorItens.find(x => x.produtoId === pid);
+          if (exist) {
+            exist.qtd = (Number(exist.qtd) || 0) + (Number(it.qtd) || 1);
+          } else {
+            state.pedidoFornecedorItens.push({ produtoId: pid, qtd: Number(it.qtd) || 1, origem: 'encomenda_cliente' });
+          }
+          adicionados += Number(it.qtd) || 1;
+        });
+      });
+
+      saveState();
+      window.CRM.renderItensPedidoFornecedor();
+      alert(`✅ ${adicionados} caixas de encomendas de clientes adicionadas à lista do fornecedor!`);
+    },
+
+    limparPedidoFornecedor() {
+      if (state.pedidoFornecedorItens && state.pedidoFornecedorItens.length > 0) {
+        if (!confirm('Deseja limpar todos os itens da lista do fornecedor?')) return;
+      }
+      state.pedidoFornecedorItens = [];
+      saveState();
+      window.CRM.renderItensPedidoFornecedor();
+      showToast('Lista do fornecedor limpa.');
+    },
+
+    removerItemPedidoFornecedor(index) {
+      if (Array.isArray(state.pedidoFornecedorItens)) {
+        state.pedidoFornecedorItens.splice(index, 1);
+        saveState();
+        window.CRM.renderItensPedidoFornecedor();
+      }
+    },
+
+    alterarQtdItemPedidoFornecedor(index, delta) {
+      if (Array.isArray(state.pedidoFornecedorItens) && state.pedidoFornecedorItens[index]) {
+        const novaQtd = (Number(state.pedidoFornecedorItens[index].qtd) || 1) + delta;
+        if (novaQtd <= 0) {
+          state.pedidoFornecedorItens.splice(index, 1);
+        } else {
+          state.pedidoFornecedorItens[index].qtd = novaQtd;
+        }
+        saveState();
+        window.CRM.renderItensPedidoFornecedor();
+      }
+    },
+
+    renderItensPedidoFornecedor() {
+      const container = document.getElementById('pedFornItensList');
+      const countEl = document.getElementById('pedFornCountItens');
+      const totaisEl = document.getElementById('pedFornTotaisBadge');
+      const textarea = document.getElementById('pedFornMensagemText');
+      if (!container) return;
+
+      const itens = Array.isArray(state.pedidoFornecedorItens) ? state.pedidoFornecedorItens : [];
+      let totalCaixas = 0;
+      let totalUsd = 0;
+      let totalBrl = 0;
+
+      if (itens.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:30px 10px; color:#94a3b8; font-size:12.5px;">Nenhum medicamento na lista do pedido.<br><span style="font-size:11px; color:#64748b;">Clique em "📥 Puxar Encomendas Pendentes" ou pesquise acima para adicionar.</span></div>`;
+        if (countEl) countEl.textContent = '0 itens';
+        if (totaisEl) totaisEl.textContent = '0 caixas · Custo: US$ 0.00 / R$ 0,00';
+        if (textarea) textarea.value = '';
+        return;
+      }
+
+      const html = itens.map((it, idx) => {
+        const raw = rawCatalog.find(p => p.id === it.produtoId) || { id: it.produtoId, nombre: 'Medicamento #' + it.produtoId, marca: '', precio: 0 };
+        const p = computeProduct(raw);
+        const subUsd = (p.usd || 0) * (it.qtd || 1);
+        const subBrl = (p.custo || 0) * (it.qtd || 1);
+        totalCaixas += Number(it.qtd) || 1;
+        totalUsd += subUsd;
+        totalBrl += subBrl;
+        const fotoSrc = p.localFoto || p.remoteFoto || '';
+
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:#0f172a; padding:8px 10px; border-radius:6px; margin-bottom:6px; border:1px solid #1e293b; gap:8px;">
+            <img src="${fotoSrc}" style="width:42px; height:42px; object-fit:cover; border-radius:4px; background:#020617; border:1px solid #334155;" onerror="this.style.display='none'" />
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:13px; font-weight:800; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${idx + 1}. ${escapeHtml(p.nombre)}</div>
+              <div style="font-size:11px; color:#94a3b8;">
+                <span style="color:#38bdf8; font-weight:700;">#${p.id}</span> · ${(p.marca || '').toUpperCase()} · Custo: US$ ${(p.usd || 0).toFixed(2)} (R$ ${(p.custo || 0).toFixed(0)})
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button type="button" class="btn btn-xs" style="width:24px; height:24px; padding:0; line-height:22px; font-weight:800;" onclick="window.CRM.alterarQtdItemPedidoFornecedor(${idx}, -1)">-</button>
+              <b style="font-size:14px; color:#34d399; min-width:24px; text-align:center;">${it.qtd} cx</b>
+              <button type="button" class="btn btn-xs" style="width:24px; height:24px; padding:0; line-height:22px; font-weight:800;" onclick="window.CRM.alterarQtdItemPedidoFornecedor(${idx}, 1)">+</button>
+              <button type="button" class="btn btn-xs" style="background:#7f1d1d; color:#fca5a5; border:1px solid #dc2626; margin-left:4px;" title="Remover item" onclick="window.CRM.removerItemPedidoFornecedor(${idx})">✖</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
+      if (countEl) countEl.textContent = `${itens.length} ${itens.length === 1 ? 'item' : 'itens'}`;
+      if (totaisEl) totaisEl.textContent = `${totalCaixas} caixas · Custo: US$ ${totalUsd.toFixed(2)} / ${formatBRL(totalBrl)}`;
+
+      // Atualiza texto pré-formatado da mensagem
+      window.CRM.gerarTextoMensagemPedidoFornecedor(itens, totalCaixas);
+    },
+
+    gerarTextoMensagemPedidoFornecedor(itens, totalCaixas) {
+      const textarea = document.getElementById('pedFornMensagemText');
+      if (!textarea) return;
+
+      const dataHoje = new Date().toLocaleDateString('pt-BR');
+      const lines = [
+        `*PEDIDO CONSOLIDADO — SHAPE TOTAL / BAXTI* 📦🇵🇾`,
+        `Data: ${dataHoje}`,
+        ``,
+        `Olá! Segue o pedido consolidado de importação para o próximo envio:`,
+        ``
+      ];
+
+      itens.forEach((it, idx) => {
+        const raw = rawCatalog.find(p => p.id === it.produtoId) || { id: it.produtoId, nombre: 'Medicamento #' + it.produtoId, marca: '', foto: '' };
+        const p = computeProduct(raw);
+        // Link direto do GitHub Pages: gera miniatura/anexo automático no WhatsApp
+        const fotoUrl = p.localFoto ? `https://itabh92.github.io/shapetotal-crm/${p.localFoto}` : (p.remoteFoto || '');
+
+        lines.push(`${idx + 1}️⃣ *${p.nombre}*`);
+        lines.push(`• Quantidade: *${it.qtd} caixas*`);
+        lines.push(`• Marca: ${(p.marca || '').toUpperCase()} | Cód: #${p.id}`);
+        if (fotoUrl) lines.push(`📸 Foto: ${fotoUrl}`);
+        lines.push(``);
+      });
+
+      lines.push(`📦 *Total consolidado: ${totalCaixas} caixas.*`);
+      lines.push(`Por favor confirmar a disponibilidade dos itens e o valor total para liberação do PIX. Obrigado! 🤝`);
+
+      textarea.value = lines.join('\n');
+    },
+
+    salvarTelefoneFornecedor() {
+      const inp = document.getElementById('pedFornTelefone');
+      if (!inp) return;
+      state.telefoneFornecedor = inp.value.trim();
+      saveState();
+      showToast('Telefone do fornecedor salvo!');
+    },
+
+    copiarMensagemPedidoFornecedor() {
+      const textarea = document.getElementById('pedFornMensagemText');
+      if (!textarea || !textarea.value) {
+        alert('Nenhuma mensagem gerada para copiar.');
+        return;
+      }
+      navigator.clipboard.writeText(textarea.value);
+      showToast('Mensagem para o fornecedor copiada com sucesso!');
+    },
+
+    enviarPedidoFornecedorWhatsApp() {
+      const textarea = document.getElementById('pedFornMensagemText');
+      if (!textarea || !textarea.value) {
+        alert('Adicione medicamentos ao pedido antes de enviar.');
+        return;
+      }
+      const telInput = document.getElementById('pedFornTelefone');
+      const tel = telInput ? telInput.value.replace(/\D/g, '') : '';
+      const text = textarea.value;
+
+      let url = '';
+      if (tel) {
+        url = `https://api.whatsapp.com/send?phone=${tel}&text=${encodeURIComponent(text)}`;
+      } else {
+        url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      }
+
+      window.open(url, '_blank') || (window.location.href = url);
+      showToast('Abrindo WhatsApp com o pedido pronto...');
+    },
+
+    salvarPedidoFornecedorComoTransito() {
+      const itens = Array.isArray(state.pedidoFornecedorItens) ? state.pedidoFornecedorItens : [];
+      if (!itens.length) {
+        alert('Nenhum item na lista para salvar como trânsito.');
+        return;
+      }
+
+      let totalCustoBrl = 0;
+      const itensTransito = [];
+
+      itens.forEach(it => {
+        const raw = rawCatalog.find(p => p.id === it.produtoId) || { id: it.produtoId, nombre: 'Produto #' + it.produtoId, marca: '', precio: 0 };
+        const p = computeProduct(raw);
+        const subCusto = (p.custo || 0) * (it.qtd || 1);
+        totalCustoBrl += subCusto;
+
+        itensTransito.push({
+          id_catalogo: p.id,
+          nome: p.nombre,
+          marca: p.marca || '',
+          categoria: p.categoria || '',
+          qtd: it.qtd || 1,
+          custo_unit_usd: p.usd || 0,
+          custo_unit_reais: p.custo || 0,
+          preco_venda_pix: p.precoFinal || 0,
+          preco_venda_cartao: p.precoCartao || 0
+        });
+      });
+
+      const loteId = 'PED-' + Date.now().toString().slice(-6);
+      const novoPedidoTransito = {
+        id: loteId,
+        data_compra: new Date().toLocaleDateString('pt-BR'),
+        fornecedor: 'Shape Total / Importação Paraguai',
+        status: 'em_transito',
+        custo_total_reais: Math.round(totalCustoBrl),
+        itens: itensTransito
+      };
+
+      if (!Array.isArray(state.pedidosTransito)) state.pedidosTransito = [];
+      state.pedidosTransito.unshift(novoPedidoTransito);
+
+      // Se houver encomendas pendentes de clientes correspondentes, marca-as como pedido_ao_fornecedor
+      const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente');
+      pendentes.forEach(e => {
+        const eItens = getEncomendaItens(e);
+        const bateu = eItens.some(it => itens.some(pi => pi.produtoId === it.produtoId));
+        if (bateu) {
+          e.status = 'pedido_ao_fornecedor';
+          e.loteId = loteId;
+        }
+      });
+
+      saveState();
+      renderAll();
+      window.CRM.renderEncomendas();
+
+      alert(`🚚 Pedido ${loteId} salvo como Carga em Trânsito com sucesso! (${itensTransito.reduce((a, b) => a + b.qtd, 0)} caixas).\n\nAgora você pode acompanhar a chegada pelo botão "🚚 A Chegar".`);
     }
   };
 
