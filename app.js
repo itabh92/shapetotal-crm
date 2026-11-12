@@ -2178,9 +2178,21 @@
             state.frascosDoses[v.produtoId].mgRestante = curMg + addMg;
           }
           state.frascosDoses[v.produtoId].totalAplicadasMg = Math.max(0, (Number(state.frascosDoses[v.produtoId].totalAplicadasMg) || 0) - addMg);
+        } else if (Array.isArray(v.itens) && v.itens.length > 0) {
+          if (!state.meuEstoque) state.meuEstoque = {};
+          v.itens.forEach(it => {
+            state.meuEstoque[it.produtoId] = (Number(state.meuEstoque[it.produtoId]) || 0) + (Number(it.qtd) || 1);
+          });
         } else {
           if (!state.meuEstoque) state.meuEstoque = {};
           state.meuEstoque[v.produtoId] = (Number(state.meuEstoque[v.produtoId]) || 0) + v.qtd;
+        }
+
+        // Se houver encomenda vinculada à venda, cancela a baixa e devolve o status
+        const encVinculada = (state.encomendas || []).find(e => String(e.vendaId) === vidStr);
+        if (encVinculada) {
+          encVinculada.status = 'pendente';
+          encVinculada.vendaId = null;
         }
 
         // Soft delete (append-only) para preservar histórico na sincronização entre Mac e iPhone
@@ -2190,7 +2202,7 @@
         saveState();
         renderAll();
         window.CRM.openSalesHistoryModal();
-        showToast(v.isDose ? `Venda estornada! +${v.doseMg} mg devolvidos ao frasco.` : `Venda estornada! ${v.qtd} un devolvida ao Estoque BH.`);
+        showToast(v.isDose ? `Venda estornada! +${v.doseMg} mg devolvidos ao frasco.` : `Venda estornada! Itens devolvidos ao Estoque BH.`);
       }
     },
 
@@ -3121,6 +3133,9 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
                 </button>
                 ${e.status === 'entregue' ? `
                   <span class="badge" style="background:#065f46; color:#a7f3d0; font-size:10.5px; font-weight:800; padding:3px 6px; border-radius:4px;" title="Estoque físico já abatido e venda registrada">✅ Baixado</span>
+                  <button class="btn btn-xs" style="background:#7f1d1d; color:#fca5a5; border:1px solid #dc2626; font-size:10.5px; font-weight:700;" title="Cancelar baixa e devolver medicamentos ao estoque" onclick="window.CRM.estornarEncomendaEntregue('${e.id}')">
+                    ↩️ Estornar Venda
+                  </button>
                 ` : `
                   <button class="btn btn-xs btn-green" style="background:#059669; color:#fff; font-size:11px; font-weight:800;" title="Dar baixa no estoque BH e registrar venda no histórico" onclick="window.CRM.entregarEncomendaEDarBaixa('${e.id}')">
                     💰 Baixar Estoque
@@ -3922,6 +3937,48 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       window.CRM.showSaleReceipt(venda, computeProduct(rawFirst));
     },
 
+    estornarEncomendaEntregue(encId) {
+      const enc = (state.encomendas || []).find(e => e.id === encId);
+      if (!enc) return;
+
+      const itens = getEncomendaItens(enc);
+      const totalQtd = itens.reduce((s, it) => s + (Number(it.qtd) || 1), 0);
+      const confirmMsg = `⚠️ Deseja cancelar/estornar esta venda de "${enc.cliente}"?\n\n` +
+        `• Medicamentos a devolver ao estoque físico BH: ${totalQtd} caixa(s)\n` +
+        `• Valor total: ${formatBRL(enc.valorTotal)}\n\n` +
+        `Ao confirmar:\n` +
+        `1. Os medicamentos voltam automaticamente para o seu estoque físico em BH.\n` +
+        `2. A venda é estornada do histórico financeiro (sem inflar lucro ou faturamento).\n` +
+        `3. O status do pedido volta para "Aguardando" para você corrigir ou excluir.`;
+
+      if (!confirm(confirmMsg)) return;
+
+      // 1. Devolve os medicamentos ao estoque físico em BH
+      if (!state.meuEstoque) state.meuEstoque = {};
+      itens.forEach(it => {
+        const curStock = Number(state.meuEstoque[it.produtoId] || 0);
+        state.meuEstoque[it.produtoId] = curStock + (Number(it.qtd) || 1);
+      });
+
+      // 2. Se houver venda registrada no histórico oficial, estorna
+      if (enc.vendaId && Array.isArray(state.vendas)) {
+        const venda = state.vendas.find(v => String(v.id) === String(enc.vendaId));
+        if (venda) {
+          venda.estornada = true;
+          venda.estornadaEm = new Date().toISOString();
+        }
+      }
+
+      // 3. Atualiza o status da encomenda de volta para pendente
+      enc.status = 'pendente';
+      enc.vendaId = null;
+
+      saveState();
+      renderAll();
+      window.CRM.renderEncomendas();
+      showToast(`✅ Venda estornada! ${totalQtd} caixa(s) devolvida(s) ao estoque BH.`);
+    },
+
     deleteEncomenda(encId) {
       const enc = (state.encomendas || []).find(e => e.id === encId);
       if (!enc) return;
@@ -4063,19 +4120,21 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       }
 
       // Monta texto formatado do WhatsApp com itens numerados e fotos
+      const isPronta = enc.tipoOperacao === 'pronta_entrega' || enc.status === 'entregue';
       const lines = [
-        `*RECIBO DE ENCOMENDA & RESERVA — SHAPE TOTAL BH* 📦✨`,
+        `*RECIBO DE PEDIDO & RESERVA — BAXTI IMPORTADOS* 📦✨`,
         `Data: ${new Date(enc.data).toLocaleDateString('pt-BR')}`,
         ``,
         `Olá, *${enc.cliente}*! Seu pedido foi registrado com sucesso:`,
         ``,
-        `📦 *Medicamentos Encomendados (${itens.length} ${itens.length === 1 ? 'item' : 'itens'}):*`
+        `📦 *Medicamentos (${itens.length} ${itens.length === 1 ? 'item' : 'itens'}):*`
       ];
 
       itens.forEach((it, idx) => {
         const rawIt = rawCatalog.find(x => x.id === it.produtoId) || {};
         const pIt = computeProduct(rawIt);
-        const fotoUrl = pIt.localFoto ? `https://itabh92.github.io/shapetotal-crm/${pIt.localFoto}` : (pIt.remoteFoto || '');
+        // Utiliza a URL oficial neutra de catálogo do laboratório/distribuidor, sem menção ao site pessoal
+        const fotoUrl = pIt.remoteFoto || (pIt.localFoto ? `https://shapetotal.com/${pIt.localFoto}` : '');
 
         lines.push(`${idx + 1}️⃣ *${it.produtoNome}*`);
         lines.push(`• Quantidade: *${it.qtd} caixa(s)*`);
@@ -4092,10 +4151,15 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (saldo > 0) lines.push(`📍 *Saldo a Pagar na Entrega:* *${formatBRL(saldo)}*`);
       if (enc.endereco) lines.push(`📍 *Endereço de Entrega:* ${enc.endereco}`);
       lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━`);
-      lines.push(`🔑 *Chave PIX (BAXTI):* pix@baxti.com.br`);
+      lines.push(`💠 *Chave PIX (CNPJ):* 64.228.053/0001-47`);
+      lines.push(`🏦 *Beneficiário:* BAXTI IMPORTADOS LTDA`);
       lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━`);
-      lines.push(`🚚 *Previsão de Chegada:* 7 a 10 dias úteis.`);
-      lines.push(`Assim que desembarcar em nosso estoque em Belo Horizonte, nossa equipe entra em contato com você para agendar o envio ou retirada.`);
+      if (isPronta) {
+        lines.push(`🚀 *Prazo de Envio:* Em estoque — envio no mesmo dia (via Uber Flash / Motoboy em BH).`);
+      } else {
+        lines.push(`🚚 *Prazo de Chegada:* 7 a 10 dias úteis.`);
+        lines.push(`Assim que desembarcar em nosso estoque em Belo Horizonte, nossa equipe entra em contato com você para agendar o envio imediato.`);
+      }
       lines.push(``);
       lines.push(`Agradecemos pela preferência e confiança! Conte sempre conosco. ✨`);
 
