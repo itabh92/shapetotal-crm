@@ -1988,6 +1988,64 @@
       showToast('Comprovante copiado para a área de transferência!');
     },
 
+    previewSaleWhatsAppQuote() {
+      const pid = Number(document.getElementById('saleProdId').value);
+      const raw = rawCatalog.find(x => x.id === pid);
+      if (!raw) {
+        showToast('Selecione um produto!');
+        return;
+      }
+      const p = computeProduct(raw);
+      const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
+      const unitRaw = document.getElementById('saleUnitPrice').value.trim();
+      const totalRaw = document.getElementById('saleTotalValue').value.trim();
+      const unitVal = unitRaw !== '' && isFinite(Number(unitRaw)) ? Number(unitRaw) : p.precoFinal;
+      const subtotalVal = totalRaw !== '' && isFinite(Number(totalRaw)) ? Number(totalRaw) : (unitVal * qty);
+
+      const freteVal = Math.max(0, Number(document.getElementById('saleShipping') ? document.getElementById('saleShipping').value : 0) || 0);
+      const grandTotal = subtotalVal + freteVal;
+
+      const pay = document.getElementById('salePayment').value;
+      const isGlp = isGlpProduct(p);
+      const payLabelMap = {
+        'pix': '💠 À vista no PIX',
+        'cartao_parcelado': isGlp ? '💳 Cartão de Crédito (até 12x s/ juros)' : '💳 Cartão de Crédito (até 6x s/ juros)',
+        'cartao_6x': isGlp ? '💳 Cartão de Crédito (até 12x s/ juros)' : '💳 Cartão de Crédito (até 6x)',
+        'cartao_debito': '💳 Cartão Débito',
+        'dinheiro': '💵 Dinheiro em Espécie'
+      };
+      const payLabel = payLabelMap[pay] || pay;
+      const client = document.getElementById('saleClientName').value.trim() || 'Cliente';
+      const phone = document.getElementById('saleClientPhone').value.trim();
+      const notes = document.getElementById('saleNotes').value.trim();
+      const isPix = pay === 'pix';
+
+      const lines = [
+        `*ORÇAMENTO & PROPOSTA — SHAPE TOTAL BH* 📦✨`,
+        `━━━━━━━━━━━━━━━━━━━━━━━━━`,
+        `👤 *Cliente:* ${client}`,
+        `🧪 *Medicamento:* ${qty}x *${p.nombre}*`,
+        qty > 1 ? `💵 *Valor Unitário:* ${formatBRL(unitVal)} cada` : ``,
+        `📦 *Subtotal Medicamento:* ${formatBRL(subtotalVal)}`,
+        freteVal > 0 ? `🚚 *Frete / Envio (Uber Flash / Motoboy):* ${formatBRL(freteVal)}` : `🚚 *Frete:* Retirada em mãos / Frete a combinar`,
+        `━━━━━━━━━━━━━━━━━━━━━━━━━`,
+        `💰 *TOTAL A PAGAR:* *${formatBRL(grandTotal)}*`,
+        `💳 *Forma de Pagamento:* ${payLabel}`,
+        notes ? `📍 *Endereço / Observação:* ${notes}` : ``,
+        `━━━━━━━━━━━━━━━━━━━━━━━━━`,
+        isPix ? `💠 *Chave PIX (CNPJ):* 64.228.053/0001-47\n🏦 *Beneficiário:* BAXTI IMPORTADOS LTDA (Banco Inter)\n━━━━━━━━━━━━━━━━━━━━━━━━━` : ``,
+        `🔒 *Garantia:* Medicamento 100% original, lacrado e com procedência.`,
+        `Assim que confirmar, já providenciamos a separação e o envio imediato! 🚀💪`
+      ].filter(Boolean);
+
+      const modal = document.getElementById('saleReceiptModal');
+      const textarea = document.getElementById('saleReceiptText');
+      if (textarea) textarea.value = lines.join('\n');
+      window._lastReceiptPhone = phone;
+      if (modal) modal.classList.add('open');
+      showToast('Mensagem de WhatsApp com frete e total gerada!');
+    },
+
     openSalesHistoryModal() {
       const modal = document.getElementById('salesHistoryModal');
       const vendas = state.vendas || [];
@@ -2362,6 +2420,8 @@
     openWhatsAppCatalogModal(mode) {
       const modal = document.getElementById('waCatalogModal');
       const textarea = document.getElementById('waCatalogText');
+      const sBox = document.getElementById('cartShippingBox');
+      if (sBox) sBox.style.display = 'none';
       if (mode === 'meu_estoque') {
         const inStock = rawCatalog.map(computeProduct).filter(p => ((state.meuEstoque || {})[p.id] || 0) > 0);
         if (!inStock.length) {
@@ -2497,11 +2557,35 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
     openCartModal() {
       const modal = document.getElementById('waCatalogModal');
+      const sBox = document.getElementById('cartShippingBox');
+      const sInp = document.getElementById('cartShippingInput');
+      if (sBox) sBox.style.display = 'flex';
+      const shippingVal = sInp ? Number(sInp.value) || 0 : 0;
+      window.CRM.renderCartWhatsAppText(shippingVal);
+      modal.classList.add('open');
+    },
+
+    onCartShippingChange(val) {
+      const shippingVal = Math.max(0, Number(val) || 0);
+      window.CRM.renderCartWhatsAppText(shippingVal);
+    },
+
+    setCartShippingPreset(val) {
+      const inp = document.getElementById('cartShippingInput');
+      if (inp) inp.value = val;
+      window.CRM.renderCartWhatsAppText(val);
+    },
+
+    renderCartWhatsAppText(frete = 0) {
       const textarea = document.getElementById('waCatalogText');
       const entries = Object.entries(state.cart).filter(([, q]) => q > 0);
       let totalPix = 0;
       let totalCusto = 0;
-      const lines = [`*ORÇAMENTO SHAPE TOTAL*`, ``];
+      const lines = [
+        `*ORÇAMENTO & PEDIDO — SHAPE TOTAL BH* 📦✨`,
+        `━━━━━━━━━━━━━━━━━━━━━━━━━`
+      ];
+
       entries.forEach(([id, qty]) => {
         const raw = rawCatalog.find(x => String(x.id) === String(id));
         if (raw) {
@@ -2509,14 +2593,32 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
           const sub = p.precoFinal * qty;
           totalPix += sub;
           totalCusto += p.custo * qty;
-          lines.push(`• ${qty}x *${p.nombre}* ➔ *${formatBRLInt(sub)}* (${formatBRLInt(p.precoFinal)} un)`);
+          lines.push(`• ${qty}x *${p.nombre}* ➔ *${formatBRL(sub)}* (${formatBRL(p.precoFinal)} un)`);
         }
       });
-      lines.push(``);
-      lines.push(`💰 *Total à vista (PIX): ${formatBRLInt(totalPix)}*`);
-      lines.push(`💳 *Total no Cartão: ${formatBRLInt(totalPix + state.taxaCartaoFixa)}*`);
-      textarea.value = lines.join('\n');
-      modal.classList.add('open');
+
+      const freteNum = Number(frete) || 0;
+      const totalPixComFrete = totalPix + freteNum;
+      const totalCartaoComFrete = totalPix + state.taxaCartaoFixa + freteNum;
+
+      lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      lines.push(`📦 *Subtotal Medicamentos:* ${formatBRL(totalPix)}`);
+      if (freteNum > 0) {
+        lines.push(`🚚 *Frete / Envio (Uber Flash / Motoboy):* ${formatBRL(freteNum)}`);
+      } else {
+        lines.push(`🚚 *Frete:* Retirada em mãos / Frete a combinar`);
+      }
+      lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      lines.push(`💰 *TOTAL À VISTA NO PIX: ${formatBRL(totalPixComFrete)}*`);
+      lines.push(`💳 *TOTAL NO CARTÃO: ${formatBRL(totalCartaoComFrete)}* (em até 12x s/ juros em GLP-1)`);
+      lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      lines.push(`💠 *Chave PIX (CNPJ):* 64.228.053/0001-47`);
+      lines.push(`🏦 *Beneficiário:* BAXTI IMPORTADOS LTDA (Banco Inter)`);
+      lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      lines.push(`🔒 *Garantia:* Medicamentos 100% originais com controle de pureza.`);
+      lines.push(`Me envie o comprovante e seu endereço completo para agendarmos o envio! 🚀🤝`);
+
+      if (textarea) textarea.value = lines.join('\n');
     },
 
     clearCart() {
