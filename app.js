@@ -201,6 +201,7 @@
   let currentEncomendaFilter = 'todas';
   let currentReceiptEncId = null;
   let currentReceiptPhone = '';
+  let currentPedidoOperacao = 'pronta_entrega'; // 'pronta_entrega' | 'encomenda'
   let novaEncomendaItens = [];
 
   function getEncomendaItens(enc) {
@@ -1571,65 +1572,96 @@
     },
 
     openSaleModal(productId) {
-      const modal = document.getElementById('saleModal');
-      const selectContainer = document.getElementById('saleProdSelectContainer');
+      // Unificação Completa: abre o formulário consolidado já em modo Pronta Entrega BH (baixa imediata)
+      window.CRM.openNovaEncomendaModal(productId, 'pronta_entrega');
+    },
+
+    filterSaleProdutosSelect(query, selectedId = null) {
       const select = document.getElementById('saleProdSelect');
+      const badge = document.getElementById('saleSearchCountBadge');
+      if (!select) return;
+
+      const q = (query || '').toLowerCase().trim();
       const allComputed = rawCatalog.map(computeProduct);
       const inStockProds = allComputed.filter(p => ((state.meuEstoque || {})[p.id] || 0) > 0);
 
-      // Sempre exibe o seletor para permitir alternar entre produtos com 1 toque
-      selectContainer.style.display = 'block';
-
-      let targetId = productId;
-      const targetProd = allComputed.find(p => p.id === targetId);
-      if (!targetProd) {
-        targetId = (inStockProds.length > 0 ? inStockProds[0] : allComputed[0]).id;
+      let filtered = allComputed;
+      if (q === 'estoque' || q === 'em estoque') {
+        filtered = inStockProds;
+      } else if (q) {
+        filtered = allComputed.filter(p => {
+          const txt = `${p.id} ${p.nombre || ''} ${p.marca || ''} ${p.composicion || ''} ${p.categoria || ''}`.toLowerCase();
+          return txt.includes(q);
+        });
       }
 
-      // Monta as opções do select com agrupamento claro e destaque para pronta entrega
+      const filteredInStock = filtered.filter(p => ((state.meuEstoque || {})[p.id] || 0) > 0);
+      const filteredOutStock = filtered.filter(p => !((state.meuEstoque || {})[p.id] || 0));
+
+      if (!filtered.length) {
+        select.innerHTML = `<option value="">Nenhum medicamento encontrado com "${escapeHtml(q)}"</option>`;
+        if (badge) badge.textContent = '0 opções';
+        return;
+      }
+
       let optionsHtml = '';
-      if (inStockProds.length > 0) {
-        optionsHtml += `<optgroup label="✅ Pronta Entrega BH (Em Estoque)">`;
-        optionsHtml += inStockProds.map(p => `
-          <option value="${p.id}" ${p.id === targetId ? 'selected' : ''}>
+      if (filteredInStock.length > 0) {
+        optionsHtml += `<optgroup label="✅ Pronta Entrega BH (Em Estoque: ${filteredInStock.length})">`;
+        optionsHtml += filteredInStock.map(p => `
+          <option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>
             ${p.nombre} (Disponível: ${(state.meuEstoque || {})[p.id]} un)
           </option>
         `).join('');
         optionsHtml += `</optgroup>`;
+      }
 
-        // Se o produto clicado não estiver com estoque > 0, adiciona grupo de destaque para ele
-        if (targetProd && !inStockProds.some(p => p.id === targetId)) {
-          optionsHtml = `
-            <optgroup label="⚡ Produto Selecionado">
-              <option value="${targetProd.id}" selected>
-                ${targetProd.nombre} (Disponível: ${(state.meuEstoque || {})[targetProd.id] || 0} un)
-              </option>
-            </optgroup>
-          ` + optionsHtml;
-        }
-
-        // Demais produtos do catálogo para venda flexível sem bloqueios
-        const outros = allComputed.filter(p => !inStockProds.some(ip => ip.id === p.id) && (!targetProd || p.id !== targetProd.id));
-        if (outros.length > 0) {
-          optionsHtml += `<optgroup label="📦 Outros Produtos (Estoque 0 ou Encomenda)">`;
-          optionsHtml += outros.slice(0, 40).map(p => `
-            <option value="${p.id}" ${p.id === targetId ? 'selected' : ''}>
-              ${p.nombre} (Disponível: 0 un)
-            </option>
-          `).join('');
-          optionsHtml += `</optgroup>`;
-        }
-      } else {
-        optionsHtml = allComputed.map(p => `
-          <option value="${p.id}" ${p.id === targetId ? 'selected' : ''}>
-            ${p.nombre} (Disponível: ${(state.meuEstoque || {})[p.id] || 0} un)
+      if (filteredOutStock.length > 0) {
+        optionsHtml += `<optgroup label="📦 Outros Produtos (Estoque 0 ou Encomenda: ${filteredOutStock.length})">`;
+        optionsHtml += filteredOutStock.slice(0, 60).map(p => `
+          <option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>
+            ${p.nombre} (Disponível: 0 un)
           </option>
         `).join('');
+        optionsHtml += `</optgroup>`;
       }
 
       select.innerHTML = optionsHtml;
-      window.CRM.setSaleModalData(targetId);
-      modal.classList.add('open');
+      if (badge) {
+        badge.textContent = `${filteredInStock.length} em estoque · ${filtered.length} total`;
+      }
+
+      const hasSelected = selectedId && filtered.some(p => p.id === selectedId);
+      const targetId = hasSelected ? selectedId : (filteredInStock[0] ? filteredInStock[0].id : (filtered[0] ? filtered[0].id : null));
+      if (targetId) {
+        select.value = targetId;
+        window.CRM.setSaleModalData(targetId);
+      }
+    },
+
+    quickSearchSaleProduto(term) {
+      const inp = document.getElementById('saleProdBuscaInput');
+      if (inp) {
+        inp.value = term === 'estoque' ? '' : term;
+        inp.focus();
+      }
+      window.CRM.filterSaleProdutosSelect(term);
+    },
+
+    onSaleClienteSelect(val) {
+      const nome = (val || '').trim().toLowerCase();
+      if (!nome) return;
+      const all = [...(state.encomendas || []), ...(state.vendas || [])];
+      const match = all.find(x => (x.cliente || '').trim().toLowerCase() === nome);
+      if (match) {
+        const phoneInp = document.getElementById('saleClientPhone');
+        if (phoneInp && !phoneInp.value && match.telefone) {
+          phoneInp.value = match.telefone;
+        }
+        const notesInp = document.getElementById('saleNotes');
+        if (notesInp && !notesInp.value && match.endereco) {
+          notesInp.value = `Entrega: ${match.endereco}`;
+        }
+      }
     },
 
     onSaleProductSelect(val) {
@@ -3251,28 +3283,111 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         });
       }
 
-      const sorted = [...filtered].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+      const isPronta = currentPedidoOperacao === 'pronta_entrega';
+      const inStock = filtered.filter(p => ((state.meuEstoque || {})[p.id] || 0) > 0);
+      const outStock = filtered.filter(p => !((state.meuEstoque || {})[p.id] || 0));
 
-      if (!sorted.length) {
+      if (!filtered.length) {
         sel.innerHTML = `<option value="">Nenhum produto encontrado com "${escapeHtml(q)}"</option>`;
         if (badge) badge.textContent = '0 opções';
         return;
       }
 
-      sel.innerHTML = sorted.map(p => {
-        return `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${p.nombre} — ${(p.marca || '').toUpperCase()}</option>`;
-      }).join('');
+      let optionsHtml = '';
+      if (isPronta && inStock.length > 0) {
+        optionsHtml += `<optgroup label="✅ Pronta Entrega BH (${inStock.length} disponíveis)">`;
+        optionsHtml += inStock.map(p => `
+          <option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>
+            ${p.nombre} — ${(p.marca || '').toUpperCase()} (Estoque: ${(state.meuEstoque || {})[p.id]} un)
+          </option>
+        `).join('');
+        optionsHtml += `</optgroup>`;
 
-      if (badge) {
-        badge.textContent = q ? `${sorted.length} encontrados` : `${sorted.length} opções`;
+        if (outStock.length > 0) {
+          optionsHtml += `<optgroup label="📦 Outros Produtos do Catálogo (${outStock.length})">`;
+          optionsHtml += outStock.slice(0, 60).map(p => `
+            <option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>
+              ${p.nombre} — ${(p.marca || '').toUpperCase()} (Estoque: 0)
+            </option>
+          `).join('');
+          optionsHtml += `</optgroup>`;
+        }
+      } else {
+        const sorted = [...filtered].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+        optionsHtml = sorted.map(p => {
+          const stk = (state.meuEstoque || {})[p.id] || 0;
+          return `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${p.nombre} — ${(p.marca || '').toUpperCase()}${stk > 0 ? ` [Estoque: ${stk}]` : ''}</option>`;
+        }).join('');
       }
 
-      const hasSelected = selectedId && sorted.some(p => p.id === selectedId);
-      const targetId = hasSelected ? selectedId : Number(sel.value) || (sorted[0] ? sorted[0].id : null);
+      sel.innerHTML = optionsHtml;
+
+      if (badge) {
+        if (isPronta) {
+          badge.textContent = `${inStock.length} em pronta entrega · ${filtered.length} total`;
+        } else {
+          badge.textContent = q ? `${filtered.length} encontrados` : `${filtered.length} opções`;
+        }
+      }
+
+      const hasSelected = selectedId && filtered.some(p => p.id === selectedId);
+      const targetId = hasSelected ? selectedId : (isPronta && inStock.length > 0 ? inStock[0].id : (filtered[0] ? filtered[0].id : null));
       if (targetId) {
         sel.value = targetId;
         window.CRM.onEncProdutoChange(targetId);
       }
+    },
+
+    setPedidoOperacao(tipo) {
+      currentPedidoOperacao = tipo === 'encomenda' ? 'encomenda' : 'pronta_entrega';
+      const isPronta = currentPedidoOperacao === 'pronta_entrega';
+
+      const btnPe = document.getElementById('btnOpProntaEntrega');
+      const btnEnc = document.getElementById('btnOpEncomenda');
+      const hint = document.getElementById('encOperacaoHint');
+      const tit = document.getElementById('encNovaTitulo');
+      const btnSimples = document.getElementById('btnSalvarPedidoSimples');
+      const btnWa = document.getElementById('btnSalvarPedidoWhatsApp');
+
+      if (isPronta) {
+        if (btnPe) {
+          btnPe.style.background = '#059669';
+          btnPe.style.color = '#fff';
+          btnPe.style.border = '2px solid #34d399';
+        }
+        if (btnEnc) {
+          btnEnc.style.background = '#1e293b';
+          btnEnc.style.color = '#fbbf24';
+          btnEnc.style.border = '1px solid #d97706';
+        }
+        if (hint) {
+          hint.textContent = '🟢 Pronta Entrega: Abate estoque físico em BH imediatamente e registra venda';
+          hint.style.color = '#34d399';
+        }
+        if (tit) tit.innerHTML = '💰 Nova Venda & Baixa de Estoque BH';
+        if (btnSimples) btnSimples.textContent = '💾 Baixar Estoque & Salvar Venda';
+        if (btnWa) btnWa.textContent = '📲 Baixar Estoque & Enviar WhatsApp';
+      } else {
+        if (btnPe) {
+          btnPe.style.background = '#1e293b';
+          btnPe.style.color = '#38bdf8';
+          btnPe.style.border = '1px solid #334155';
+        }
+        if (btnEnc) {
+          btnEnc.style.background = '#b45309';
+          btnEnc.style.color = '#fff';
+          btnEnc.style.border = '2px solid #fbbf24';
+        }
+        if (hint) {
+          hint.textContent = '🇵🇾 Encomenda Paraguai: Entra no concentrador do fornecedor e aguarda chegada em BH';
+          hint.style.color = '#fbbf24';
+        }
+        if (tit) tit.innerHTML = '📝 Nova Encomenda p/ Importar (Paraguai)';
+        if (btnSimples) btnSimples.textContent = '💾 Salvar Encomenda';
+        if (btnWa) btnWa.textContent = '📲 Salvar & Enviar Recibo WhatsApp';
+      }
+
+      window.CRM.filterEncProdutosSelect(document.getElementById('encNovoBuscaInput') ? document.getElementById('encNovoBuscaInput').value : '');
     },
 
     quickSearchEncProduto(term) {
@@ -3284,10 +3399,11 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       window.CRM.filterEncProdutosSelect(term);
     },
 
-    openNovaEncomendaModal(productId = null) {
+    openNovaEncomendaModal(productId = null, operacao = 'encomenda') {
       const modal = document.getElementById('encomendasModal');
       if (!modal) return;
       window.CRM.switchEncomendasTab('nova');
+      window.CRM.setPedidoOperacao(operacao);
       window.CRM.populateEncClientesDatalist();
       novaEncomendaItens = [];
 
@@ -3554,15 +3670,80 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const subtotalProdutos = novaEncomendaItens.reduce((s, it) => s + (Number(it.subtotal) || 0), 0);
       const valorTotal = subtotalProdutos + frete;
       const saldoRestante = Math.max(0, valorTotal - sinal);
+      const isProntaEntrega = currentPedidoOperacao === 'pronta_entrega';
 
+      // 1. Se for pronta entrega, abate as quantidades de cada medicamento do estoque físico BH
+      if (isProntaEntrega) {
+        if (!state.meuEstoque) state.meuEstoque = {};
+        novaEncomendaItens.forEach(it => {
+          const curStock = Number(state.meuEstoque[it.produtoId] || 0);
+          const nextStock = curStock - it.qtd;
+          if (nextStock <= 0) {
+            delete state.meuEstoque[it.produtoId];
+          } else {
+            state.meuEstoque[it.produtoId] = nextStock;
+          }
+        });
+      }
+
+      // 2. Calcula custo total e lucro líquido real do pedido
+      let custoTotalBrl = 0;
+      novaEncomendaItens.forEach(it => {
+        const raw = rawCatalog.find(x => x.id === it.produtoId) || {};
+        const p = computeProduct(raw);
+        custoTotalBrl += (p.custo || 0) * it.qtd;
+      });
+      const lucroEst = subtotalProdutos - custoTotalBrl;
+
+      const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      const encId = 'ENC-' + Date.now().toString().slice(-6) + '-' + Math.random().toString(36).substr(2, 3);
+      const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
+
+      // 3. Se for pronta entrega, grava a venda oficial no histórico com conciliação imediata
+      if (isProntaEntrega) {
+        const primeiroItem = novaEncomendaItens[0];
+        const nomesProdutos = novaEncomendaItens.length === 1
+          ? primeiroItem.produtoNome
+          : `${novaEncomendaItens.length} medicamentos: ` + novaEncomendaItens.map(it => `${it.qtd}x ${it.produtoNome}`).join(' + ');
+
+        const venda = {
+          id: saleId,
+          data: new Date().toISOString(),
+          produtoId: primeiroItem.produtoId || 0,
+          produtoNome: nomesProdutos,
+          marca: primeiroItem.marca || 'Shape Total',
+          qtd: novaEncomendaItens.reduce((s, it) => s + it.qtd, 0),
+          itens: [...novaEncomendaItens],
+          isDose: false,
+          doseMg: 0,
+          estornada: false,
+          origemAparelho: aparelhoOrigem,
+          valorUnitario: primeiroItem.precoUnit,
+          valorProdutos: subtotalProdutos,
+          valorFrete: frete,
+          valorTotal: valorTotal,
+          formaPagamento: formaPagamento === 'cartao' ? '💳 Cartão de Crédito (até 12x s/ juros)' : '💠 À vista no PIX',
+          cliente: cliente,
+          telefone: telefone,
+          obs: `Venda Pronta Entrega (${encId})${endereco ? ` · Entrega: ${endereco}` : ''}${obs ? ` · ${obs}` : ''}`.trim(),
+          custoTotal: custoTotalBrl,
+          lucro: lucroEst
+        };
+
+        if (!state.vendas) state.vendas = [];
+        state.vendas.unshift(venda);
+      }
+
+      // 4. Salva a encomenda (se pronta entrega, status 'entregue' vinculada à venda; se encomenda, 'pendente')
       const primeiroItem = novaEncomendaItens[0];
       const newEnc = {
-        id: 'ENC-' + Date.now().toString().slice(-6) + '-' + Math.random().toString(36).substr(2, 3),
+        id: encId,
         data: new Date().toISOString(),
         cliente,
         telefone,
         endereco,
-        status: 'pendente',
+        status: isProntaEntrega ? 'entregue' : 'pendente',
+        tipoOperacao: currentPedidoOperacao,
         produtoId: primeiroItem.produtoId,
         produtoNome: primeiroItem.produtoNome,
         marca: primeiroItem.marca,
@@ -3573,11 +3754,11 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         valorProdutos: subtotalProdutos,
         frete,
         valorTotal,
-        sinal,
-        saldoRestante,
+        sinal: isProntaEntrega ? valorTotal : sinal,
+        saldoRestante: isProntaEntrega ? 0 : saldoRestante,
         obs,
         loteId: null,
-        vendaId: null
+        vendaId: isProntaEntrega ? saleId : null
       };
 
       if (!Array.isArray(state.encomendas)) state.encomendas = [];
@@ -3602,7 +3783,9 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       novaEncomendaItens = [];
 
       renderAll();
-      showToast('✅ Pedido salvo com sucesso!');
+      showToast(isProntaEntrega 
+        ? `💰 Venda de ${formatBRL(valorTotal)} concluída e estoque baixado!` 
+        : `🇵🇾 Encomenda de ${formatBRL(valorTotal)} salva com sucesso!`);
 
       // Fecha o modal de cadastro para não sobrepor telas
       const mEnc = document.getElementById('encomendasModal');
