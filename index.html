@@ -454,8 +454,28 @@
 
         <!-- Seletor do Medicamento com busca e cálculo -->
         <div style="background:#0f172a; padding:12px; border-radius:8px; border:1px solid #334155; margin-bottom:12px;">
+          <!-- Campo de Busca Rápida por Nome/Marca -->
+          <div class="m-field" style="margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <label style="color:#38bdf8; font-weight:800; margin:0;">🔍 Pesquisar Medicamento por Nome</label>
+              <span id="encSearchCountBadge" style="font-size:11px; color:#94a3b8; font-weight:700;">890 opções</span>
+            </div>
+            <input id="encNovoBuscaInput" type="text" placeholder="Digite para filtrar: ex: TG, Tirzec, Lipoless, Retatrutida, Durateston..." style="text-align:left; font-size:14px; background:#020617; border:2px solid #38bdf8; color:#fff; border-radius:6px; padding:8px 12px;" oninput="window.CRM.filterEncProdutosSelect(this.value)" />
+          </div>
+
+          <!-- Atalhos rápidos com 1 toque -->
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+            <span style="font-size:10px; color:#94a3b8; align-self:center;">Mais pedidos:</span>
+            <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchEncProduto('tg')">TG 15mg</button>
+            <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchEncProduto('tirzec')">Tirzec 15mg</button>
+            <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchEncProduto('lipoless')">Lipoless 15mg</button>
+            <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchEncProduto('tirzedral')">Tirzedral</button>
+            <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#fbbf24; border:1px solid #d97706;" onclick="window.CRM.quickSearchEncProduto('retatrutide')">Retatrutida</button>
+            <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#34d399; border:1px solid #059669;" onclick="window.CRM.quickSearchEncProduto('lipoland')">Lipoland</button>
+          </div>
+
           <div class="m-field" style="margin-bottom:10px;">
-            <label style="color:#38bdf8; font-weight:800;">🧪 Selecionar Medicamento do Catálogo (890 SKUs)</label>
+            <label style="color:#cbd5e1; font-size:11px; font-weight:700;">Medicamento Selecionado:</label>
             <select id="encNovoProdutoSelect" class="filter-select" style="width:100%; font-size:13px;" onchange="window.CRM.onEncProdutoChange(this.value)"></select>
           </div>
 
@@ -1021,8 +1041,8 @@
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script src="dados_catalogo.js?v=20261112_1000"></script>
-  <script src="app.js?v=20261112_1000"></script>
+  <script src="dados_catalogo.js?v=20261112_1057"></script>
+  <script src="app.js?v=20261112_1057"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

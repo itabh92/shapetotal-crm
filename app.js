@@ -3047,23 +3047,72 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
     },
 
     populateEncProdutosDropdown(selectedId = null) {
+      const searchInp = document.getElementById('encNovoBuscaInput');
+      if (searchInp) searchInp.value = '';
+      window.CRM.filterEncProdutosSelect('', selectedId);
+    },
+
+    filterEncProdutosSelect(query, selectedId = null) {
       const sel = document.getElementById('encNovoProdutoSelect');
+      const badge = document.getElementById('encSearchCountBadge');
       if (!sel) return;
 
-      const sorted = [...rawCatalog].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+      const q = (query || '').toLowerCase().trim();
+      let filtered = rawCatalog;
+      if (q) {
+        filtered = rawCatalog.filter(p => {
+          const txt = `${p.id} ${p.nombre || ''} ${p.marca || ''} ${p.composicion || ''} ${p.desc_comercial || ''}`.toLowerCase();
+          return txt.includes(q);
+        });
+      }
+
+      const sorted = [...filtered].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+
+      if (!sorted.length) {
+        sel.innerHTML = `<option value="">Nenhum produto encontrado com "${escapeHtml(q)}"</option>`;
+        if (badge) badge.textContent = '0 opções';
+        return;
+      }
+
       sel.innerHTML = sorted.map(p => {
         return `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${p.nombre} — ${(p.marca || '').toUpperCase()}</option>`;
       }).join('');
 
-      const targetId = selectedId || Number(sel.value) || (sorted[0] ? sorted[0].id : null);
-      if (targetId) window.CRM.onEncProdutoChange(targetId);
+      if (badge) {
+        badge.textContent = q ? `${sorted.length} encontrados` : `${sorted.length} opções`;
+      }
+
+      const hasSelected = selectedId && sorted.some(p => p.id === selectedId);
+      const targetId = hasSelected ? selectedId : Number(sel.value) || (sorted[0] ? sorted[0].id : null);
+      if (targetId) {
+        sel.value = targetId;
+        window.CRM.onEncProdutoChange(targetId);
+      }
+    },
+
+    quickSearchEncProduto(term) {
+      const inp = document.getElementById('encNovoBuscaInput');
+      if (inp) {
+        inp.value = term;
+        inp.focus();
+      }
+      window.CRM.filterEncProdutosSelect(term);
     },
 
     openNovaEncomendaModal(productId = null) {
       const modal = document.getElementById('encomendasModal');
       if (!modal) return;
       window.CRM.switchEncomendasTab('nova');
-      window.CRM.populateEncProdutosDropdown(productId);
+      if (productId) {
+        const prod = rawCatalog.find(p => p.id === productId);
+        const searchInp = document.getElementById('encNovoBuscaInput');
+        if (searchInp && prod) {
+          searchInp.value = prod.nombre.split(' ')[0];
+        }
+        window.CRM.filterEncProdutosSelect(searchInp ? searchInp.value : '', productId);
+      } else {
+        window.CRM.populateEncProdutosDropdown(null);
+      }
       modal.classList.add('open');
     },
 
@@ -3153,6 +3202,8 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       document.getElementById('encNovoEndereco').value = '';
       document.getElementById('encNovoSinal').value = '0';
       document.getElementById('encNovoObs').value = '';
+      const searchInp = document.getElementById('encNovoBuscaInput');
+      if (searchInp) searchInp.value = '';
 
       renderAll();
       showToast('Encomenda cadastrada com sucesso!');
