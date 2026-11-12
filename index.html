@@ -83,6 +83,7 @@
           <button class="btn btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_especial')">📋 Tabela Tirzepatida & Reta</button>
           <button class="btn btn-primary" onclick="window.CRM.openWhatsAppCatalogModal('grok')">🧬 Guia Grok WhatsApp</button>
           <button class="btn btn-blue" onclick="window.CRM.openWhatsAppCatalogModal('filtro')">📲 Lista WhatsApp Atual</button>
+          <button class="btn internal-only" style="background:#7c3aed; color:#ffffff; font-weight:800;" onclick="window.CRM.openNewProductModal()" title="Cadastrar um produto novo no catálogo local">➕ Novo Produto</button>
           <button id="btnViewMode" class="btn">📊 Ver Planilha</button>
           <button class="btn internal-only" style="background:#1e293b; color:#94a3b8; font-size:11px;" title="Restaura os 32 itens físicos canônicos de BH" onclick="window.CRM.resetEstoqueBase()">🔄 Reset Estoque (32 un)</button>
           <button class="btn internal-only" onclick="window.CRM.exportCSV()">📥 Excel/CSV</button>
@@ -129,6 +130,25 @@
         <div id="kpiAvgProfit" class="kpi-value" style="color:#34d399;">R$ 0,00</div>
         <div id="kpiAvgProfitSub" class="kpi-sub">Faixa ativa: Recomendado</div>
       </div>
+    </section>
+
+    <!-- Decision Strip (Compact Executive Alerts) -->
+    <section id="decisionStrip" class="internal-only" style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 14px 0;">
+      <button class="btn" style="background:#064e3b; border:1px solid #10b981; color:#a7f3d0; font-size:12px; font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">
+        💰 Lucro Mês: <span id="decLucroMes">R$ 0,00</span>
+      </button>
+      <button class="btn" style="background:#422006; border:1px solid #f59e0b; color:#fde68a; font-size:12px; font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">
+        ⏳ A Receber: <span id="decAReceber">R$ 0,00</span>
+      </button>
+      <button class="btn" style="background:#1e293b; border:1px solid #475569; color:#cbd5e1; font-size:12px; font-weight:700;" onclick="window.CRM.filterByGroup('meu_estoque')">
+        📦 Estoque Baixo BH: <span id="decEstoqueBaixo">0</span>
+      </button>
+      <button class="btn" style="background:#3b0764; border:1px solid #a855f7; color:#e9d5ff; font-size:12px; font-weight:700;" onclick="window.CRM.filterByGroup('meu_estoque')">
+        💉 Frasco &lt;20%: <span id="decFrascoBaixo">0</span>
+      </button>
+      <button class="btn" style="background:#450a0a; border:1px solid #ef4444; color:#fecaca; font-size:12px; font-weight:700;" onclick="window.CRM.filterByMargin('margem_baixa')">
+        ⚠️ Margem Baixa: <span id="decMargemBaixa">0</span>
+      </button>
     </section>
 
     <!-- Main Category Tabs requested by User -->
@@ -219,6 +239,8 @@
         <option value="com_estoque">✅ Só com Estoque</option>
         <option value="todos">📦 Todos (Com e Sem Estoque)</option>
         <option value="sem_estoque">❌ Sem Estoque (Esgotados)</option>
+        <option value="margem_baixa">⚠️ Margem Baixa (&lt; 20%)</option>
+        <option value="margem_negativa">🚨 Margem Negativa (&lt; 0%)</option>
       </select>
 
       <select id="branchSelect" class="filter-select">
@@ -1093,9 +1115,18 @@
       </div>
       <div style="font-size:11px; color:#94a3b8; margin-bottom:14px; text-align:right;" id="salePriceHint">Sugestão de tabela: R$ 900,00 cada un</div>
 
-      <div class="m-field" style="margin-bottom:14px;">
-        <label>Data & Hora da Venda</label>
-        <input id="saleDate" type="datetime-local" style="font-size:12px;" />
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+        <div class="m-field">
+          <label>Data & Hora da Venda</label>
+          <input id="saleDate" type="datetime-local" style="font-size:12px;" />
+        </div>
+        <div class="m-field">
+          <label>Status do Pagamento</label>
+          <select id="salePaymentStatus" class="filter-select" style="width:100%; font-size:13px;">
+            <option value="pago">✅ Pago na hora</option>
+            <option value="pendente">⏳ Pendente (A Receber)</option>
+          </select>
+        </div>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
@@ -1285,11 +1316,63 @@
     </div>
   </div>
 
+  <!-- Modal: Novo Produto no Catálogo -->
+  <div id="newProductModal" class="modal-backdrop">
+    <div class="modal" style="max-width:540px;">
+      <div class="modal-head">
+        <h2>➕ Cadastrar Novo Produto</h2>
+        <button class="btn" onclick="document.getElementById('newProductModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+      <div class="m-field" style="margin-bottom:10px;">
+        <label>Nome Comercial do Produto *</label>
+        <input id="npNombre" type="text" placeholder="Ex: TIRZEPATIDA 60 MG FRASCO" />
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+        <div class="m-field">
+          <label>Marca / Laboratório</label>
+          <input id="npMarca" type="text" placeholder="Ex: GEN HEALTH" />
+        </div>
+        <div class="m-field">
+          <label>Composição / Concentração</label>
+          <input id="npComposicion" type="text" placeholder="Ex: Tirzepatida 60 mg" />
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px;">
+        <div class="m-field">
+          <label>Grupo Principal</label>
+          <select id="npColecao" class="filter-select" style="width:100%;">
+            <option value="1_emagrecedores">🔥 Emagrecedores</option>
+            <option value="2_anabolizantes">💪 Anabolizantes</option>
+            <option value="3_hgh_peptideos">🧬 Peptídeos & HGH</option>
+            <option value="4_estetica">✨ Estética & Beleza</option>
+            <option value="5_saude_mental_suporte">🧠 Saúde Mental</option>
+          </select>
+        </div>
+        <div class="m-field">
+          <label>Custo Fonte (USD)</label>
+          <input id="npUsd" type="number" step="0.01" min="0" placeholder="50.00" />
+        </div>
+        <div class="m-field">
+          <label>Qtd Inicial BH</label>
+          <input id="npEstoque" type="number" min="0" value="1" />
+        </div>
+      </div>
+      <div class="m-field" style="margin-bottom:14px;">
+        <label>URL da Foto (opcional)</label>
+        <input id="npFoto" type="text" placeholder="https://... ou deixe vazio" />
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button class="btn" onclick="document.getElementById('newProductModal').classList.remove('open')">Cancelar</button>
+        <button class="btn btn-primary" onclick="window.CRM.saveNewProduct()">✅ Salvar Produto</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script src="dados_catalogo.js?v=20261112_1610"></script>
-  <script src="app.js?v=20261112_1610"></script>
+  <script src="dados_catalogo.js?v=20261112_1630"></script>
+  <script src="app.js?v=20261112_1630"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
