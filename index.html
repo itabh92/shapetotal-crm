@@ -496,9 +496,16 @@
               <input id="encNovoPrecoUnit" type="number" step="1" style="text-align:right; font-size:15px; font-weight:800; color:#38bdf8;" oninput="window.CRM.onEncQtdPriceChange()" />
             </div>
             <div class="m-field">
-              <label>Valor Total (R$)</label>
+              <label style="color:#fbbf24;">🚚 Frete / Envio (R$)</label>
+              <input id="encNovoFrete" type="number" step="5" placeholder="0" value="0" style="text-align:right; font-size:15px; font-weight:800; color:#fbbf24;" oninput="window.CRM.onEncQtdPriceChange()" />
+            </div>
+            <div class="m-field">
+              <label style="color:#34d399;">Total Geral (R$)</label>
               <input id="encNovoValorTotal" type="number" step="1" style="text-align:right; font-size:16px; font-weight:900; color:#34d399;" readonly />
             </div>
+          </div>
+          <div id="encPriceHint" style="font-size:11px; color:#94a3b8; margin-top:6px; text-align:right;">
+            Produtos: R$ 0,00 + Frete: R$ 0,00 = Total: R$ 0,00
           </div>
         </div>
 
@@ -570,6 +577,7 @@
             <div id="encReceiptProdSub" style="font-size:11px; color:#38bdf8; margin-bottom:6px;">Marca · Apresentação</div>
             <div style="display:flex; gap:12px; flex-wrap:wrap; font-size:11px;">
               <div><span style="color:#94a3b8;">Quantidade:</span> <b id="encReceiptQtd" style="color:#fbbf24;">1 cx</b></div>
+              <div id="encReceiptFreteBox" style="display:none;"><span style="color:#94a3b8;">Frete:</span> <b id="encReceiptFrete" style="color:#fbbf24;">R$ 0,00</b></div>
               <div><span style="color:#94a3b8;">Total:</span> <b id="encReceiptTotal" style="color:#34d399;">R$ 0,00</b></div>
               <div id="encReceiptSinalBox" style="display:none;"><span style="color:#94a3b8;">Sinal:</span> <b id="encReceiptSinal" style="color:#fbbf24;">R$ 0,00</b></div>
               <div id="encReceiptSaldoBox" style="display:none;"><span style="color:#94a3b8;">Saldo:</span> <b id="encReceiptSaldo" style="color:#cbd5e1;">R$ 0,00</b></div>
@@ -1041,8 +1049,8 @@
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script src="dados_catalogo.js?v=20261112_1057"></script>
-  <script src="app.js?v=20261112_1057"></script>
+  <script src="dados_catalogo.js?v=20261112_1106"></script>
+  <script src="app.js?v=20261112_1106"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

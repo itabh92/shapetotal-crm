@@ -378,11 +378,14 @@
         qtd: Math.max(1, num(e.qtd)),
         formaPagamento: String(e.formaPagamento || 'pix'),
         precoUnit: num(e.precoUnit),
+        valorProdutos: num(e.valorProdutos),
+        frete: num(e.frete),
         valorTotal: num(e.valorTotal),
         sinal: num(e.sinal),
         saldoRestante: num(e.saldoRestante),
         obs: String(e.obs || ''),
-        loteId: e.loteId ? String(e.loteId) : null
+        loteId: e.loteId ? String(e.loteId) : null,
+        vendaId: e.vendaId ? String(e.vendaId) : null
       })).filter(e => e.id);
     }
     if (Array.isArray(imp.pedidosTransito)) {
@@ -2917,7 +2920,10 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
                 </div>
               </div>
             </td>
-            <td style="font-weight:800; color:#34d399; font-size:13px;">${formatBRL(e.valorTotal)}</td>
+            <td>
+              <div style="font-weight:800; color:#34d399; font-size:13px;">${formatBRL(e.valorTotal)}</div>
+              ${e.frete > 0 ? `<div style="font-size:10.5px; color:#fbbf24;">+${formatBRL(e.frete)} frete</div>` : ''}
+            </td>
             <td>
               <div style="font-size:11px;">Sinal: <b style="color:#fbbf24;">${formatBRL(e.sinal || 0)}</b></div>
               <div style="font-size:11px;">Saldo: <b style="color:#cbd5e1;">${formatBRL(e.saldoRestante || (e.valorTotal - (e.sinal || 0)))}</b></div>
@@ -2936,8 +2942,15 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
                 <button class="btn btn-xs btn-primary" style="background:#4f46e5; border-color:#818cf8; font-size:11px;" title="Ver Comprovante com Foto" onclick="window.CRM.openEncomendaReceiptModal('${e.id}')">
                   🧾 Recibo c/ Foto
                 </button>
+                ${e.status === 'entregue' ? `
+                  <span class="badge" style="background:#065f46; color:#a7f3d0; font-size:10.5px; font-weight:800; padding:3px 6px; border-radius:4px;" title="Estoque físico já abatido e venda registrada">✅ Baixado</span>
+                ` : `
+                  <button class="btn btn-xs btn-green" style="background:#059669; color:#fff; font-size:11px; font-weight:800;" title="Dar baixa no estoque BH e registrar venda no histórico" onclick="window.CRM.entregarEncomendaEDarBaixa('${e.id}')">
+                    💰 Baixar Estoque
+                  </button>
+                `}
                 ${e.status === 'chegou_bh' ? `
-                  <button class="btn btn-xs btn-green" style="background:#059669; color:#fff; font-size:11px;" title="Avisar no WhatsApp que chegou em BH" onclick="window.CRM.openAvisoChegadaWhatsApp('${e.id}')">
+                  <button class="btn btn-xs btn-green" style="background:#0284c7; color:#fff; font-size:11px;" title="Avisar no WhatsApp que chegou em BH" onclick="window.CRM.openAvisoChegadaWhatsApp('${e.id}')">
                     🎉 Avisar Chegada
                   </button>
                 ` : ''}
@@ -3136,8 +3149,19 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
     onEncQtdPriceChange() {
       const qtd = Math.max(1, Number(document.getElementById('encNovoQtd').value) || 1);
       const preco = Math.max(0, Number(document.getElementById('encNovoPrecoUnit').value) || 0);
-      const total = qtd * preco;
+      const frete = Math.max(0, Number(document.getElementById('encNovoFrete') ? document.getElementById('encNovoFrete').value : 0) || 0);
+      const subtotal = qtd * preco;
+      const total = subtotal + frete;
       document.getElementById('encNovoValorTotal').value = total;
+
+      const hint = document.getElementById('encPriceHint');
+      if (hint) {
+        if (frete > 0) {
+          hint.textContent = `Produtos (${qtd}x): ${formatBRL(subtotal)} + Frete: ${formatBRL(frete)} = Total: ${formatBRL(total)}`;
+        } else {
+          hint.textContent = `Produtos (${qtd}x): ${formatBRL(subtotal)} (Frete grátis / retirada)`;
+        }
+      }
       window.CRM.onEncSinalChange();
     },
 
@@ -3156,7 +3180,9 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const qtd = Math.max(1, Number(document.getElementById('encNovoQtd').value) || 1);
       const formaPagamento = document.getElementById('encNovoPagamento').value;
       const precoUnit = Number(document.getElementById('encNovoPrecoUnit').value) || 0;
-      const valorTotal = Number(document.getElementById('encNovoValorTotal').value) || 0;
+      const frete = Math.max(0, Number(document.getElementById('encNovoFrete') ? document.getElementById('encNovoFrete').value : 0) || 0);
+      const valorProdutos = qtd * precoUnit;
+      const valorTotal = valorProdutos + frete;
       const sinal = Number(document.getElementById('encNovoSinal').value) || 0;
       const saldoRestante = Math.max(0, valorTotal - sinal);
       const obs = (document.getElementById('encNovoObs').value || '').trim();
@@ -3185,11 +3211,14 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         qtd,
         formaPagamento,
         precoUnit,
+        valorProdutos,
+        frete,
         valorTotal,
         sinal,
         saldoRestante,
         obs,
-        loteId: null
+        loteId: null,
+        vendaId: null
       };
 
       if (!Array.isArray(state.encomendas)) state.encomendas = [];
@@ -3202,6 +3231,8 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       document.getElementById('encNovoEndereco').value = '';
       document.getElementById('encNovoSinal').value = '0';
       document.getElementById('encNovoObs').value = '';
+      const fInp = document.getElementById('encNovoFrete');
+      if (fInp) fInp.value = '0';
       const searchInp = document.getElementById('encNovoBuscaInput');
       if (searchInp) searchInp.value = '';
 
@@ -3218,6 +3249,12 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
     changeStatusEncomenda(encId, novoStatus) {
       const enc = (state.encomendas || []).find(e => e.id === encId);
       if (!enc) return;
+
+      if (novoStatus === 'entregue') {
+        window.CRM.entregarEncomendaEDarBaixa(encId);
+        return;
+      }
+
       enc.status = novoStatus;
       saveState();
       renderAll();
@@ -3229,6 +3266,97 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
           window.CRM.openAvisoChegadaWhatsApp(encId);
         }
       }
+    },
+
+    entregarEncomendaEDarBaixa(encId) {
+      const enc = (state.encomendas || []).find(e => e.id === encId);
+      if (!enc) return;
+
+      if (enc.status === 'entregue' && enc.vendaId) {
+        alert(`Esta encomenda já foi entregue e a baixa no estoque já foi registrada (Venda ${enc.vendaId}).`);
+        return;
+      }
+
+      const pid = enc.produtoId;
+      const raw = rawCatalog.find(p => p.id === pid) || {};
+      const p = computeProduct(raw);
+      const currentStock = Number((state.meuEstoque || {})[pid] || 0);
+
+      const confirmMsg = `📦 Confirmar entrega e dar baixa no estoque BH?\n\n` +
+        `• Cliente: ${enc.cliente}\n` +
+        `• Produto: ${enc.qtd}x ${enc.produtoNome}\n` +
+        `• Total: ${formatBRL(enc.valorTotal)} ${enc.frete > 0 ? `(Frete: ${formatBRL(enc.frete)})` : ''}\n` +
+        `• Estoque físico atual em BH: ${currentStock} un\n\n` +
+        `Ao confirmar, ${enc.qtd} unidade(s) serão abatidas do seu estoque físico em BH e a venda oficial será registrada no CRM.`;
+
+      if (!confirm(confirmMsg)) {
+        window.CRM.renderEncomendasClientes();
+        return;
+      }
+
+      if (enc.qtd > currentStock) {
+        const prosseguir = confirm(`Atenção: A quantidade da encomenda (${enc.qtd} un) é maior do que o seu estoque registrado no aparelho (${currentStock} un).\n\nDeseja registrar a entrega e a venda mesmo assim?`);
+        if (!prosseguir) {
+          window.CRM.renderEncomendasClientes();
+          return;
+        }
+      }
+
+      // 1. Abate estoque físico em BH
+      const nextStock = currentStock - enc.qtd;
+      if (!state.meuEstoque) state.meuEstoque = {};
+      if (nextStock <= 0) {
+        delete state.meuEstoque[pid];
+      } else {
+        state.meuEstoque[pid] = nextStock;
+      }
+
+      // 2. Registro oficial de Venda no CRM
+      const valorProdutos = enc.valorProdutos || (enc.precoUnit * enc.qtd);
+      const frete = Number(enc.frete || 0);
+      const valorTotal = enc.valorTotal || (valorProdutos + frete);
+      const custoTotal = (p.custo || 0) * enc.qtd;
+      const lucroEst = valorProdutos - custoTotal;
+
+      const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
+
+      const venda = {
+        id: saleId,
+        data: new Date().toISOString(),
+        produtoId: p.id,
+        produtoNome: enc.produtoNome,
+        marca: enc.marca || p.marca || '',
+        qtd: enc.qtd,
+        isDose: false,
+        doseMg: 0,
+        estornada: false,
+        origemAparelho: aparelhoOrigem,
+        valorUnitario: enc.precoUnit,
+        valorProdutos: valorProdutos,
+        valorFrete: frete,
+        valorTotal: valorTotal,
+        formaPagamento: enc.formaPagamento === 'cartao' ? '💳 Cartão de Crédito (até 12x s/ juros)' : '💠 À vista no PIX',
+        cliente: enc.cliente,
+        telefone: enc.telefone,
+        obs: `Encomenda entregue (${enc.id}) · ${enc.obs || ''}`.trim(),
+        custoTotal: custoTotal,
+        lucro: lucroEst
+      };
+
+      if (!state.vendas) state.vendas = [];
+      state.vendas.unshift(venda);
+
+      // 3. Atualiza status da encomenda
+      enc.status = 'entregue';
+      enc.vendaId = saleId;
+
+      saveState();
+      renderAll();
+      window.CRM.renderEncomendas();
+
+      showToast(`✅ Baixa realizada! -${enc.qtd} un no Estoque BH e venda de ${formatBRL(valorTotal)} registrada.`);
+      window.CRM.showSaleReceipt(venda, p);
     },
 
     deleteEncomenda(encId) {
@@ -3301,6 +3429,15 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
       const sinal = Number(enc.sinal) || 0;
       const saldo = Number(enc.saldoRestante) || Math.max(0, enc.valorTotal - sinal);
+      const frete = Number(enc.frete) || 0;
+
+      const fBox = document.getElementById('encReceiptFreteBox');
+      if (frete > 0) {
+        if (fBox) fBox.style.display = 'block';
+        document.getElementById('encReceiptFrete').textContent = formatBRL(frete);
+      } else {
+        if (fBox) fBox.style.display = 'none';
+      }
 
       const sBox = document.getElementById('encReceiptSinalBox');
       const salBox = document.getElementById('encReceiptSaldoBox');
@@ -3332,6 +3469,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       }
 
       // Monta texto formatado do WhatsApp
+      const valorProdutos = enc.valorProdutos || (enc.precoUnit * enc.qtd);
       const lines = [
         `*RECIBO DE ENCOMENDA & RESERVA — SHAPE TOTAL BH* 📦✨`,
         `Data: ${new Date(enc.data).toLocaleDateString('pt-BR')}`,
@@ -3340,8 +3478,11 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         ``,
         `💊 *Medicamento:* ${enc.produtoNome}`,
         `📦 *Quantidade:* ${enc.qtd} caixa(s)`,
-        `💰 *Valor Total:* ${formatBRL(enc.valorTotal)} (${enc.formaPagamento === 'cartao' ? 'Cartão em até 12x s/ juros' : 'À vista no PIX'})`
+        `💰 *Valor Produtos:* ${formatBRL(valorProdutos)}`
       ];
+
+      if (frete > 0) lines.push(`🚚 *Frete / Envio:* ${formatBRL(frete)}`);
+      lines.push(`💵 *Valor Total:* ${formatBRL(enc.valorTotal)} (${enc.formaPagamento === 'cartao' ? 'Cartão em até 12x s/ juros' : 'À vista no PIX'})`);
 
       if (sinal > 0) lines.push(`💵 *Sinal Pago Antecipado:* ${formatBRL(sinal)}`);
       if (saldo > 0) lines.push(`📍 *Saldo a Pagar na Entrega:* ${formatBRL(saldo)}`);
