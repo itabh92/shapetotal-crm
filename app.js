@@ -204,6 +204,7 @@
     minMarginFilter: null,
     movimentacoes: [], // [{ id, produtoId, tipo, qtd, referenciaId, motivo, custoUnitReal, data, usuario }]
     custosReais: {}, // { [produtoId]: custoUnitRealBrl }
+    estoqueAtualizadoEm: new Date().toISOString(),
     ultimaVerificacaoAlertas: null
   };
 
@@ -342,6 +343,7 @@
         state.savedFilters = Array.isArray(parsed.savedFilters) ? parsed.savedFilters : [];
         state.movimentacoes = Array.isArray(parsed.movimentacoes) ? parsed.movimentacoes : [];
         state.custosReais = (parsed.custosReais && typeof parsed.custosReais === 'object') ? parsed.custosReais : {};
+        state.estoqueAtualizadoEm = parsed.estoqueAtualizadoEm || '';
         state.ultimaVerificacaoAlertas = parsed.ultimaVerificacaoAlertas || null;
         // Migração suave de encomendas antigas para o funil com etapa/próxima ação
         state.encomendas.forEach(e => {
@@ -441,7 +443,10 @@
       customProducts: state.customProducts || [],
       clientes: state.clientes || [],
       savedFilters: state.savedFilters || [],
-      canonVistos: state.canonVistos || []
+      canonVistos: state.canonVistos || [],
+      movimentacoes: state.movimentacoes || [],
+      custosReais: state.custosReais || {},
+      estoqueAtualizadoEm: state.estoqueAtualizadoEm || new Date().toISOString()
     };
   }
 
@@ -453,6 +458,7 @@
       taxaCartaoFixa: state.taxaCartaoFixa,
       activeTier: state.activeTier,
       meuEstoque: state.meuEstoque,
+      estoqueAtualizadoEm: state.estoqueAtualizadoEm || new Date().toISOString(),
       vendas: (state.vendas || []).slice(0, 30),
       encomendas: (state.encomendas || []).slice(0, 30),
       pedidosTransito: (state.pedidosTransito || []).filter(p => p.status === 'em_transito'),
@@ -461,6 +467,8 @@
       customProducts: state.customProducts || [],
       clientes: (state.clientes || []).slice(0, 50),
       savedFilters: state.savedFilters || [],
+      movimentacoes: (state.movimentacoes || []).slice(0, 80),
+      custosReais: state.custosReais || {},
       canonVistos: state.canonVistos || []
     };
   }
@@ -554,6 +562,12 @@
     }
     if (isObj(imp.overrides)) out.overrides = imp.overrides;
     if (Array.isArray(imp.canonVistos)) out.canonVistos = imp.canonVistos.map(String);
+    if (typeof imp.estoqueAtualizadoEm === 'string') out.estoqueAtualizadoEm = imp.estoqueAtualizadoEm;
+    if (Array.isArray(imp.movimentacoes)) out.movimentacoes = imp.movimentacoes.filter(m => isObj(m) && m.id);
+    if (isObj(imp.custosReais)) out.custosReais = imp.custosReais;
+    if (Array.isArray(imp.clientes)) out.clientes = imp.clientes.filter(c => isObj(c) && c.nome);
+    if (Array.isArray(imp.savedFilters)) out.savedFilters = imp.savedFilters.filter(isObj);
+    if (Array.isArray(imp.customProducts)) out.customProducts = imp.customProducts.filter(isObj);
     return out;
   }
 
@@ -602,12 +616,18 @@
       return db - da;
     });
 
-    // 2. Merge de pedidos em trânsito
+    // 2. Merge de pedidos em trânsito (status 'entregue' prevalece entre aparelhos)
     const curPedidos = Array.isArray(cur.pedidosTransito) ? cur.pedidosTransito : [];
     const impPedidos = Array.isArray(imp.pedidosTransito) ? imp.pedidosTransito : [];
     const pedidosMap = new Map();
     curPedidos.forEach(p => { if (p && p.id) pedidosMap.set(String(p.id), p); });
-    impPedidos.forEach(p => { if (p && p.id) pedidosMap.set(String(p.id), p); });
+    impPedidos.forEach(p => {
+      if (!p || !p.id) return;
+      const pid = String(p.id);
+      const local = pedidosMap.get(pid);
+      if (local && local.status === 'entregue' && p.status !== 'entregue') return;
+      pedidosMap.set(pid, p);
+    });
     const mergedPedidos = Array.from(pedidosMap.values());
 
     // 3. Merge de encomendas de clientes
@@ -647,24 +667,37 @@
       localStorage.setItem(BACKUP_KEY, JSON.stringify({ quando: new Date().toISOString(), estado: current }));
     }
 
-    const mergedEstoque = { ...(cur.meuEstoque || {}) };
+    // Estoque físico usa a versão mais recente por timestamp (evita ressuscitar item vendido)
+    const tsCur = cur.estoqueAtualizadoEm ? new Date(cur.estoqueAtualizadoEm).getTime() : 0;
+    const tsImp = imp.estoqueAtualizadoEm ? new Date(imp.estoqueAtualizadoEm).getTime() : 0;
+    let mergedEstoque = { ...(cur.meuEstoque || {}) };
     if (imp.meuEstoque && typeof imp.meuEstoque === 'object') {
-      Object.keys(imp.meuEstoque).forEach(pid => {
-        const qImp = Number(imp.meuEstoque[pid]) || 0;
-        const qLoc = Number(mergedEstoque[pid]) || 0;
-        mergedEstoque[pid] = Math.max(qLoc, qImp);
-      });
+      if (tsImp >= tsCur || !tsCur) {
+        mergedEstoque = { ...imp.meuEstoque };
+      }
     }
+
+    // Merge append-only de movimentações por ID
+    const movsMap = new Map();
+    [...(cur.movimentacoes || []), ...(imp.movimentacoes || [])].forEach(m => {
+      if (m && m.id && !movsMap.has(String(m.id))) movsMap.set(String(m.id), m);
+    });
+    const mergedMovs = Array.from(movsMap.values())
+      .sort((a, b) => new Date(b.data || 0).getTime() - new Date(a.data || 0).getTime())
+      .slice(0, 1000);
 
     const nextState = {
       ...cur,
       ...imp,
       meuEstoque: mergedEstoque,
+      estoqueAtualizadoEm: tsImp > tsCur ? imp.estoqueAtualizadoEm : (cur.estoqueAtualizadoEm || new Date().toISOString()),
       _bhStockSyncKey: imp._bhStockSyncKey || cur._bhStockSyncKey || '',
       cotacaoAtualizadaEm: imp.cotacaoAtualizadaEm || cur.cotacaoAtualizadaEm || '',
       vendas: mergedVendas,
       encomendas: mergedEncomendas,
       pedidosTransito: mergedPedidos,
+      movimentacoes: mergedMovs,
+      custosReais: { ...(cur.custosReais || {}), ...(imp.custosReais || {}) },
       customProducts: Array.isArray(imp.customProducts) ? imp.customProducts : (cur.customProducts || []),
       savedFilters: Array.isArray(imp.savedFilters) ? imp.savedFilters : (cur.savedFilters || []),
       canonVistos: Array.from(canonSet)
@@ -716,6 +749,7 @@
         canonVistos: state.canonVistos || [],
         movimentacoes: state.movimentacoes || [],
         custosReais: state.custosReais || {},
+        estoqueAtualizadoEm: state.estoqueAtualizadoEm || new Date().toISOString(),
         ultimaVerificacaoAlertas: state.ultimaVerificacaoAlertas || null
       }));
     } catch (e) {
@@ -766,6 +800,14 @@
    * @param {string} motivo
    * @param {number|null} custoUnitReal
    */
+  function getCustoUnitarioReal(p) {
+    const pid = Number(p && p.id);
+    if (pid && state.custosReais && Number(state.custosReais[pid]) > 0) {
+      return Number(state.custosReais[pid]);
+    }
+    return Number((p && p.custo) || 0);
+  }
+
   function registrarMovimento(tipo, produtoId, qtd, referenciaId = '', motivo = '', custoUnitReal = null) {
     const pid = Number(produtoId);
     const q = Number(qtd) || 0;
@@ -783,6 +825,9 @@
       usuario: /iPhone|iPad/i.test(navigator.userAgent || '') ? 'Italo (iPhone)' : 'Italo (Mac)'
     };
     state.movimentacoes.unshift(mov);
+    if (tipo !== 'reserva' && tipo !== 'liberacao') {
+      state.estoqueAtualizadoEm = mov.data;
+    }
     // Mantém histórico enxuto no localStorage (últimos 1000 movimentos)
     if (state.movimentacoes.length > 1000) {
       state.movimentacoes = state.movimentacoes.slice(0, 1000);
@@ -2086,14 +2131,15 @@
     const now = new Date();
     const mesAtual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const vendasAtivas = (state.vendas || []).filter(v => !v.estornada);
+    // Lucro confirmado considera apenas vendas já pagas (exclui pendentes/a receber)
     const lucroMes = vendasAtivas
-      .filter(v => String(v.data || '').startsWith(mesAtual))
+      .filter(v => String(v.data || '').startsWith(mesAtual) && v.statusPagamento !== 'pendente')
       .reduce((s, v) => s + (Number(v.lucro) || 0), 0);
     const aReceber = vendasAtivas
       .filter(v => v.statusPagamento === 'pendente')
       .reduce((s, v) => s + (Number(v.valorTotal) || 0), 0);
     const estoque = state.meuEstoque || {};
-    const estoqueBaixo = Object.values(estoque).filter(q => Number(q) === 1).length;
+    const estoqueBaixo = Object.values(estoque).filter(q => Number(q) > 0 && Number(q) <= 2).length;
     const frascoBaixo = Object.values(state.frascosDoses || {}).filter(f => f && Number(f.mgRestante) <= 24).length;
     const margemBaixa = rawCatalog.reduce((acc, r) => acc + (computeProduct(r).margemAplicada < 20 ? 1 : 0), 0);
 
@@ -3130,9 +3176,10 @@
         alert('Item sem estoque físico em BH! Use Encomenda.');
         return;
       }
-      const lucroEst = totalVal - (p.custo * qty);
+      const custoUnitTravado = getCustoUnitarioReal(p);
+      const lucroEst = totalVal - (custoUnitTravado * qty);
       if (lucroEst < 0) {
-        alert(`🚫 Venda bloqueada por margem negativa! Custo: ${formatBRL(p.custo * qty)}`);
+        alert(`🚫 Venda bloqueada por margem negativa! Custo: ${formatBRL(custoUnitTravado * qty)}`);
         return;
       }
       if (qty > disp.disponivel) {
@@ -3153,7 +3200,7 @@
         origemAparelho: /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac',
         valorUnitario: unitVal, valorProdutos: totalVal, valorFrete: 0, valorTotal: totalVal,
         formaPagamento: payLabel, statusPagamento: payStatus, cliente, telefone, endereco: '', obs: 'Venda Rápida',
-        custoTotal: p.custo * qty, lucro: lucroEst
+        custoTotal: custoUnitTravado * qty, lucro: lucroEst
       });
       state.encomendas = state.encomendas || [];
       state.encomendas.unshift({
@@ -4023,9 +4070,10 @@
         alert('Item sem estoque físico em BH! Cadastre a entrada no Estoque BH ou registre como Encomenda.');
         return;
       }
-      const lucroEst = subtotalVal - (p.custo * qty);
+      const custoUnitSale = getCustoUnitarioReal(p);
+      const lucroEst = subtotalVal - (custoUnitSale * qty);
       if (lucroEst < 0) {
-        alert(`🚫 Venda bloqueada por margem negativa!\n\nCusto (${qty}x): ${formatBRL(p.custo * qty)}\nValor informado: ${formatBRL(subtotalVal)}\n\nAjuste o preço para cima antes de confirmar.`);
+        alert(`🚫 Venda bloqueada por margem negativa!\n\nCusto (${qty}x): ${formatBRL(custoUnitSale * qty)}\nValor informado: ${formatBRL(subtotalVal)}\n\nAjuste o preço para cima antes de confirmar.`);
         return;
       }
       if (qty > dispCaixa.disponivel && dispCaixa.reservado > 0) {
@@ -4071,7 +4119,7 @@
         telefone: phone,
         endereco: address,
         obs: notes,
-        custoTotal: p.custo * qty,
+        custoTotal: custoUnitSale * qty,
         lucro: lucroEst
       };
 
@@ -4584,6 +4632,10 @@
         showToast(clientesParaAvisar > 0
           ? `Pedido recebido (+${totalItens} un)! ${clientesParaAvisar} cliente(s) prontos para avisar!`
           : `Pedido recebido! ${totalItens} unidades somadas ao Estoque BH.`);
+        if (clientesParaAvisar > 0 && confirm(`📦 Pedido recebido!\n\n${clientesParaAvisar} cliente(s) estavam aguardando esses itens.\nDeseja ir agora para "⚡ Operação do Dia" para avisar no WhatsApp?`)) {
+          document.getElementById('transitoModal')?.classList.remove('open');
+          window.CRM.filterByGroup('operacao_dia');
+        }
       }
     },
 
