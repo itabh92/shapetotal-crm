@@ -848,3 +848,29 @@ body.client-mode .internal-only { display: none !important; }
   flex-direction: column;
   gap: 6px;
 }
+
+/* Botão Flutuante Venda Rápida */
+.fab-venda-rapida {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 260;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #052e16;
+  font-weight: 900;
+  font-size: 13px;
+  padding: 12px 18px;
+  border-radius: 99px;
+  border: 2px solid #6ee7b7;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.38);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.15s;
+}
+.fab-venda-rapida:hover { transform: scale(1.04); }
+body.client-mode .fab-venda-rapida { display: none !important; }
+@media (max-width: 900px) {
+  .fab-venda-rapida { right: 12px; bottom: 14px; padding: 10px 14px; font-size: 12px; }
+}

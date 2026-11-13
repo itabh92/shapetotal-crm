@@ -166,6 +166,9 @@
       <button class="btn" style="background:#450a0a; border:1px solid #ef4444; color:#fecaca; font-size:12px; font-weight:700;" onclick="window.CRM.filterByMargin('margem_baixa')">
         ⚠️ Margem Baixa: <span id="decMargemBaixa">0</span>
       </button>
+      <button class="btn" style="background:#1e1b4b; border:1px solid #6366f1; color:#c7d2fe; font-size:12px; font-weight:800;" onclick="window.CRM.openPaineisComerciaisModal()">
+        📊 Painéis Comerciais (Top 10 / Parados / Crítico)
+      </button>
     </section>
 
     <!-- Main Category Tabs requested by User -->
@@ -1438,11 +1441,114 @@
     </div>
   </div>
 
+  <!-- Modal: Painéis de Decisão Comercial (Item 3) -->
+  <div id="paineisComerciaisModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:980px; width:96%;">
+      <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:12px; margin-bottom:14px;">
+        <div>
+          <h3 style="font-size:17px; font-weight:800; color:#818cf8;">📊 Painéis de Decisão Comercial</h3>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">Top 10 por lucro/quantidade (30d), produtos parados (30/60d) e estoque crítico com ação rápida</p>
+        </div>
+        <button class="btn" onclick="document.getElementById('paineisComerciaisModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+      <div id="paineisComerciaisBody" class="op-dia-grid" style="max-height:72vh; overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Venda Rápida em 3 Passos (Item 4) -->
+  <div id="vendaRapidaModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:520px; width:95%;">
+      <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:10px; margin-bottom:12px;">
+        <div>
+          <h3 style="font-size:17px; font-weight:800; color:#34d399;">⚡ Venda Rápida (3 Passos)</h3>
+          <p id="vrStepSubtitle" style="font-size:12px; color:var(--text-muted); margin-top:2px;">Passo 1 de 3: Escolha o produto disponível</p>
+        </div>
+        <button class="btn" onclick="document.getElementById('vendaRapidaModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+
+      <!-- Passo 1: Produto -->
+      <div id="vrStep1">
+        <input id="vrSearchInput" type="text" placeholder="🔍 Buscar produto (prioriza disponível em BH)..." style="width:100%; background:#0f172a; border:1px solid #38bdf8; color:#fff; padding:9px 12px; border-radius:8px; margin-bottom:10px; box-sizing:border-box;" oninput="window.CRM.renderVendaRapidaProdutos()" />
+        <div id="vrProdList" style="max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+      </div>
+
+      <!-- Passo 2: Quantidade / Dose & Preço -->
+      <div id="vrStep2" style="display:none;">
+        <div id="vrSelectedProdBadge" style="background:#0f172a; border:1px solid #334155; border-radius:8px; padding:10px; margin-bottom:10px;"></div>
+        <div id="vrDoseBox" style="display:none; margin-bottom:10px;">
+          <label style="font-size:11px; color:#38bdf8; font-weight:700;">💉 Dose rápida (mg):</label>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+            <button type="button" class="btn" style="font-size:11px;" onclick="window.CRM.setVendaRapidaDose(2.5, 65)">2,5 mg (R$ 65)</button>
+            <button type="button" class="btn" style="font-size:11px;" onclick="window.CRM.setVendaRapidaDose(5, 130)">5,0 mg (R$ 130)</button>
+            <button type="button" class="btn" style="font-size:11px;" onclick="window.CRM.setVendaRapidaDose(7.5, 185)">7,5 mg (R$ 185)</button>
+            <button type="button" class="btn" style="font-size:11px;" onclick="window.CRM.setVendaRapidaDose(0, 0)">Frasco fechado</button>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+          <div class="m-field">
+            <label>Quantidade</label>
+            <input id="vrQty" type="number" min="1" value="1" oninput="window.CRM.updateVendaRapidaTotal()" />
+          </div>
+          <div class="m-field">
+            <label>Valor Unitário (R$)</label>
+            <input id="vrUnitPrice" type="number" min="0" step="1" oninput="window.CRM.updateVendaRapidaTotal()" />
+          </div>
+        </div>
+        <div style="background:#064e3b; border:1px solid #10b981; border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <span style="font-size:12px; color:#a7f3d0; font-weight:700;">Total da Venda:</span>
+          <b id="vrTotalPreview" style="font-size:18px; color:#34d399;">R$ 0,00</b>
+        </div>
+        <div style="display:flex; justify-content:space-between; gap:8px;">
+          <button type="button" class="btn" onclick="window.CRM.setVendaRapidaStep(1)">← Voltar</button>
+          <button type="button" class="btn btn-primary" onclick="window.CRM.setVendaRapidaStep(3)">Avançar (Cliente) →</button>
+        </div>
+      </div>
+
+      <!-- Passo 3: Cliente & Pagamento -->
+      <div id="vrStep3" style="display:none;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+          <div class="m-field">
+            <label>Cliente *</label>
+            <input id="vrCliente" list="encClientesDatalist" type="text" placeholder="Nome do cliente" oninput="window.CRM.onVrClienteInput(this.value)" />
+          </div>
+          <div class="m-field">
+            <label>WhatsApp</label>
+            <input id="vrTelefone" type="text" placeholder="(31) 9..." />
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+          <div class="m-field">
+            <label>Pagamento</label>
+            <select id="vrPagamento" class="filter-select" style="width:100%;">
+              <option value="pix">💠 PIX</option>
+              <option value="cartao_parcelado">💳 Cartão</option>
+              <option value="dinheiro">💵 Dinheiro</option>
+            </select>
+          </div>
+          <div class="m-field">
+            <label>Status</label>
+            <select id="vrPayStatus" class="filter-select" style="width:100%;">
+              <option value="pago">✅ Pago</option>
+              <option value="pendente">⏳ Pendente</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; gap:8px;">
+          <button type="button" class="btn" onclick="window.CRM.setVendaRapidaStep(2)">← Voltar</button>
+          <button type="button" class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; flex:1;" onclick="window.CRM.confirmVendaRapida()">✅ Concluir + Recibo WhatsApp</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botão Flutuante Venda Rápida -->
+  <button id="fabVendaRapida" class="fab-venda-rapida internal-only" onclick="window.CRM.openVendaRapidaModal()" title="Fluxo rápido em 3 passos">⚡ Venda Rápida</button>
+
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script src="dados_catalogo.js?v=20261113_0025"></script>
-  <script src="app.js?v=20261113_0025"></script>
+  <script src="dados_catalogo.js?v=20261113_0040"></script>
+  <script src="app.js?v=20261113_0040"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
