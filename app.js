@@ -1033,6 +1033,98 @@
     el.innerHTML = `👤 <b>${escapeHtml(cli.nome)}</b>${tagsHtml} · <b>${cli.qtdPedidos || 0}</b> pedido(s) · Total: <b>${formatBRL(cli.totalGasto || 0)}</b> · Última: ${ult}${cli.anotacoes ? `<div style="margin-top:3px;color:#cbd5e1;font-size:11px;">📝 ${escapeHtml(cli.anotacoes)}</div>` : ''}`;
   }
 
+  /**
+   * Calcula a disponibilidade real de um produto em BH cruzando:
+   * - estoqueBH (físico atual)
+   * - reservado (encomendas com status pendente ou pedido_ao_fornecedor)
+   * - chegando (pedidos em trânsito)
+   */
+  function getDisponibilidade(produtoId) {
+    const pid = Number(produtoId);
+    const estoqueBH = Math.max(0, Number((state.meuEstoque || {})[pid] || 0));
+
+    let reservado = 0;
+    const reservasDetalhes = [];
+    (state.encomendas || []).forEach(enc => {
+      if (enc.status !== 'pendente' && enc.status !== 'pedido_ao_fornecedor') return;
+      getEncomendaItens(enc).forEach(it => {
+        if (Number(it.produtoId) === pid) {
+          const q = Math.max(0, Number(it.qtd) || 0);
+          if (q > 0) {
+            reservado += q;
+            reservasDetalhes.push({
+              encId: enc.id,
+              cliente: enc.cliente || 'Cliente',
+              telefone: enc.telefone || '',
+              qtd: q,
+              status: enc.status,
+              data: enc.data || ''
+            });
+          }
+        }
+      });
+    });
+
+    let chegando = 0;
+    const transitoDetalhes = [];
+    (state.pedidosTransito || []).forEach(ped => {
+      if (ped.status !== 'em_transito') return;
+      (ped.itens || []).forEach(it => {
+        if (Number(it.id_catalogo) === pid) {
+          const q = Math.max(0, Number(it.qtd) || 0);
+          if (q > 0) {
+            chegando += q;
+            transitoDetalhes.push({
+              pedidoId: ped.id,
+              data: ped.data_compra || '',
+              qtd: q
+            });
+          }
+        }
+      });
+    });
+
+    const disponivel = Math.max(0, estoqueBH - reservado);
+    let status = 'encomenda';
+    if (disponivel > 0) status = 'pronta';
+    else if (reservado > 0) status = 'reservado';
+    else if (chegando > 0) status = 'chegando';
+
+    return { estoqueBH, reservado, chegando, disponivel, status, reservasDetalhes, transitoDetalhes };
+  }
+
+  function getDisponibilidadeTotals() {
+    let pronta = 0;
+    let reservado = 0;
+    let chegando = 0;
+    let pedirFornecedor = 0;
+
+    const estoque = state.meuEstoque || {};
+    const idsComMovimento = new Set(Object.keys(estoque).map(Number));
+    (state.encomendas || []).forEach(e => {
+      if (e.status === 'pendente' || e.status === 'pedido_ao_fornecedor') {
+        getEncomendaItens(e).forEach(it => {
+          idsComMovimento.add(Number(it.produtoId));
+          if (e.status === 'pendente') pedirFornecedor += Number(it.qtd) || 0;
+        });
+      }
+    });
+    (state.pedidosTransito || []).forEach(p => {
+      if (p.status === 'em_transito') {
+        (p.itens || []).forEach(it => idsComMovimento.add(Number(it.id_catalogo)));
+      }
+    });
+
+    idsComMovimento.forEach(pid => {
+      const d = getDisponibilidade(pid);
+      pronta += d.disponivel;
+      reservado += d.reservado;
+      chegando += d.chegando;
+    });
+
+    return { pronta, reservado, chegando, pedirFornecedor };
+  }
+
   function getFilteredProducts() {
     const q = normalizeSearchText(state.search.trim());
     let list = rawCatalog.map(computeProduct);
@@ -1071,6 +1163,8 @@
         if (state.branchFilter === 'pj' && p.pj <= 0) return false;
         if (state.branchFilter === 'sg' && p.sg <= 0) return false;
       }
+      if (state.stockFilter === 'disponivel_agora' && getDisponibilidade(p.id).disponivel <= 0) return false;
+      if (state.stockFilter === 'reservado_clientes' && getDisponibilidade(p.id).reservado <= 0) return false;
 
       if (state.minMarginFilter !== null && state.minMarginFilter !== undefined) {
         if (p.margemAplicada < Number(state.minMarginFilter)) return false;
@@ -1330,6 +1424,18 @@
                 <span class="branch-pill">SG: <b>${p.sg}</b></span>
                 ${p.presentacion ? `<span class="branch-pill">${p.presentacion}</span>` : ''}
               </div>
+
+              ${(() => {
+                const disp = getDisponibilidade(p.id);
+                if (disp.disponivel === 0 && disp.reservado === 0 && disp.chegando === 0) {
+                  return `<div class="p-disp-row internal-only"><span class="disp-pill disp-gray">⚪ Só encomenda</span></div>`;
+                }
+                return `<div class="p-disp-row internal-only">
+                  <span class="disp-pill ${disp.disponivel > 0 ? 'disp-green' : 'disp-gray'}" title="Estoque livre em BH para prometer agora">🟢 ${disp.disponivel} disponível</span>
+                  ${disp.reservado > 0 ? `<button type="button" class="disp-pill disp-amber" onclick="event.stopPropagation(); window.CRM.openDispDetalhesModal(${p.id}, 'reservado')">🟡 ${disp.reservado} reservado</button>` : ''}
+                  ${disp.chegando > 0 ? `<button type="button" class="disp-pill disp-blue" onclick="event.stopPropagation(); window.CRM.openDispDetalhesModal(${p.id}, 'chegando')">🔵 ${disp.chegando} chegando</button>` : ''}
+                </div>`;
+              })()}
 
               <div class="p-cost-bar internal-only">
                 <span>Fonte: <b>USD ${p.usd.toFixed(2)}</b></span>
@@ -1613,7 +1719,8 @@
       peptideos: 0,
       estetico_outros: 0,
       saude_mental: 0,
-      meu_estoque: 0
+      meu_estoque: 0,
+      operacao_dia: 0
     };
     const estoque = state.meuEstoque || {};
     rawCatalog.forEach(p => {
@@ -1634,6 +1741,9 @@
       const qBh = Number(estoque[p.id] || 0);
       if (qBh > 0) counts.meu_estoque += qBh;
     });
+    const avisarHojeCount = (state.encomendas || []).filter(e => e.status === 'chegou_bh').length;
+    const pedFornecedorCount = (state.encomendas || []).filter(e => e.status === 'pendente').length;
+    counts.operacao_dia = avisarHojeCount + pedFornecedorCount;
     document.querySelectorAll('.group-tab').forEach(tab => {
       const grp = tab.getAttribute('data-group');
       const badge = tab.querySelector('.tab-count');
@@ -1700,12 +1810,156 @@
     `;
   }
 
+  function renderDispStatusStrip() {
+    const totals = getDisponibilidadeTotals();
+    const elPronta = document.getElementById('statDispPronta');
+    const elRes = document.getElementById('statDispReservado');
+    const elCheg = document.getElementById('statDispChegando');
+    const elPedir = document.getElementById('statDispPedir');
+    if (elPronta) elPronta.textContent = String(totals.pronta);
+    if (elRes) elRes.textContent = String(totals.reservado);
+    if (elCheg) elCheg.textContent = String(totals.chegando);
+    if (elPedir) elPedir.textContent = String(totals.pedirFornecedor);
+  }
+
+  function renderOperacaoDia() {
+    const cont = document.getElementById('operacaoDiaContainer');
+    if (!cont) return;
+
+    // 1. Disponível agora
+    const disponiveis = rawCatalog
+      .map(computeProduct)
+      .map(p => ({ p, disp: getDisponibilidade(p.id) }))
+      .filter(x => x.disp.disponivel > 0)
+      .sort((a, b) => b.disp.disponivel - a.disp.disponivel);
+
+    // 2. Aguardando pedido ao fornecedor (pendente)
+    const pedirMap = new Map();
+    (state.encomendas || []).filter(e => e.status === 'pendente').forEach(e => {
+      getEncomendaItens(e).forEach(it => {
+        const pid = Number(it.produtoId);
+        const cur = pedirMap.get(pid) || { produtoId: pid, nome: it.produtoNome, qtd: 0, clientes: [] };
+        cur.qtd += Number(it.qtd) || 0;
+        cur.clientes.push(e.cliente);
+        pedirMap.set(pid, cur);
+      });
+    });
+    const aguardandoPedir = Array.from(pedirMap.values());
+
+    // 3. Chegando no trânsito
+    const chegandoList = [];
+    (state.pedidosTransito || []).filter(ped => ped.status === 'em_transito').forEach(ped => {
+      (ped.itens || []).forEach(it => {
+        const disp = getDisponibilidade(it.id_catalogo);
+        chegandoList.push({
+          pedidoId: ped.id,
+          data: ped.data_compra,
+          produtoId: it.id_catalogo,
+          nome: it.nome,
+          qtd: it.qtd,
+          clientesAguardando: disp.reservasDetalhes.length
+        });
+      });
+    });
+
+    // 4. Clientes para avisar hoje (encomendas que chegaram em BH)
+    const avisarClientes = (state.encomendas || []).filter(e => e.status === 'chegou_bh');
+
+    cont.innerHTML = `
+      <div class="op-dia-grid">
+        <div class="op-dia-card" style="border-color:rgba(16,185,129,0.4);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <b style="color:#10b981;font-size:14px;">🟢 Disponível Agora (${disponiveis.length} SKUs)</b>
+            <button class="btn" style="font-size:11px;padding:3px 8px;" onclick="window.CRM.filterByDisponibilidade('disponivel_agora')">Ver no catálogo</button>
+          </div>
+          <div class="op-dia-list">
+            ${disponiveis.length ? disponiveis.map(({ p, disp }) => `
+              <div style="background:#0b1120;padding:8px 10px;border-radius:8px;border:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:#fff;">${escapeHtml(p.nombre)}</div>
+                  <div style="font-size:11px;color:#10b981;">🟢 ${disp.disponivel} livre${disp.reservado > 0 ? ` · <span style="color:#f59e0b;">🟡 ${disp.reservado} res.</span>` : ''} · PIX ${formatBRLInt(p.precoFinal)}</div>
+                </div>
+                <button class="btn btn-green" style="padding:5px 10px;font-size:11px;font-weight:800;" onclick="window.CRM.openSaleModal(${p.id})">⚡ Vender</button>
+              </div>
+            `).join('') : '<div style="color:var(--text-muted);font-size:12px;">Nenhum item livre em BH no momento.</div>'}
+          </div>
+        </div>
+
+        <div class="op-dia-card" style="border-color:rgba(245,158,11,0.4);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <b style="color:#f59e0b;font-size:14px;">📦 Aguardando Pedido ao Fornecedor (${aguardandoPedir.length})</b>
+            <button class="btn" style="font-size:11px;padding:3px 8px;background:#4f46e5;color:#fff;" onclick="window.CRM.openPedidoFornecedorModal(); window.CRM.carregarEncomendasClientesNoPedidoFornecedor();">🇵🇾 Puxar p/ Pedido</button>
+          </div>
+          <div class="op-dia-list">
+            ${aguardandoPedir.length ? aguardandoPedir.map(x => `
+              <div style="background:#0b1120;padding:8px 10px;border-radius:8px;border:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:#fff;">${x.qtd}x ${escapeHtml(x.nome)}</div>
+                  <div style="font-size:11px;color:#94a3b8;">Clientes: ${x.clientes.map(c => escapeHtml(c)).join(', ')}</div>
+                </div>
+                <button class="btn" style="font-size:11px;padding:4px 8px;" onclick="window.CRM.openEncomendasModal()">Abrir</button>
+              </div>
+            `).join('') : '<div style="color:var(--text-muted);font-size:12px;">Tudo em dia! Nenhuma encomenda pendente de compra.</div>'}
+          </div>
+        </div>
+
+        <div class="op-dia-card" style="border-color:rgba(59,130,246,0.4);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <b style="color:#3b82f6;font-size:14px;">🔵 Chegando no Trânsito (${chegandoList.length} itens)</b>
+            <button class="btn" style="font-size:11px;padding:3px 8px;" onclick="window.CRM.openTransitoModal()">Abrir Trânsito</button>
+          </div>
+          <div class="op-dia-list">
+            ${chegandoList.length ? chegandoList.map(c => `
+              <div style="background:#0b1120;padding:8px 10px;border-radius:8px;border:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:#fff;">${c.qtd}x ${escapeHtml(c.nome)}</div>
+                  <div style="font-size:11px;color:#94a3b8;">#${c.pedidoId} · ${c.data}${c.clientesAguardando > 0 ? ` · <b style="color:#f59e0b;">${c.clientesAguardando} cliente(s) aguardando</b>` : ''}</div>
+                </div>
+                <button class="btn btn-green" style="font-size:11px;padding:4px 8px;" onclick="window.CRM.confirmarChegadaPedido('${c.pedidoId}')">📦 Chegou</button>
+              </div>
+            `).join('') : '<div style="color:var(--text-muted);font-size:12px;">Nenhuma carga em trânsito.</div>'}
+          </div>
+        </div>
+
+        <div class="op-dia-card" style="border-color:rgba(168,85,247,0.4);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <b style="color:#c084fc;font-size:14px;">📲 Clientes para Avisar Hoje (${avisarClientes.length})</b>
+          </div>
+          <div class="op-dia-list">
+            ${avisarClientes.length ? avisarClientes.map(e => `
+              <div style="background:#0b1120;padding:8px 10px;border-radius:8px;border:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:#fff;">${escapeHtml(e.cliente)} · ${escapeHtml(e.produtoNome)}</div>
+                  <div style="font-size:11px;color:#34d399;">Chegou em BH! ${e.telefone ? escapeHtml(e.telefone) : 'Sem telefone'}</div>
+                </div>
+                <button class="btn btn-green" style="font-size:11px;padding:4px 8px;" onclick="window.CRM.avisarClienteChegada('${esc(String(e.id))}')">📲 Avisar</button>
+              </div>
+            `).join('') : '<div style="color:var(--text-muted);font-size:12px;">Nenhum cliente aguardando aviso de chegada.</div>'}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   function renderAll() {
     updateTabCounts();
     renderDecisionStrip();
+    renderDispStatusStrip();
     renderSavedFilters();
     const cliBadge = document.getElementById('countClientesBadge');
     if (cliBadge) cliBadge.textContent = String((state.clientes || []).length);
+
+    const opCont = document.getElementById('operacaoDiaContainer');
+    const prodCont = document.getElementById('productsContainer');
+    if (state.mainGroup === 'operacao_dia') {
+      if (opCont) opCont.style.display = 'block';
+      if (prodCont) prodCont.style.display = 'none';
+      renderOperacaoDia();
+      return;
+    }
+    if (opCont) opCont.style.display = 'none';
+    if (prodCont) prodCont.style.display = '';
+
     const filtered = getFilteredProducts();
     renderKPIs(filtered);
     renderProducts(filtered);
@@ -1891,8 +2145,93 @@
       state.stockFilter = val || 'margem_baixa';
       const sel = document.getElementById('stockSelect');
       if (sel) sel.value = state.stockFilter;
-      renderLimit = 120;
+      renderLimit = 60;
       renderAll();
+    },
+
+    filterByDisponibilidade(val) {
+      state.mainGroup = 'todas';
+      document.querySelectorAll('.group-tab').forEach(t => {
+        t.classList.toggle('active', t.getAttribute('data-group') === 'todas');
+      });
+      state.stockFilter = val || 'disponivel_agora';
+      state.minMarginFilter = null;
+      const sel = document.getElementById('stockSelect');
+      if (sel) sel.value = state.stockFilter;
+      renderLimit = 60;
+      renderAll();
+    },
+
+    openDispDetalhesModal(produtoId, tipo) {
+      const modal = document.getElementById('dispDetalhesModal');
+      const titleEl = document.getElementById('dispDetalhesTitulo');
+      const bodyEl = document.getElementById('dispDetalhesBody');
+      if (!modal || !titleEl || !bodyEl) return;
+
+      const prod = rawCatalog.find(p => Number(p.id) === Number(produtoId));
+      const disp = getDisponibilidade(produtoId);
+      const nomeProd = prod ? prod.nombre : `Produto #${produtoId}`;
+
+      if (tipo === 'reservado') {
+        titleEl.textContent = `🟡 Reservas: ${nomeProd}`;
+        bodyEl.innerHTML = disp.reservasDetalhes.length ? disp.reservasDetalhes.map(r => `
+          <div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <b style="color:#fbbf24;">👤 ${escapeHtml(r.cliente)} · ${r.qtd} cx</b>
+              <div style="font-size:11px;color:#94a3b8;">Status: ${r.status} ${r.telefone ? `· 📱 ${escapeHtml(r.telefone)}` : ''}</div>
+            </div>
+            <button class="btn" style="font-size:11px;" onclick="document.getElementById('dispDetalhesModal').classList.remove('open'); window.CRM.openEncomendasModal();">Ver Encomenda</button>
+          </div>
+        `).join('') : '<div style="color:var(--text-muted);font-size:12px;">Nenhuma reserva ativa.</div>';
+      } else {
+        titleEl.textContent = `🔵 Em Trânsito: ${nomeProd}`;
+        bodyEl.innerHTML = disp.transitoDetalhes.length ? disp.transitoDetalhes.map(t => `
+          <div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <b style="color:#38bdf8;">🚚 Pedido #${escapeHtml(String(t.pedidoId))} · ${t.qtd} un</b>
+              <div style="font-size:11px;color:#94a3b8;">Data da compra: ${escapeHtml(t.data)}</div>
+            </div>
+            <button class="btn" style="font-size:11px;" onclick="document.getElementById('dispDetalhesModal').classList.remove('open'); window.CRM.openTransitoModal();">Abrir Trânsito</button>
+          </div>
+        `).join('') : '<div style="color:var(--text-muted);font-size:12px;">Nenhum pedido em trânsito para este item.</div>';
+      }
+      modal.classList.add('open');
+    },
+
+    avisarClienteChegada(encId) {
+      const enc = (state.encomendas || []).find(e => String(e.id) === String(encId));
+      if (!enc) return;
+      const itensTxt = getEncomendaItens(enc).map(it => `${it.qtd}x ${it.produtoNome}`).join(', ');
+      const msg = `Olá *${enc.cliente}*! Tudo bem? 📦✨\n\nSua encomenda (*${itensTxt}*) acabou de chegar aqui em Belo Horizonte!\n\nPodemos combinar a entrega ou retirada hoje?`;
+      const digits = String(enc.telefone || '').replace(/\D/g, '');
+      const url = digits.length >= 10
+        ? `https://api.whatsapp.com/send?phone=${digits.startsWith('55') ? digits : '55' + digits}&text=${encodeURIComponent(msg)}`
+        : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+      window.open(url, '_blank');
+    },
+
+    avisarClientesPedido(pedidoId) {
+      const ped = (state.pedidosTransito || []).find(p => String(p.id) === String(pedidoId));
+      if (!ped) return;
+      const pids = new Set((ped.itens || []).map(it => Number(it.id_catalogo)));
+      const clientesChegou = (state.encomendas || []).filter(e =>
+        (e.status === 'chegou_bh' || e.status === 'pendente' || e.status === 'pedido_ao_fornecedor') &&
+        getEncomendaItens(e).some(it => pids.has(Number(it.produtoId)))
+      );
+      if (!clientesChegou.length) {
+        showToast('Nenhum cliente com encomenda vinculada a este pedido.');
+        return;
+      }
+      const resumo = clientesChegou.map((e, i) => {
+        const itens = getEncomendaItens(e).map(it => `${it.qtd}x ${it.produtoNome}`).join(', ');
+        return `${i + 1}. ${e.cliente} (${e.telefone || 'sem tel'}) — ${itens}`;
+      }).join('\n');
+      if (clientesChegou.length === 1) {
+        window.CRM.avisarClienteChegada(clientesChegou[0].id);
+        return;
+      }
+      navigator.clipboard?.writeText(`CLIENTES PARA AVISAR (PEDIDO #${ped.id}):\n${resumo}`);
+      alert(`📲 Clientes aguardando itens do pedido #${ped.id} (lista copiada!):\n\n${resumo}\n\nUse o painel "⚡ Operação do Dia" -> "Clientes para Avisar Hoje" para disparar 1 a 1 no WhatsApp.`);
     },
 
     openNewProductModal() {
@@ -2356,7 +2695,9 @@
         });
       }
 
-      const filteredInStock = filtered.filter(p => ((state.meuEstoque || {})[p.id] || 0) > 0);
+      const filteredInStock = filtered
+        .filter(p => ((state.meuEstoque || {})[p.id] || 0) > 0)
+        .sort((a, b) => getDisponibilidade(b.id).disponivel - getDisponibilidade(a.id).disponivel);
       const filteredOutStock = filtered.filter(p => !((state.meuEstoque || {})[p.id] || 0));
 
       if (!filtered.length) {
@@ -2368,11 +2709,14 @@
       let optionsHtml = '';
       if (filteredInStock.length > 0) {
         optionsHtml += `<optgroup label="✅ Pronta Entrega BH (Em Estoque: ${filteredInStock.length})">`;
-        optionsHtml += filteredInStock.map(p => `
+        optionsHtml += filteredInStock.map(p => {
+          const disp = getDisponibilidade(p.id);
+          return `
           <option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>
-            ${p.nombre} (Disponível: ${(state.meuEstoque || {})[p.id]} un)
+            ${p.nombre} (Disp: ${disp.disponivel} | BH: ${disp.estoqueBH}${disp.reservado > 0 ? ` | Res: ${disp.reservado}` : ''})
           </option>
-        `).join('');
+        `;
+        }).join('');
         optionsHtml += `</optgroup>`;
       }
 
@@ -2732,6 +3076,7 @@
       }
 
       // Se for frasco/caixa fechada
+      const dispCaixa = getDisponibilidade(pid);
       if (currentStock <= 0) {
         alert('Item sem estoque físico em BH! Cadastre a entrada no Estoque BH ou registre como Encomenda.');
         return;
@@ -2741,7 +3086,10 @@
         alert(`🚫 Venda bloqueada por margem negativa!\n\nCusto (${qty}x): ${formatBRL(p.custo * qty)}\nValor informado: ${formatBRL(subtotalVal)}\n\nAjuste o preço para cima antes de confirmar.`);
         return;
       }
-      if (qty > currentStock) {
+      if (qty > dispCaixa.disponivel && dispCaixa.reservado > 0) {
+        const prosseguirRes = confirm(`⚠️ Atenção: há ${dispCaixa.reservado} un reservada(s) para clientes.\nDisponível livre agora: ${dispCaixa.disponivel} un (Estoque BH: ${currentStock} un).\n\nDeseja vender mesmo assim?`);
+        if (!prosseguirRes) return;
+      } else if (qty > currentStock) {
         const prosseguir = confirm(`Atenção: A quantidade informada (${qty}) é maior do que o estoque registrado no aparelho (${currentStock} un).\n\nDeseja registrar a venda e ajustar o estoque mesmo assim?`);
         if (!prosseguir) return;
       }
@@ -3190,16 +3538,23 @@
               <div style="font-size:12px; margin-bottom:12px;">
                 <b style="color:#e2e8f0;">Itens Comprados (${totalItensPed} un):</b>
                 <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:6px; margin-top:6px;">
-                  ${(ped.itens || []).map(it => `
-                    <div style="background:#0b1120; padding:6px 10px; border-radius:6px; border:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center;">
-                      <span style="color:#f8fafc; font-weight:700;">${it.qtd}x ${it.nome}</span>
+                  ${(ped.itens || []).map(it => {
+                    const dispIt = getDisponibilidade(it.id_catalogo);
+                    const aguardando = dispIt.reservasDetalhes.length;
+                    return `
+                    <div style="background:#0b1120; padding:6px 10px; border-radius:6px; border:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                      <div>
+                        <span style="color:#f8fafc; font-weight:700;">${it.qtd}x ${it.nome}</span>
+                        ${aguardando > 0 ? `<div style="font-size:10px;color:#f59e0b;font-weight:700;">🟡 ${aguardando} cliente(s) aguardando</div>` : ''}
+                      </div>
                       <span style="color:#34d399; font-weight:800; font-size:11px;">PIX ${formatBRLInt(it.preco_venda_pix || 900)}</span>
                     </div>
-                  `).join('')}
+                  `;
+                  }).join('')}
                 </div>
               </div>
 
-              <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <span style="font-size:11px; color:${isEntregue ? '#34d399' : '#fbbf24'};">
                   ● Status: <b>${isEntregue ? 'Entregue no Estoque BH' : 'Pago • Aguardando Entrega'}</b>
                 </span>
@@ -3210,7 +3565,7 @@
                       📦 Confirmar Chegada em BH
                     </button>
                   ` : `
-                    <span style="font-size:11px; color:#94a3b8;">Estoque atualizado</span>
+                    <button class="btn" style="background:#4f46e5; color:#fff; font-weight:700; padding:5px 10px; font-size:11px;" onclick="window.CRM.avisarClientesPedido('${ped.id}')">📲 Avisar clientes aguardando</button>
                   `}
                 </div>
               </div>
@@ -3235,13 +3590,28 @@
           state.meuEstoque[pid] = (Number(state.meuEstoque[pid]) || 0) + Number(it.qtd || 0);
         });
 
+        // Marca encomendas de clientes ligadas aos itens recebidos como 'chegou_bh' para avisar hoje
+        const pidsRecebidos = new Set((ped.itens || []).map(it => Number(it.id_catalogo)));
+        let clientesParaAvisar = 0;
+        (state.encomendas || []).forEach(enc => {
+          if (enc.status === 'pendente' || enc.status === 'pedido_ao_fornecedor') {
+            if (getEncomendaItens(enc).some(it => pidsRecebidos.has(Number(it.produtoId)))) {
+              enc.status = 'chegou_bh';
+              enc.chegouEm = new Date().toISOString();
+              clientesParaAvisar++;
+            }
+          }
+        });
+
         ped.status = 'entregue';
         ped.data_entrega = new Date().toISOString();
 
         saveState();
         renderAll();
         window.CRM.openTransitoModal();
-        showToast(`Pedido recebido! ${totalItens} unidades somadas ao Estoque BH.`);
+        showToast(clientesParaAvisar > 0
+          ? `Pedido recebido (+${totalItens} un)! ${clientesParaAvisar} cliente(s) prontos para avisar!`
+          : `Pedido recebido! ${totalItens} unidades somadas ao Estoque BH.`);
       }
     },
 
@@ -3823,7 +4193,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
     renderEncomendasConcentrador() {
       const encomendas = Array.isArray(state.encomendas) ? state.encomendas : [];
-      const pendentes = encomendas.filter(e => e.status === 'pendente');
+      const pendentes = encomendas.filter(e => e.status === 'pendente' || e.status === 'pedido_ao_fornecedor');
 
       const grupos = {};
       pendentes.forEach(e => {
@@ -4584,8 +4954,17 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const saldoRestante = Math.max(0, valorTotal - sinal);
       const isProntaEntrega = currentPedidoOperacao === 'pronta_entrega';
 
-      // 1. Se for pronta entrega, abate as quantidades de cada medicamento do estoque físico BH
+      // 1. Se for pronta entrega, valida disponibilidade livre e abate do estoque físico BH
       if (isProntaEntrega) {
+        for (const it of novaEncomendaItens) {
+          const disp = getDisponibilidade(it.produtoId);
+          if (it.qtd > disp.disponivel) {
+            const msgDisp = disp.reservado > 0
+              ? `⚠️ "${it.produtoNome}" tem ${disp.reservado} un reservada(s) para outros clientes.\nDisponível livre: ${disp.disponivel} un (BH: ${disp.estoqueBH} un).\n\nDeseja vender mesmo assim (ou trocar para Encomenda)?`
+              : `⚠️ "${it.produtoNome}" tem apenas ${disp.disponivel} un disponível em BH (solicitado: ${it.qtd}).\n\nDeseja vender mesmo assim?`;
+            if (!confirm(msgDisp)) return;
+          }
+        }
         if (!state.meuEstoque) state.meuEstoque = {};
         novaEncomendaItens.forEach(it => {
           const curStock = Number(state.meuEstoque[it.produtoId] || 0);
@@ -5487,7 +5866,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
     },
 
     carregarEncomendasClientesNoPedidoFornecedor() {
-      const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente');
+      const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente' || e.status === 'pedido_ao_fornecedor');
       if (!pendentes.length) {
         alert('Nenhuma encomenda pendente de cliente no momento.');
         return;

@@ -771,4 +771,80 @@ body.client-mode .internal-only { display: none !important; }
     padding: 14px;
     max-height: 92vh;
   }
+  .p-img-wrap { height: 130px; }
+  .p-body { padding: 9px 11px; gap: 5px; }
+  .p-title { font-size: 13px; }
+  .tiers-box { gap: 4px; }
+  .tier-pill { padding: 4px 3px; }
+  .p-disp-row { gap: 4px; }
+  .disp-pill { font-size: 10px; padding: 2px 6px; }
+  .op-dia-grid { grid-template-columns: 1fr !important; }
+}
+
+/* Disponibilidade Real — Cores consistentes (Verde=#10b981, Amarelo=#f59e0b, Azul=#3b82f6) */
+.p-disp-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  margin-top: 2px;
+}
+.disp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 99px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  line-height: 1.2;
+}
+.disp-green { background: rgba(16,185,129,0.16); color: #10b981; border-color: rgba(16,185,129,0.45); }
+.disp-amber { background: rgba(245,158,11,0.16); color: #f59e0b; border-color: rgba(245,158,11,0.45); }
+.disp-blue { background: rgba(59,130,246,0.16); color: #3b82f6; border-color: rgba(59,130,246,0.45); }
+.disp-gray { background: rgba(148,163,184,0.12); color: #94a3b8; border-color: rgba(148,163,184,0.3); cursor: default; }
+
+.disp-status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 10px 0;
+}
+.disp-stat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  background: #0f172a;
+  transition: transform 0.12s;
+}
+.disp-stat-btn:hover { transform: translateY(-1px); }
+
+.op-dia-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.op-dia-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.op-dia-list {
+  max-height: 360px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }

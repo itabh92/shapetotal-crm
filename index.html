@@ -133,6 +133,22 @@
       </div>
     </section>
 
+    <!-- Disponibilidade Real Status Strip -->
+    <section id="dispStatusStrip" class="disp-status-strip internal-only">
+      <button class="disp-stat-btn disp-green" onclick="window.CRM.filterByDisponibilidade('disponivel_agora')">
+        🟢 Pronta Entrega: <span id="statDispPronta">0</span>
+      </button>
+      <button class="disp-stat-btn disp-amber" onclick="window.CRM.filterByDisponibilidade('reservado_clientes')">
+        🟡 Reservado: <span id="statDispReservado">0</span>
+      </button>
+      <button class="disp-stat-btn disp-blue" onclick="window.CRM.openTransitoModal()">
+        🔵 Chegando: <span id="statDispChegando">0</span>
+      </button>
+      <button class="disp-stat-btn" style="background:rgba(168,85,247,0.14);color:#c084fc;border:1px solid rgba(168,85,247,0.45);" onclick="window.CRM.openEncomendasModal()">
+        📦 A pedir fornecedor: <span id="statDispPedir">0</span>
+      </button>
+    </section>
+
     <!-- Decision Strip (Compact Executive Alerts) -->
     <section id="decisionStrip" class="internal-only" style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 14px 0;">
       <button class="btn" style="background:#064e3b; border:1px solid #10b981; color:#a7f3d0; font-size:12px; font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">
@@ -161,6 +177,7 @@
       <button class="group-tab" data-group="estetico_outros">✨ Estética & Beleza <span class="tab-count">36</span></button>
       <button class="group-tab" data-group="saude_mental">🧠 Saúde Mental & Suporte <span class="tab-count">50</span></button>
       <button class="group-tab tab-meu-estoque" data-group="meu_estoque" style="background:#064e3b; color:#34d399; font-weight:800; border:1px solid #10b981;">📍 Meu Estoque BH <span class="tab-count" id="countMeuEstoque">32</span></button>
+      <button class="group-tab internal-only" data-group="operacao_dia" style="background:#0c4a6e; color:#38bdf8; font-weight:800; border:1px solid #0284c7;">⚡ Operação do Dia <span class="tab-count" id="countOperacaoDia">0</span></button>
     </nav>
 
     <!-- Painel Executivo Exclusivo da Operação BH (visível na aba Meu Estoque BH) -->
@@ -238,6 +255,8 @@
 
       <select id="stockSelect" class="filter-select">
         <option value="com_estoque">✅ Só com Estoque</option>
+        <option value="disponivel_agora">🟢 Disponível p/ Venda Agora</option>
+        <option value="reservado_clientes">🟡 Com Reserva de Clientes</option>
         <option value="todos">📦 Todos (Com e Sem Estoque)</option>
         <option value="sem_estoque">❌ Sem Estoque (Esgotados)</option>
         <option value="margem_baixa">⚠️ Margem Baixa (&lt; 20%)</option>
@@ -266,6 +285,7 @@
     </section>
 
     <!-- Products Grid / Table Container -->
+    <section id="operacaoDiaContainer" class="internal-only" style="display:none;"></section>
     <section id="productsContainer" class="product-grid"></section>
 
   </main>
@@ -1407,11 +1427,22 @@
     </div>
   </div>
 
+  <!-- Mini-modal: Detalhes de Disponibilidade (Reservas e Trânsito) -->
+  <div id="dispDetalhesModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:520px;">
+      <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:10px; margin-bottom:12px;">
+        <h3 id="dispDetalhesTitulo" style="font-size:15px; font-weight:800; color:#f8fafc;">Detalhes de Disponibilidade</h3>
+        <button class="btn" onclick="document.getElementById('dispDetalhesModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+      <div id="dispDetalhesBody" style="display:flex; flex-direction:column; gap:8px; max-height:360px; overflow-y:auto;"></div>
+    </div>
+  </div>
+
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script src="dados_catalogo.js?v=20261113_0010"></script>
-  <script src="app.js?v=20261113_0010"></script>
+  <script src="dados_catalogo.js?v=20261113_0025"></script>
+  <script src="app.js?v=20261113_0025"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
