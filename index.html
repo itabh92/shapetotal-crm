@@ -46,6 +46,7 @@
           <button class="btn internal-only" style="background:#4f46e5; color:#ffffff; font-weight:800; border:1px solid #818cf8;" onclick="window.CRM.openEncomendasModal()" title="Gerenciar Encomendas de Clientes & Concentrar Pedido p/ Fornecedor">📝 Encomendas (<span id="countEncomendasBadge">0</span>)</button>
           <button class="btn internal-only" style="background:#047857; color:#ffffff; font-weight:800; border:1px solid #10b981;" onclick="window.CRM.openPedidoFornecedorModal()" title="Montar lista de compras e reserva para enviar ao fornecedor no WhatsApp">🇵🇾 Pedido Fornecedor</button>
           <button class="btn btn-blue internal-only" style="font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">📋 Vendas (<span id="countVendasBadge">0</span>)</button>
+          <button class="btn internal-only" style="background:#0f766e; color:#ffffff; font-weight:800; border:1px solid #14b8a6;" onclick="window.CRM.openClientesModal()" title="CRM de Clientes, Histórico & WhatsApp">👥 Clientes (<span id="countClientesBadge">0</span>)</button>
           <button class="btn btn-amber internal-only" style="font-weight:800; border:1px solid #fbbf24; background:#b45309; color:#fff;" onclick="window.CRM.openTransitoModal()">🚚 A Chegar (<span id="countTransitoBadge">27</span>)</button>
           <button class="btn internal-only" style="background:#0284c7; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openSyncModal()" title="Sincronize estoque, vendas e doses entre celular e computador">☁️ Sincronizar</button>
           <button id="btnClientMode" class="btn">👁️ Modo Cliente</button>
@@ -257,6 +258,11 @@
         <option value="lucro_desc">💰 Maior Lucro (R$)</option>
         <option value="nome_asc">🔤 Nome (A-Z)</option>
       </select>
+    </section>
+
+    <!-- Saved Filters Bar -->
+    <section id="savedFiltersBar" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin:0 0 12px 0;">
+      <!-- Renderizado dinamicamente via JS -->
     </section>
 
     <!-- Products Grid / Table Container -->
@@ -496,6 +502,7 @@
         </div>
 
         <!-- 1. Dados do Cliente com Autocomplete Proativo -->
+        <div id="encClientHistoryBanner" style="display:none; background:#0b1329; border:1px solid #14b8a6; border-radius:8px; padding:8px 12px; margin-bottom:10px; font-size:12px; color:#99f6e4;"></div>
         <div style="background:#0f172a; padding:12px; border-radius:8px; border:1px solid #1e293b; margin-bottom:12px;">
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px;">
             <div class="m-field">
@@ -1016,6 +1023,8 @@
         <button class="btn" onclick="document.getElementById('saleModal').classList.remove('open')">✖ Fechar</button>
       </div>
 
+      <div id="saleClientHistoryBanner" style="display:none; background:#0b1329; border:1px solid #14b8a6; border-radius:8px; padding:8px 12px; margin-bottom:12px; font-size:12px; color:#99f6e4;"></div>
+
       <div id="saleProdCard" style="display:flex; gap:12px; align-items:center; background:#0f172a; padding:12px; border-radius:8px; border:1px solid #334155; margin-bottom:16px;">
         <img id="saleProdImg" src="" style="width:54px; height:54px; border-radius:6px; object-fit:cover; border:1px solid #475569;" />
         <div style="flex:1;">
@@ -1368,11 +1377,41 @@
     </div>
   </div>
 
+  <!-- Modal: CRM de Clientes -->
+  <div id="clientesModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:920px; width:96%;">
+      <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:12px; margin-bottom:14px;">
+        <div>
+          <h3 style="font-size:17px; font-weight:800; color:#2dd4bf;">👥 CRM de Clientes & Histórico</h3>
+          <p id="clientesResumoSub" style="font-size:12px; color:var(--text-muted); margin-top:2px;">Histórico consolidado de vendas e encomendas</p>
+        </div>
+        <button class="btn" onclick="document.getElementById('clientesModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+        <input id="clientesSearchInput" type="text" placeholder="🔍 Buscar cliente por nome, telefone ou tag..." style="flex:1; min-width:220px; text-align:left; background:#0f172a; border:1px solid #334155; color:#fff; padding:8px 12px; border-radius:8px;" oninput="window.CRM.renderClientesList()" />
+        <select id="clientesSortSelect" class="filter-select" onchange="window.CRM.renderClientesList()">
+          <option value="ultima">🕒 Mais Recentes</option>
+          <option value="gasto">💰 Maior Total Gasto</option>
+          <option value="pedidos">📦 Mais Compras</option>
+          <option value="nome">🔤 Nome (A-Z)</option>
+        </select>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <div id="clientesListContainer" style="max-height:420px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+        <div id="clienteDetalheContainer" style="max-height:420px; overflow-y:auto; background:#0f172a; border:1px solid #1e293b; border-radius:10px; padding:12px;">
+          <div style="color:var(--text-muted); font-size:13px; text-align:center; padding:40px 10px;">Selecione um cliente à esquerda para ver o histórico completo, editar tags/anotações ou chamar no WhatsApp.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script src="dados_catalogo.js?v=20261112_1630"></script>
-  <script src="app.js?v=20261112_1630"></script>
+  <script src="dados_catalogo.js?v=20261113_0010"></script>
+  <script src="app.js?v=20261113_0010"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

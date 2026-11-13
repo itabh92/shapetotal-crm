@@ -198,7 +198,10 @@
     },
     cotacaoAtualizadaEm: new Date().toISOString(),
     _bhStockSyncKey: '',
-    customProducts: []
+    customProducts: [],
+    clientes: [], // [{ id, nome, telefone, endereco, totalGasto, qtdPedidos, ultimaCompra, anotacoes, tags }]
+    savedFilters: [], // [{ id, nome, mainGroup, subCat, brand, stockFilter, minMarginFilter, search }]
+    minMarginFilter: null
   };
 
   const AUDIT_LOG_KEY = 'ST_AUDIT_LOG_v1';
@@ -279,7 +282,8 @@
     } catch (e) {}
   }
 
-  let renderLimit = 120;
+  let renderLimit = 60;
+  let scrollObserver = null;
   let currentEncomendaFilter = 'todas';
   let currentReceiptEncId = null;
   let currentReceiptPhone = '';
@@ -331,6 +335,8 @@
         state.encomendas = Array.isArray(parsed.encomendas) ? parsed.encomendas : [];
         state.pedidosTransito = Array.isArray(parsed.pedidosTransito) ? parsed.pedidosTransito : [];
         state.customProducts = Array.isArray(parsed.customProducts) ? parsed.customProducts : [];
+        state.clientes = Array.isArray(parsed.clientes) ? parsed.clientes : [];
+        state.savedFilters = Array.isArray(parsed.savedFilters) ? parsed.savedFilters : [];
         state.customProducts.forEach(cp => {
           if (cp && cp.id && !rawCatalog.some(r => String(r.id) === String(cp.id))) {
             rawCatalog.unshift(cp);
@@ -395,6 +401,8 @@
       changed = true;
     }
     if (changed) saveState();
+    backfillClientesFromHistory();
+    rebuildSearchIndex();
   }
 
   function esc(v) {
@@ -418,6 +426,8 @@
       frascosDoses: state.frascosDoses || {},
       overrides: state.overrides || {},
       customProducts: state.customProducts || [],
+      clientes: state.clientes || [],
+      savedFilters: state.savedFilters || [],
       canonVistos: state.canonVistos || []
     };
   }
@@ -436,6 +446,8 @@
       frascosDoses: state.frascosDoses || {},
       overrides: state.overrides || {},
       customProducts: state.customProducts || [],
+      clientes: (state.clientes || []).slice(0, 50),
+      savedFilters: state.savedFilters || [],
       canonVistos: state.canonVistos || []
     };
   }
@@ -640,8 +652,30 @@
       vendas: mergedVendas,
       encomendas: mergedEncomendas,
       pedidosTransito: mergedPedidos,
+      customProducts: Array.isArray(imp.customProducts) ? imp.customProducts : (cur.customProducts || []),
+      savedFilters: Array.isArray(imp.savedFilters) ? imp.savedFilters : (cur.savedFilters || []),
       canonVistos: Array.from(canonSet)
     };
+    const mergedClientesMap = new Map();
+    [...(cur.clientes || []), ...(imp.clientes || [])].forEach(c => {
+      if (!c || !c.nome) return;
+      const key = String(c.telefone || '').replace(/\D/g, '') || String(c.nome).trim().toLowerCase();
+      const prev = mergedClientesMap.get(key);
+      if (!prev) {
+        mergedClientesMap.set(key, { ...c });
+      } else {
+        mergedClientesMap.set(key, {
+          ...prev,
+          ...c,
+          totalGasto: Math.max(Number(prev.totalGasto) || 0, Number(c.totalGasto) || 0),
+          qtdPedidos: Math.max(Number(prev.qtdPedidos) || 0, Number(c.qtdPedidos) || 0),
+          ultimaCompra: (String(c.ultimaCompra || '') > String(prev.ultimaCompra || '')) ? c.ultimaCompra : prev.ultimaCompra,
+          anotacoes: c.anotacoes || prev.anotacoes || '',
+          tags: Array.from(new Set([...(prev.tags || []), ...(c.tags || [])]))
+        });
+      }
+    });
+    nextState.clientes = Array.from(mergedClientesMap.values());
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
     return true;
@@ -664,6 +698,8 @@
         pedidosTransito: state.pedidosTransito || [],
         frascosDoses: state.frascosDoses || {},
         customProducts: state.customProducts || [],
+        clientes: state.clientes || [],
+        savedFilters: state.savedFilters || [],
         canonVistos: state.canonVistos || []
       }));
     } catch (e) {
@@ -882,8 +918,123 @@
     'cialis': ['tadalafila', 'tadalafil', 'cialis']
   };
 
+  // Índice pré-computado para busca instantânea (< 50 ms)
+  const searchIndexMap = new Map();
+
+  function normalizeSearchText(str) {
+    return String(str || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/t\.g\./g, 'tg')
+      .replace(/t\.g\b/g, 'tg');
+  }
+
+  function rebuildSearchIndex() {
+    searchIndexMap.clear();
+    rawCatalog.forEach(p => {
+      const ov = (state.overrides && state.overrides[p.id]) || {};
+      const desc = ov.desc !== undefined ? ov.desc : (p.desc_comercial || '');
+      const base = normalizeSearchText(`${p.id} shape-${p.id} ${p.nombre || ''} ${p.marca || ''} ${p.composicion || ''} ${p.categoria || ''} ${desc}`);
+      // Expande sinônimos relevantes já no índice para busca em O(1)
+      const extraSyns = [];
+      for (const [k, syns] of Object.entries(GYM_SYNONYMS)) {
+        if (base.includes(k) || syns.some(s => base.includes(s))) {
+          extraSyns.push(...syns);
+        }
+      }
+      searchIndexMap.set(p.id, extraSyns.length ? `${base} ${extraSyns.join(' ')}` : base);
+    });
+  }
+
+  // CRM de Clientes: helpers de persistência e histórico
+  function normalizeClientKey(nome, telefone) {
+    const tel = String(telefone || '').replace(/\D/g, '');
+    if (tel.length >= 8) return `tel:${tel.slice(-9)}`;
+    return `nome:${normalizeSearchText(nome).trim()}`;
+  }
+
+  function findClienteRecord(nome, telefone = '') {
+    const lista = state.clientes || [];
+    const tel = String(telefone || '').replace(/\D/g, '');
+    if (tel.length >= 8) {
+      const byTel = lista.find(c => String(c.telefone || '').replace(/\D/g, '').endsWith(tel.slice(-9)));
+      if (byTel) return byTel;
+    }
+    const cleanNome = normalizeSearchText(nome).trim();
+    if (!cleanNome || cleanNome === 'cliente') return null;
+    return lista.find(c => normalizeSearchText(c.nome).trim() === cleanNome) || null;
+  }
+
+  function upsertClienteFromOperacao({ nome, telefone = '', endereco = '', valor = 0, data = '', obs = '' }, skipSave = false) {
+    const cleanNome = String(nome || '').trim();
+    if (!cleanNome || cleanNome.toLowerCase() === 'cliente') return null;
+    if (!Array.isArray(state.clientes)) state.clientes = [];
+
+    let cli = findClienteRecord(cleanNome, telefone);
+    const dt = data || new Date().toISOString();
+    const valNum = Math.max(0, Number(valor) || 0);
+
+    if (!cli) {
+      cli = {
+        id: 'cli_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        nome: cleanNome,
+        telefone: String(telefone || '').trim(),
+        endereco: String(endereco || '').trim(),
+        totalGasto: valNum,
+        qtdPedidos: 1,
+        ultimaCompra: dt,
+        anotacoes: String(obs || '').trim(),
+        tags: []
+      };
+      state.clientes.unshift(cli);
+    } else {
+      if (cleanNome.length > (cli.nome || '').length) cli.nome = cleanNome;
+      if (telefone && !cli.telefone) cli.telefone = String(telefone).trim();
+      if (endereco && !cli.endereco) cli.endereco = String(endereco).trim();
+      cli.totalGasto = Number(cli.totalGasto || 0) + valNum;
+      cli.qtdPedidos = Number(cli.qtdPedidos || 0) + 1;
+      if (!cli.ultimaCompra || String(dt) > String(cli.ultimaCompra)) {
+        cli.ultimaCompra = dt;
+      }
+    }
+    if (!skipSave) saveState();
+    return cli;
+  }
+
+  function backfillClientesFromHistory() {
+    if (Array.isArray(state.clientes) && state.clientes.length > 0) return;
+    state.clientes = [];
+    const ops = [
+      ...(state.vendas || []).filter(v => !v.estornada).map(v => ({
+        nome: v.cliente, telefone: v.telefone, endereco: v.endereco,
+        valor: v.valorTotal, data: v.data, obs: v.obs
+      })),
+      ...(state.encomendas || []).filter(e => !e.vendaId && e.status !== 'cancelado').map(e => ({
+        nome: e.cliente, telefone: e.telefone, endereco: e.endereco,
+        valor: e.valorTotal, data: e.data, obs: e.obs
+      }))
+    ];
+    ops.forEach(op => upsertClienteFromOperacao(op, true));
+  }
+
+  function renderClientHistoryBanner(nome, bannerId) {
+    const el = document.getElementById(bannerId);
+    if (!el) return;
+    const cli = findClienteRecord(nome);
+    if (!cli) {
+      el.style.display = 'none';
+      el.innerHTML = '';
+      return;
+    }
+    const ult = cli.ultimaCompra ? new Date(cli.ultimaCompra).toLocaleDateString('pt-BR') : '-';
+    const tagsHtml = (cli.tags || []).map(t => `<span style="background:#134e4a;color:#5eead4;padding:1px 6px;border-radius:99px;font-size:10px;margin-left:4px;">${escapeHtml(t)}</span>`).join('');
+    el.style.display = 'block';
+    el.innerHTML = `👤 <b>${escapeHtml(cli.nome)}</b>${tagsHtml} · <b>${cli.qtdPedidos || 0}</b> pedido(s) · Total: <b>${formatBRL(cli.totalGasto || 0)}</b> · Última: ${ult}${cli.anotacoes ? `<div style="margin-top:3px;color:#cbd5e1;font-size:11px;">📝 ${escapeHtml(cli.anotacoes)}</div>` : ''}`;
+  }
+
   function getFilteredProducts() {
-    const q = state.search.trim().toLowerCase();
+    const q = normalizeSearchText(state.search.trim());
     let list = rawCatalog.map(computeProduct);
 
     list = list.filter(p => {
@@ -921,16 +1072,18 @@
         if (state.branchFilter === 'sg' && p.sg <= 0) return false;
       }
 
+      if (state.minMarginFilter !== null && state.minMarginFilter !== undefined) {
+        if (p.margemAplicada < Number(state.minMarginFilter)) return false;
+      }
+
       if (q) {
-        const rawHay = `${p.id} shape-${p.id} ${p.nombre || ''} ${p.marca || ''} ${p.composicion || ''} ${p.categoria || ''} ${p.desc || ''}`.toLowerCase();
-        // Normaliza removendo pontos entre siglas curtas para casar tanto "TG" quanto "T.G."
-        const cleanHay = rawHay.replace(/t\.g\./g, 'tg').replace(/t\.g\b/g, 'tg');
-        const hay = `${rawHay} ${cleanHay}`;
+        const hay = searchIndexMap.get(p.id) || normalizeSearchText(`${p.id} shape-${p.id} ${p.nombre || ''} ${p.marca || ''} ${p.composicion || ''} ${p.categoria || ''} ${p.desc || ''}`);
         const tokens = q.split(/\s+/).filter(Boolean);
         for (const t of tokens) {
-          const syns = GYM_SYNONYMS[t] || [t];
-          const matched = syns.some(s => hay.includes(s));
-          if (!matched) return false;
+          if (!hay.includes(t)) {
+            const syns = GYM_SYNONYMS[t];
+            if (!syns || !syns.some(s => hay.includes(s))) return false;
+          }
         }
       }
       return true;
@@ -1132,7 +1285,7 @@
     const visible = filtered.slice(0, renderLimit);
     const hasMore = filtered.length > renderLimit;
     const loadMoreBtnHtml = hasMore
-      ? `<div style="grid-column:1 / -1; display:flex; justify-content:center; padding:18px 0;">
+      ? `<div id="scrollSentinel" style="grid-column:1 / -1; display:flex; justify-content:center; padding:18px 0;">
            <button class="btn btn-primary" style="padding:10px 22px; font-weight:800;" onclick="window.CRM.loadMore()">Carregar mais (${filtered.length - renderLimit} restantes)</button>
          </div>`
       : '';
@@ -1324,6 +1477,23 @@
         ${loadMoreBtnHtml}
       `;
     }
+
+    // Virtualização progressiva: carrega próximo bloco automaticamente ao rolar perto do fim da lista
+    if (scrollObserver) {
+      scrollObserver.disconnect();
+      scrollObserver = null;
+    }
+    const sentinel = document.getElementById('scrollSentinel');
+    if (sentinel && hasMore && typeof IntersectionObserver !== 'undefined') {
+      scrollObserver = new IntersectionObserver(entries => {
+        if (entries.some(e => e.isIntersecting)) {
+          scrollObserver.disconnect();
+          renderLimit += 60;
+          renderProducts(filtered);
+        }
+      }, { rootMargin: '320px' });
+      scrollObserver.observe(sentinel);
+    }
   }
 
   function renderCartBar() {
@@ -1501,9 +1671,41 @@
     if (elMb) elMb.textContent = String(margemBaixa);
   }
 
+  const PRESET_FILTERS = [
+    { id: 'glp_estoque', nome: '🔥 GLP-1 c/ Estoque', mainGroup: 'emagrecedores', stockFilter: 'com_estoque', search: 'tirzepatida' },
+    { id: 'bh_pronta', nome: '📍 Pronta Entrega BH', mainGroup: 'meu_estoque', stockFilter: 'todos', search: '' },
+    { id: 'anabo_alta', nome: '💪 Anabolizantes Margem >=35%', mainGroup: 'anabolizantes', stockFilter: 'com_estoque', minMarginFilter: 35, search: '' },
+    { id: 'margem_baixa', nome: '⚠️ Margem <20%', mainGroup: 'todas', stockFilter: 'margem_baixa', search: '' }
+  ];
+
+  function renderSavedFilters() {
+    const bar = document.getElementById('savedFiltersBar');
+    if (!bar) return;
+    const customChips = (state.savedFilters || []).map((f, idx) => `
+      <span style="display:inline-flex;align-items:center;gap:4px;background:#1e293b;border:1px solid #475569;border-radius:99px;padding:3px 10px;font-size:11px;color:#e2e8f0;">
+        <button type="button" style="background:none;border:none;color:inherit;font-weight:700;cursor:pointer;padding:0;" onclick="window.CRM.applySavedFilter('custom_${idx}')">⭐ ${escapeHtml(f.nome)}</button>
+        <button type="button" style="background:none;border:none;color:#f87171;cursor:pointer;padding:0;font-size:11px;" title="Remover filtro" onclick="window.CRM.deleteSavedFilter(${idx})">✖</button>
+      </span>
+    `).join('');
+
+    const presetChips = PRESET_FILTERS.map(f => `
+      <button type="button" class="btn" style="padding:4px 10px;font-size:11px;border-radius:99px;background:#0f172a;border:1px solid #334155;color:#cbd5e1;" onclick="window.CRM.applySavedFilter('${f.id}')">${f.nome}</button>
+    `).join('');
+
+    bar.innerHTML = `
+      <span style="font-size:11px;color:#94a3b8;font-weight:700;margin-right:2px;">Filtros:</span>
+      ${presetChips}
+      ${customChips}
+      <button type="button" class="btn" style="padding:4px 10px;font-size:11px;border-radius:99px;background:#1e1b4b;border:1px solid #4f46e5;color:#c7d2fe;" onclick="window.CRM.saveCurrentFilter()">⭐ Salvar Atual</button>
+    `;
+  }
+
   function renderAll() {
     updateTabCounts();
     renderDecisionStrip();
+    renderSavedFilters();
+    const cliBadge = document.getElementById('countClientesBadge');
+    if (cliBadge) cliBadge.textContent = String((state.clientes || []).length);
     const filtered = getFilteredProducts();
     renderKPIs(filtered);
     renderProducts(filtered);
@@ -1747,10 +1949,212 @@
         state.meuEstoque[newId] = estoqueQtd;
       }
       logAuditoria('novo_produto', `SHAPE-${newId} ${nombre} (USD ${usd}, BH ${estoqueQtd})`);
+      rebuildSearchIndex();
       saveState();
       document.getElementById('newProductModal').classList.remove('open');
       renderAll();
       showToast(`Produto SHAPE-${newId} cadastrado!`);
+    },
+
+    applySavedFilter(key) {
+      let f = PRESET_FILTERS.find(x => x.id === key);
+      if (!f && String(key).startsWith('custom_')) {
+        const idx = parseInt(String(key).replace('custom_', ''), 10);
+        f = (state.savedFilters || [])[idx];
+      }
+      if (!f) return;
+      state.mainGroup = f.mainGroup || 'todas';
+      state.subCat = f.subCat || 'todas';
+      state.brand = f.brand || 'todas';
+      state.stockFilter = f.stockFilter || 'com_estoque';
+      state.minMarginFilter = f.minMarginFilter !== undefined ? f.minMarginFilter : null;
+      state.search = f.search || '';
+
+      document.querySelectorAll('.group-tab').forEach(t => t.classList.toggle('active', t.getAttribute('data-group') === state.mainGroup));
+      const sInp = document.getElementById('searchInput');
+      if (sInp) sInp.value = state.search;
+      const stSel = document.getElementById('stockSelect');
+      if (stSel) stSel.value = state.stockFilter;
+      renderLimit = 60;
+      renderAll();
+      showToast(`Filtro aplicado: ${f.nome}`);
+    },
+
+    saveCurrentFilter() {
+      const nome = prompt('Nome para salvar este filtro rápido:');
+      if (!nome || !nome.trim()) return;
+      if (!Array.isArray(state.savedFilters)) state.savedFilters = [];
+      state.savedFilters.push({
+        id: 'sf_' + Date.now(),
+        nome: nome.trim().slice(0, 32),
+        mainGroup: state.mainGroup,
+        subCat: state.subCat,
+        brand: state.brand,
+        stockFilter: state.stockFilter,
+        minMarginFilter: state.minMarginFilter,
+        search: state.search
+      });
+      saveState();
+      renderSavedFilters();
+      showToast('Filtro salvo!');
+    },
+
+    deleteSavedFilter(idx) {
+      if (!Array.isArray(state.savedFilters)) return;
+      state.savedFilters.splice(idx, 1);
+      saveState();
+      renderSavedFilters();
+    },
+
+    openClientesModal() {
+      const modal = document.getElementById('clientesModal');
+      if (!modal) return;
+      window.CRM.renderClientesList();
+      modal.classList.add('open');
+    },
+
+    renderClientesList() {
+      const listEl = document.getElementById('clientesListContainer');
+      const subEl = document.getElementById('clientesResumoSub');
+      if (!listEl) return;
+
+      const q = normalizeSearchText((document.getElementById('clientesSearchInput')?.value || '').trim());
+      const sort = document.getElementById('clientesSortSelect')?.value || 'ultima';
+      let lista = [...(state.clientes || [])];
+
+      if (q) {
+        lista = lista.filter(c => {
+          const hay = normalizeSearchText(`${c.nome || ''} ${c.telefone || ''} ${(c.tags || []).join(' ')} ${c.anotacoes || ''}`);
+          return hay.includes(q);
+        });
+      }
+
+      lista.sort((a, b) => {
+        if (sort === 'gasto') return (Number(b.totalGasto) || 0) - (Number(a.totalGasto) || 0);
+        if (sort === 'pedidos') return (Number(b.qtdPedidos) || 0) - (Number(a.qtdPedidos) || 0);
+        if (sort === 'nome') return String(a.nome || '').localeCompare(String(b.nome || ''));
+        return String(b.ultimaCompra || '').localeCompare(String(a.ultimaCompra || ''));
+      });
+
+      if (subEl) {
+        const totalFat = lista.reduce((s, c) => s + (Number(c.totalGasto) || 0), 0);
+        subEl.textContent = `${lista.length} cliente(s) · Total acumulado: ${formatBRL(totalFat)}`;
+      }
+
+      if (!lista.length) {
+        listEl.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-muted);background:#0f172a;border-radius:8px;">Nenhum cliente encontrado. Eles são criados automaticamente ao salvar vendas ou encomendas.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = lista.map(c => {
+        const ult = c.ultimaCompra ? new Date(c.ultimaCompra).toLocaleDateString('pt-BR') : '-';
+        const tagsHtml = (c.tags || []).map(t => `<span style="background:#134e4a;color:#5eead4;padding:1px 6px;border-radius:99px;font-size:10px;">${escapeHtml(t)}</span>`).join(' ');
+        return `
+          <div style="background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:10px 12px;cursor:pointer;" onclick="window.CRM.selectClienteDetalhe('${esc(String(c.id))}')">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <b style="color:#f8fafc;font-size:13px;">${escapeHtml(c.nome)}</b>
+              <b style="color:#34d399;font-size:12px;">${formatBRL(c.totalGasto || 0)}</b>
+            </div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:3px;display:flex;justify-content:space-between;">
+              <span>${c.telefone ? `📱 ${escapeHtml(c.telefone)}` : 'Sem telefone'} · ${c.qtdPedidos || 0} pedido(s)</span>
+              <span>Última: ${ult}</span>
+            </div>
+            ${tagsHtml ? `<div style="margin-top:4px;">${tagsHtml}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    },
+
+    selectClienteDetalhe(clienteId) {
+      const detEl = document.getElementById('clienteDetalheContainer');
+      const cli = (state.clientes || []).find(c => String(c.id) === String(clienteId));
+      if (!detEl || !cli) return;
+
+      const cliNorm = normalizeSearchText(cli.nome);
+      const cliTel = String(cli.telefone || '').replace(/\D/g, '');
+      const matchOp = op => {
+        const opTel = String(op.telefone || '').replace(/\D/g, '');
+        if (cliTel.length >= 8 && opTel.length >= 8 && opTel.slice(-9) === cliTel.slice(-9)) return true;
+        return normalizeSearchText(op.cliente).trim() === cliNorm;
+      };
+
+      const vendasCli = (state.vendas || []).filter(v => !v.estornada && matchOp(v));
+      const encsCli = (state.encomendas || []).filter(e => !e.vendaId && matchOp(e));
+
+      const histRows = [
+        ...vendasCli.map(v => ({ data: v.data, titulo: v.produtoNome, valor: v.valorTotal, tipo: v.statusPagamento === 'pendente' ? '⏳ A Receber' : '✅ Venda' })),
+        ...encsCli.map(e => ({ data: e.data, titulo: e.produtoNome || `${(e.itens || []).length} item(ns)`, valor: e.valorTotal, tipo: `📝 ${e.status}` }))
+      ].sort((a, b) => String(b.data || '').localeCompare(String(a.data || '')));
+
+      detEl.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px;">
+          <div>
+            <h4 style="margin:0;color:#fff;font-size:15px;">${escapeHtml(cli.nome)}</h4>
+            <div style="font-size:12px;color:#94a3b8;">${cli.telefone ? escapeHtml(cli.telefone) : 'Telefone não informado'}</div>
+            ${cli.endereco ? `<div style="font-size:11px;color:#cbd5e1;margin-top:2px;">📍 ${escapeHtml(cli.endereco)}</div>` : ''}
+          </div>
+          <button class="btn btn-green" style="padding:6px 10px;font-size:11px;font-weight:800;" onclick="window.CRM.whatsappCliente('${esc(String(cli.id))}')">📲 WhatsApp</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div style="background:#020617;padding:8px;border-radius:6px;border:1px solid #1e293b;">
+            <div style="font-size:10px;color:#94a3b8;">TOTAL GASTO</div>
+            <b style="color:#34d399;font-size:14px;">${formatBRL(cli.totalGasto || 0)}</b>
+          </div>
+          <div style="background:#020617;padding:8px;border-radius:6px;border:1px solid #1e293b;">
+            <div style="font-size:10px;color:#94a3b8;">PEDIDOS</div>
+            <b style="color:#38bdf8;font-size:14px;">${cli.qtdPedidos || 0}</b>
+          </div>
+        </div>
+
+        <div class="m-field" style="margin-bottom:8px;">
+          <label style="font-size:11px;">🏷️ Tags (separadas por vírgula)</label>
+          <input id="cliEditTags" type="text" value="${escapeHtml((cli.tags || []).join(', '))}" placeholder="Ex: VIP, Tirzepatida, Recorrente" />
+        </div>
+        <div class="m-field" style="margin-bottom:8px;">
+          <label style="font-size:11px;">📝 Anotações</label>
+          <textarea id="cliEditNotes" rows="2" style="width:100%;background:#020617;border:1px solid #334155;color:#fff;border-radius:6px;padding:6px;font-size:12px;">${escapeHtml(cli.anotacoes || '')}</textarea>
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-bottom:12px;font-size:12px;" onclick="window.CRM.saveClienteNotesTags('${esc(String(cli.id))}')">💾 Salvar Tags & Anotações</button>
+
+        <div style="font-size:11px;font-weight:800;color:#94a3b8;margin-bottom:6px;">HISTÓRICO (${histRows.length})</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${histRows.length ? histRows.map(h => `
+            <div style="background:#020617;border:1px solid #1e293b;border-radius:6px;padding:6px 8px;font-size:11px;display:flex;justify-content:space-between;gap:8px;">
+              <div>
+                <div style="color:#e2e8f0;font-weight:700;">${escapeHtml(h.titulo)}</div>
+                <div style="color:#64748b;font-size:10px;">${h.data ? new Date(h.data).toLocaleDateString('pt-BR') : '-'} · ${h.tipo}</div>
+              </div>
+              <b style="color:#34d399;white-space:nowrap;">${formatBRL(h.valor || 0)}</b>
+            </div>
+          `).join('') : '<div style="font-size:11px;color:#64748b;">Sem compras registradas ainda.</div>'}
+        </div>
+      `;
+    },
+
+    saveClienteNotesTags(clienteId) {
+      const cli = (state.clientes || []).find(c => String(c.id) === String(clienteId));
+      if (!cli) return;
+      const tagsRaw = document.getElementById('cliEditTags')?.value || '';
+      const notesRaw = document.getElementById('cliEditNotes')?.value || '';
+      cli.tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
+      cli.anotacoes = notesRaw.trim();
+      saveState();
+      window.CRM.renderClientesList();
+      showToast('Cliente atualizado!');
+    },
+
+    whatsappCliente(clienteId) {
+      const cli = (state.clientes || []).find(c => String(c.id) === String(clienteId));
+      if (!cli) return;
+      const digits = String(cli.telefone || '').replace(/\D/g, '');
+      const msg = encodeURIComponent(`Olá ${cli.nome}! Tudo bem? Passando para saber como está seu protocolo e se precisa de reposição.`);
+      if (digits.length >= 10) {
+        const phone = digits.startsWith('55') ? digits : `55${digits}`;
+        window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${msg}`, '_blank');
+      } else {
+        window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+      }
     },
 
     markSalePaid(saleId) {
@@ -2023,6 +2427,7 @@
           notesInp.value = match.obs;
         }
       }
+      renderClientHistoryBanner(val, 'saleClientHistoryBanner');
     },
 
     onSaleProductSelect(val) {
@@ -2316,6 +2721,7 @@
         state.encomendas.unshift(novaEnc);
 
         saveState();
+        upsertClienteFromOperacao({ nome: client, telefone: phone, endereco: address, valor: totalComFrete, data: dateVal, obs: notes });
         logAuditoria('venda_dose', `${p.nombre} (${doseMg}mg) - ${client} - ${formatBRL(totalComFrete)}`);
 
         document.getElementById('saleModal').classList.remove('open');
@@ -2380,6 +2786,7 @@
 
       if (!state.vendas) state.vendas = [];
       state.vendas.unshift(venda);
+      upsertClienteFromOperacao({ nome: client, telefone: phone, endereco: address, valor: totalComFrete, data: dateVal, obs: notes }, true);
 
       const novaEnc = {
         id: encId,
@@ -3763,6 +4170,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         if (telInp && !telInp.value && match.telefone) telInp.value = match.telefone;
         if (endInp && !endInp.value && match.endereco) endInp.value = match.endereco;
       }
+      renderClientHistoryBanner(val, 'encClientHistoryBanner');
     },
 
     populateEncProdutosDropdown(selectedId = null) {
@@ -3905,6 +4313,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
     openNovaEncomendaModal(productId = null, operacao = 'encomenda') {
       const modal = document.getElementById('encomendasModal');
       if (!modal) return;
+      renderClientHistoryBanner('', 'encClientHistoryBanner');
       window.CRM.switchEncomendasTab('nova');
       window.CRM.setPedidoOperacao(operacao);
       window.CRM.populateEncClientesDatalist();
@@ -4266,6 +4675,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
       if (!Array.isArray(state.encomendas)) state.encomendas = [];
       state.encomendas.unshift(newEnc);
+      upsertClienteFromOperacao({ nome: cliente, telefone, endereco, valor: valorTotal, data: newEnc.data, obs }, true);
       saveState();
 
       // Limpa formulário
@@ -4411,6 +4821,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
       if (!state.vendas) state.vendas = [];
       state.vendas.unshift(venda);
+      upsertClienteFromOperacao({ nome: client, telefone: phone, endereco: address, valor: totalComFrete, data: dateVal, obs: notes }, true);
 
       // 3. Atualiza status da encomenda
       enc.status = 'entregue';
@@ -5438,8 +5849,9 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         tab.classList.add('active');
         state.mainGroup = tab.getAttribute('data-group');
         state.subCat = 'todas';
+        state.minMarginFilter = null;
         document.getElementById('subCatSelect').value = 'todas';
-        renderLimit = 120;
+        renderLimit = 60;
         renderAll();
       });
     });
@@ -5452,38 +5864,42 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (searchClearBtn) {
         searchClearBtn.style.display = state.search ? 'flex' : 'none';
       }
-      renderLimit = 120;
+      renderLimit = 60;
       clearTimeout(searchTimer);
-      searchTimer = setTimeout(renderAll, 300);
+      searchTimer = setTimeout(renderAll, 80);
     });
 
     document.getElementById('subCatSelect').addEventListener('change', e => {
       state.subCat = e.target.value;
-      renderLimit = 120;
+      state.minMarginFilter = null;
+      renderLimit = 60;
       renderAll();
     });
 
     document.getElementById('brandSelect').addEventListener('change', e => {
       state.brand = e.target.value;
-      renderLimit = 120;
+      state.minMarginFilter = null;
+      renderLimit = 60;
       renderAll();
     });
 
     document.getElementById('stockSelect').addEventListener('change', e => {
       state.stockFilter = e.target.value;
-      renderLimit = 120;
+      state.minMarginFilter = null;
+      renderLimit = 60;
       renderAll();
     });
 
     document.getElementById('branchSelect').addEventListener('change', e => {
       state.branchFilter = e.target.value;
-      renderLimit = 120;
+      state.minMarginFilter = null;
+      renderLimit = 60;
       renderAll();
     });
 
     document.getElementById('sortSelect').addEventListener('change', e => {
       state.sortBy = e.target.value;
-      renderLimit = 120;
+      renderLimit = 60;
       renderAll();
     });
 
