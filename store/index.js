@@ -6,6 +6,14 @@ import { executarMigracaoLocalStorageParaIdb, MIGRATION_FLAG_KEY } from './migra
 
 function downloadJsonBrowser(filename, text) {
   try {
+    // Em PWA standalone no iOS, clicar em <a href="blob:..."> pode navegar a tela inteira para o blob e travar o app
+    const isIosStandalone =
+      (window.navigator && window.navigator.standalone === true) ||
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+    const isMobileSafari = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    if (isIosStandalone || isMobileSafari) {
+      return;
+    }
     const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

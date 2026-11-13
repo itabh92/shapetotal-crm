@@ -222,34 +222,37 @@ export function commitEventsAtomic(db, eventos, storesList) {
     // Cache em memória da transação para resolver múltiplos eventos no mesmo produto/lote dentro do mesmo batch
     const txCache = criarEstadoProjecoesVazio();
 
-    function processNext(idx) {
-      if (idx >= eventos.length) return;
-      const ev = eventos[idx];
-      if (!ev || !ev.id) {
-        ignorados++;
-        processNext(idx + 1);
-        return;
+    // Carrega todos os IDs já aplicados em 1 única leitura (rápido no IndexedDB real e compatível com mock)
+    const allReq = appliedStore.getAll();
+    allReq.onsuccess = () => {
+      const appliedSet = new Set((allReq.result || []).map(r => String(r.id)));
+      const pendentes = [];
+
+      for (const ev of eventos) {
+        if (!ev || !ev.id) {
+          ignorados++;
+          continue;
+        }
+        const eid = String(ev.id);
+        if (appliedSet.has(eid)) {
+          ignorados++;
+          continue;
+        }
+        appliedSet.add(eid);
+        appliedStore.put({ id: eid, ts: ev.ts || '' });
+        eventsStore.put({ ...ev, id: eid });
+        gravados++;
+        pendentes.push(ev);
       }
 
-      const checkReq = appliedStore.get(String(ev.id));
-      checkReq.onsuccess = () => {
-        if (checkReq.result) {
-          ignorados++;
-          processNext(idx + 1);
-          return;
-        }
-
-        appliedStore.put({ id: String(ev.id), ts: ev.ts || '' });
-        eventsStore.put({ ...ev, id: String(ev.id) });
-        gravados++;
-
-        aplicarNoTransactionSync(tx, txCache, ev, () => {
+      function processNext(idx) {
+        if (idx >= pendentes.length) return;
+        aplicarNoTransactionSync(tx, txCache, pendentes[idx], () => {
           processNext(idx + 1);
         });
-      };
-    }
-
-    processNext(0);
+      }
+      processNext(0);
+    };
 
     tx.oncomplete = () => resolve({ gravados, ignorados });
     tx.onerror = tx.onabort = () => reject(tx.error || new Error('TX_ABORTED'));

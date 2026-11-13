@@ -340,10 +340,16 @@ export async function executarMigracaoLocalStorageParaIdb({
   const jaMigrado = storage && storage.getItem(MIGRATION_FLAG_KEY);
   const db = await openDatabase(idbFactory);
 
-  // 1. Backup automático antes de migrar (quando ainda não havia marcação)
+  // 1. Backup automático antes de migrar (salvo no IndexedDB meta + opcional downloader)
   let backupInfo = null;
   if (!jaMigrado && rawState && Object.keys(rawState).length > 0) {
     backupInfo = exportarBackupLocalStorage(rawState, extraAudit, downloader);
+    await setMeta(db, 'backup_pre_migracao', {
+      filename: backupInfo.filename,
+      geradoEm: new Date().toISOString(),
+      bytes: backupInfo.bytes,
+      jsonStr: backupInfo.jsonStr
+    });
   }
 
   // 2. Gera eventos determinísticos e grava atomicamente (idempotente por event.id)
