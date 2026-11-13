@@ -162,13 +162,13 @@
   const BACKUP_KEY = 'SHAPETOTAL_CRM_BACKUP_PRE_IMPORT';
 
   const DEFAULT_GROUP_MARGINS = {
-    anabolizante: { label: '💪 Anabolizantes', min: 28, rec: 40, max: 58 },
-    emagrecedores: { label: '🔥 Emagrecedores & Queimadores', min: 28, rec: 40, max: 55 },
-    saude_mental: { label: '🧠 Saúde Mental & Nootrópicos', min: 32, rec: 45, max: 65 },
-    peptideo: { label: '🧬 Peptídeos & HGH', min: 30, rec: 45, max: 65 },
-    estetico: { label: '✨ Estético, Botox & Pele', min: 35, rec: 50, max: 75 },
-    sarms_post: { label: '🧪 SARMs, Pós-Ciclo & HCG', min: 30, rec: 42, max: 60 },
-    potencia_outros: { label: '⚡ Potência, Capilar & Outros', min: 32, rec: 45, max: 70 }
+    anabolizante: { label: '💪 Anabolizantes', min: 33, rec: 43, max: 60 },
+    emagrecedores: { label: '🔥 Emagrecedores & Queimadores', min: 32, rec: 42, max: 58 },
+    saude_mental: { label: '🧠 Saúde Mental & Nootrópicos', min: 32, rec: 47, max: 65 },
+    peptideo: { label: '🧬 Peptídeos & HGH', min: 30, rec: 48, max: 65 },
+    estetico: { label: '✨ Estético, Botox & Pele', min: 35, rec: 52, max: 75 },
+    sarms_post: { label: '🧪 SARMs, Pós-Ciclo & HCG', min: 30, rec: 44, max: 60 },
+    potencia_outros: { label: '⚡ Potência, Capilar & Outros', min: 32, rec: 47, max: 70 }
   };
 
   let state = {
