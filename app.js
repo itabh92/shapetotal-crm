@@ -201,7 +201,10 @@
     customProducts: [],
     clientes: [], // [{ id, nome, telefone, endereco, totalGasto, qtdPedidos, ultimaCompra, anotacoes, tags }]
     savedFilters: [], // [{ id, nome, mainGroup, subCat, brand, stockFilter, minMarginFilter, search }]
-    minMarginFilter: null
+    minMarginFilter: null,
+    movimentacoes: [], // [{ id, produtoId, tipo, qtd, referenciaId, motivo, custoUnitReal, data, usuario }]
+    custosReais: {}, // { [produtoId]: custoUnitRealBrl }
+    ultimaVerificacaoAlertas: null
   };
 
   const AUDIT_LOG_KEY = 'ST_AUDIT_LOG_v1';
@@ -337,6 +340,16 @@
         state.customProducts = Array.isArray(parsed.customProducts) ? parsed.customProducts : [];
         state.clientes = Array.isArray(parsed.clientes) ? parsed.clientes : [];
         state.savedFilters = Array.isArray(parsed.savedFilters) ? parsed.savedFilters : [];
+        state.movimentacoes = Array.isArray(parsed.movimentacoes) ? parsed.movimentacoes : [];
+        state.custosReais = (parsed.custosReais && typeof parsed.custosReais === 'object') ? parsed.custosReais : {};
+        state.ultimaVerificacaoAlertas = parsed.ultimaVerificacaoAlertas || null;
+        // Migração suave de encomendas antigas para o funil com etapa/próxima ação
+        state.encomendas.forEach(e => {
+          if (!e.etapa) {
+            e.etapa = e.status === 'entregue' ? 'entrega' : (e.status === 'pedido_ao_fornecedor' ? 'fechamento' : 'negociacao');
+          }
+          if (!e.etapaDesde) e.etapaDesde = e.data || new Date().toISOString();
+        });
         state.customProducts.forEach(cp => {
           if (cp && cp.id && !rawCatalog.some(r => String(r.id) === String(cp.id))) {
             rawCatalog.unshift(cp);
@@ -700,12 +713,325 @@
         customProducts: state.customProducts || [],
         clientes: state.clientes || [],
         savedFilters: state.savedFilters || [],
-        canonVistos: state.canonVistos || []
+        canonVistos: state.canonVistos || [],
+        movimentacoes: state.movimentacoes || [],
+        custosReais: state.custosReais || {},
+        ultimaVerificacaoAlertas: state.ultimaVerificacaoAlertas || null
       }));
     } catch (e) {
       console.error('Erro ao salvar estado:', e);
       alert('⚠️ Não foi possível salvar os dados neste aparelho. Exporte um backup agora.');
     }
+  }
+
+  // =========================================================================
+  // MOVIMENTAÇÕES DE ESTOQUE, FUNIL & MOTOR DE ALERTAS PROATIVOS
+  // =========================================================================
+  const FUNIL_ETAPAS = [
+    { id: 'lead_novo', label: '1. Lead Novo' },
+    { id: 'qualificacao', label: '2. Qualificação' },
+    { id: 'proposta', label: '3. Proposta Enviada' },
+    { id: 'negociacao', label: '4. Negociação' },
+    { id: 'fechamento', label: '5. Fechamento' },
+    { id: 'entrega', label: '6. Entrega' },
+    { id: 'pos_venda', label: '7. Pós-venda' },
+    { id: 'nutricao', label: '⏸ Nutrição' },
+    { id: 'perdido', label: '✖ Perdido' }
+  ];
+
+  const FUNIL_SUGESTOES = {
+    lead_novo: { acao: 'Enviar primeira resposta e qualificar modelo/pagamento', dias: 0 },
+    qualificacao: { acao: 'Enviar proposta por escrito', dias: 0 },
+    proposta: { acao: 'Follow-up D1: confirmar se viu a proposta', dias: 1 },
+    negociacao: { acao: 'Confirmar condição final / troca / sinal', dias: 1 },
+    fechamento: { acao: 'Confirmar pagamento na conta e separar/pedir item', dias: 1 },
+    entrega: { acao: 'Pós-venda D+2: conferir entrega e uso', dias: 2 },
+    pos_venda: { acao: 'Pedir indicação (D+7) / ofertar recompra', dias: 7 },
+    nutricao: { acao: 'Retomar contato com novidade de lote/preço', dias: 15 },
+    perdido: { acao: '', dias: 0 }
+  };
+
+  function addDaysIsoDate(days) {
+    const d = new Date();
+    d.setDate(d.getDate() + (Number(days) || 0));
+    return d.toISOString().slice(0, 10);
+  }
+
+  /**
+   * Registra uma movimentação rastreável de estoque ou reserva.
+   * @param {'entrada'|'venda'|'devolucao'|'ajuste'|'perda'|'reserva'|'liberacao'} tipo
+   * @param {number} produtoId
+   * @param {number} qtd - positivo para entrada/devolução/reserva, negativo para saída/venda/liberação
+   * @param {string} referenciaId
+   * @param {string} motivo
+   * @param {number|null} custoUnitReal
+   */
+  function registrarMovimento(tipo, produtoId, qtd, referenciaId = '', motivo = '', custoUnitReal = null) {
+    const pid = Number(produtoId);
+    const q = Number(qtd) || 0;
+    if (!pid || q === 0) return null;
+    if (!Array.isArray(state.movimentacoes)) state.movimentacoes = [];
+    const mov = {
+      id: 'mov_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+      produtoId: pid,
+      tipo: String(tipo || 'ajuste'),
+      qtd: q,
+      referenciaId: String(referenciaId || ''),
+      motivo: String(motivo || ''),
+      custoUnitReal: custoUnitReal !== null && custoUnitReal !== undefined ? Number(custoUnitReal) : null,
+      data: new Date().toISOString(),
+      usuario: /iPhone|iPad/i.test(navigator.userAgent || '') ? 'Italo (iPhone)' : 'Italo (Mac)'
+    };
+    state.movimentacoes.unshift(mov);
+    // Mantém histórico enxuto no localStorage (últimos 1000 movimentos)
+    if (state.movimentacoes.length > 1000) {
+      state.movimentacoes = state.movimentacoes.slice(0, 1000);
+    }
+    return mov;
+  }
+
+  /**
+   * Calcula o saldo pelas movimentações físicas (excluindo reservas/liberações virtuais)
+   * e retorna também a comparação com state.meuEstoque[produtoId].
+   */
+  function getSaldo(produtoId) {
+    const pid = Number(produtoId);
+    const movs = (state.movimentacoes || []).filter(m => Number(m.produtoId) === pid);
+    const fisicos = movs.filter(m => m.tipo !== 'reserva' && m.tipo !== 'liberacao');
+    const saldoMov = fisicos.reduce((acc, m) => acc + (Number(m.qtd) || 0), 0);
+    const saldoBH = Number((state.meuEstoque || {})[pid] || 0);
+    const reservasMov = movs
+      .filter(m => m.tipo === 'reserva' || m.tipo === 'liberacao')
+      .reduce((acc, m) => acc + (Number(m.qtd) || 0), 0);
+    return {
+      saldoMov,
+      saldoBH,
+      divergencia: saldoBH - saldoMov,
+      reservasMov: Math.max(0, reservasMov),
+      totalMovs: movs.length
+    };
+  }
+
+  let _alertasCacheSig = '';
+  let _alertasCacheList = [];
+  let _alertasExpanded = false;
+
+  /**
+   * Motor proativo de alertas:
+   * - estoque_critico: meuEstoque[id] > 0 e <= 2
+   * - frasco_baixo: frascosDoses com mgRestante < 24
+   * - encomenda_parada: status 'pendente' ou 'pedido_ao_fornecedor' há > 7 dias
+   * - transito_atrasado: status 'em_transito' há > 15 dias ou dataPrevista vencida
+   * - negocio_sem_acao / etapa_parada (>3d) / reserva_24h_sem_pgto
+   */
+  function calcularAlertas(force = false) {
+    const sig = JSON.stringify({
+      e: state.meuEstoque || {},
+      f: state.frascosDoses || {},
+      enc: (state.encomendas || []).map(x => [x.id, x.status, x.etapa, x.etapaDesde, x.proximaAcao, x.sinal, x.data]),
+      tr: (state.pedidosTransito || []).map(x => [x.id, x.status, x.data_compra, x.dataPrevista])
+    });
+    if (!force && sig === _alertasCacheSig) {
+      return _alertasCacheList;
+    }
+
+    const alertas = [];
+    const now = Date.now();
+    const msDia = 86400000;
+
+    // 1. Estoque crítico (1 a 2 un em BH)
+    Object.entries(state.meuEstoque || {}).forEach(([pidStr, qRaw]) => {
+      const pid = Number(pidStr);
+      const q = Number(qRaw) || 0;
+      if (q > 0 && q <= 2) {
+        const raw = rawCatalog.find(p => Number(p.id) === pid);
+        const nome = raw ? raw.nombre : `SKU #${pid}`;
+        alertas.push({
+          tipo: 'estoque_critico',
+          titulo: `Estoque crítico: ${nome}`,
+          descricao: `Restam apenas ${q} un no estoque físico BH.`,
+          severidade: q === 1 ? 'alta' : 'media',
+          acaoTexto: '🇵🇾 Pedir ao Fornecedor',
+          acaoFn: 'pedirFornecedor',
+          dados: { produtoId: pid, qtdAtual: q }
+        });
+      }
+    });
+
+    // 2. Frasco de doses baixo (< 24 mg / < 20% de 120 mg)
+    Object.entries(state.frascosDoses || {}).forEach(([pidStr, f]) => {
+      const pid = Number(pidStr);
+      const mg = Number(f && f.mgRestante);
+      if (f && !isNaN(mg) && mg < 24) {
+        const raw = rawCatalog.find(p => Number(p.id) === pid);
+        const nome = raw ? raw.nombre : `Frasco #${pid}`;
+        alertas.push({
+          tipo: 'frasco_baixo',
+          titulo: `Frasco baixo: ${nome}`,
+          descricao: `Apenas ${mg} mg restantes (< 20% de 120 mg).`,
+          severidade: mg <= 10 ? 'alta' : 'media',
+          acaoTexto: '💉 Registrar Venda de Dose',
+          acaoFn: 'vendaDose',
+          dados: { produtoId: pid, mgRestante: mg }
+        });
+      }
+    });
+
+    // 3. Encomendas paradas > 7 dias + Negócios parados / sem próxima ação / reserva > 24h
+    (state.encomendas || []).forEach(enc => {
+      if (!enc) return;
+      const st = enc.status || 'pendente';
+      const isAtiva = st === 'pendente' || st === 'pedido_ao_fornecedor' || st === 'chegou_bh';
+      const etapa = enc.etapa || 'negociacao';
+      if (!isAtiva || etapa === 'perdido' || etapa === 'pos_venda') return;
+
+      const dtCriacao = enc.data ? new Date(enc.data).getTime() : now;
+      const diasCriacao = Math.floor((now - dtCriacao) / msDia);
+      const dtEtapa = enc.etapaDesde ? new Date(enc.etapaDesde).getTime() : dtCriacao;
+      const diasEtapa = Math.floor((now - dtEtapa) / msDia);
+
+      if ((st === 'pendente' || st === 'pedido_ao_fornecedor') && diasCriacao > 7) {
+        alertas.push({
+          tipo: 'encomenda_parada',
+          titulo: `Encomenda parada (${diasCriacao}d): ${enc.cliente || 'Cliente'}`,
+          descricao: `Status "${st}" há ${diasCriacao} dias · ${formatBRL(enc.valorTotal || 0)}.`,
+          severidade: diasCriacao >= 14 ? 'alta' : 'media',
+          acaoTexto: '📝 Abrir Encomenda',
+          acaoFn: 'abrirEncomenda',
+          dados: { encomendaId: enc.id, dias: diasCriacao }
+        });
+      }
+
+      if (st === 'pendente' && (Number(enc.sinal) || 0) <= 0 && (now - dtCriacao) > msDia) {
+        alertas.push({
+          tipo: 'encomenda_parada',
+          titulo: `Reserva > 24h sem pagamento: ${enc.cliente || 'Cliente'}`,
+          descricao: `Reservado sem sinal há ${Math.max(1, diasCriacao)} dia(s) · ${formatBRL(enc.valorTotal || 0)}.`,
+          severidade: 'alta',
+          acaoTexto: '📋 Ver na Lista do Dia',
+          acaoFn: 'abrirListaDia',
+          dados: { encomendaId: enc.id }
+        });
+      } else if (!String(enc.proximaAcao || '').trim()) {
+        alertas.push({
+          tipo: 'encomenda_parada',
+          titulo: `Sem próxima ação: ${enc.cliente || 'Cliente'}`,
+          descricao: `Etapa "${etapa}" sem tarefa/data definida.`,
+          severidade: 'media',
+          acaoTexto: '📋 Definir Ação',
+          acaoFn: 'abrirListaDia',
+          dados: { encomendaId: enc.id }
+        });
+      } else if (diasEtapa > 3) {
+        alertas.push({
+          tipo: 'encomenda_parada',
+          titulo: `Etapa parada (${diasEtapa}d): ${enc.cliente || 'Cliente'}`,
+          descricao: `Na etapa "${etapa}" há ${diasEtapa} dias. Próx: ${enc.proximaAcao}`,
+          severidade: 'media',
+          acaoTexto: '📝 Abrir Encomenda',
+          acaoFn: 'abrirEncomenda',
+          dados: { encomendaId: enc.id }
+        });
+      }
+    });
+
+    // 4. Trânsito atrasado (> 15 dias em trânsito ou dataPrevista vencida)
+    (state.pedidosTransito || []).forEach(ped => {
+      if (!ped || ped.status !== 'em_transito') return;
+      const dtCompra = ped.data_compra ? new Date(ped.data_compra).getTime() : now;
+      const dias = Math.floor((now - dtCompra) / msDia);
+      const prevTs = ped.dataPrevista ? new Date(ped.dataPrevista).getTime() : null;
+      const vencida = prevTs !== null && !isNaN(prevTs) && prevTs < now;
+      if (dias > 15 || vencida) {
+        alertas.push({
+          tipo: 'transito_atrasado',
+          titulo: `Trânsito atrasado: Pedido #${ped.id}`,
+          descricao: vencida
+            ? `Data prevista (${ped.dataPrevista}) vencida! (${dias}d em trânsito)`
+            : `Há ${dias} dias em trânsito (acima de 15 dias).`,
+          severidade: (vencida || dias >= 25) ? 'alta' : 'media',
+          acaoTexto: '🚚 Abrir Trânsito',
+          acaoFn: 'abrirTransito',
+          dados: { pedidoId: ped.id, dias }
+        });
+      }
+    });
+
+    // Ordena severidade alta primeiro
+    alertas.sort((a, b) => (a.severidade === b.severidade ? 0 : (a.severidade === 'alta' ? -1 : 1)));
+    _alertasCacheSig = sig;
+    _alertasCacheList = alertas;
+    state.ultimaVerificacaoAlertas = new Date().toISOString();
+    return alertas;
+  }
+
+  function renderAlertasPanel(force = false) {
+    const alertas = calcularAlertas(force);
+    const total = alertas.length;
+    const altCount = alertas.filter(a => a.severidade === 'alta').length;
+
+    const badgeTools = document.getElementById('badgeAlertasTools');
+    if (badgeTools) {
+      badgeTools.textContent = String(total);
+      badgeTools.style.display = total > 0 ? 'inline-flex' : 'none';
+    }
+
+    const sec = document.getElementById('alertasSection');
+    const counter = document.getElementById('alertasCounterBadge');
+    const lastEl = document.getElementById('alertasLastCheck');
+    const listEl = document.getElementById('alertasList');
+    const chev = document.getElementById('alertasChevron');
+    if (!sec || !counter || !listEl) return;
+
+    sec.classList.remove('has-alta', 'has-media');
+    counter.classList.remove('alta', 'media', 'ok');
+
+    if (total === 0) {
+      counter.classList.add('ok');
+      counter.textContent = '✅ Nenhum alerta no momento';
+      listEl.innerHTML = '<div style="font-size:12px;color:#94a3b8;padding:6px 2px;">Tudo em dia: estoque, frascos, encomendas e trânsito sem pendências críticas.</div>';
+    } else if (altCount > 0) {
+      sec.classList.add('has-alta');
+      counter.classList.add('alta');
+      counter.textContent = `🔴 ${total} alerta${total > 1 ? 's' : ''} (${altCount} alta)`;
+    } else {
+      sec.classList.add('has-media');
+      counter.classList.add('media');
+      counter.textContent = `🟡 ${total} alerta${total > 1 ? 's' : ''}`;
+    }
+
+    if (lastEl && state.ultimaVerificacaoAlertas) {
+      lastEl.textContent = `Verificado: ${new Date(state.ultimaVerificacaoAlertas).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+
+    if (total > 0) {
+      listEl.innerHTML = alertas.map((a, idx) => `
+        <div class="alerta-item ${a.severidade}">
+          <div class="alerta-info">
+            <div class="alerta-titulo">${a.severidade === 'alta' ? '🔴' : '🟡'} ${escapeHtml(a.titulo)}</div>
+            <div class="alerta-desc">${escapeHtml(a.descricao)}</div>
+          </div>
+          <button type="button" class="btn alerta-btn ${a.severidade === 'alta' ? 'btn-amber' : 'btn-primary'}" onclick="window.CRM.executarAcaoAlerta(${idx})">
+            ${escapeHtml(a.acaoTexto)}
+          </button>
+        </div>
+      `).join('');
+    }
+
+    listEl.style.display = _alertasExpanded ? 'flex' : 'none';
+    if (chev) chev.textContent = _alertasExpanded ? '▴' : '▾';
+  }
+
+  function getListaDoDiaItems() {
+    const hoje = new Date().toISOString().slice(0, 10);
+    return (state.encomendas || [])
+      .filter(e => e && e.etapa !== 'perdido' && e.etapa !== 'pos_venda' && e.status !== 'entregue')
+      .filter(e => !e.proximaAcaoEm || String(e.proximaAcaoEm) <= hoje)
+      .sort((a, b) => {
+        const da = a.proximaAcaoEm || '0000-00-00';
+        const db = b.proximaAcaoEm || '0000-00-00';
+        return da.localeCompare(db);
+      });
   }
 
   const rawCatalog = (window.SHAPETOTAL_RAW && window.SHAPETOTAL_RAW.productos) ? window.SHAPETOTAL_RAW.productos : [];
@@ -1496,6 +1822,7 @@
                 <button class="btn internal-only" style="background:#312e81; color:#c7d2fe; font-weight:700; border:1px solid #4338ca;" title="Registrar encomenda deste produto para cliente" onclick="window.CRM.openNovaEncomendaModal(${p.id})">📝 Encomendar</button>
                 <button class="btn internal-only" style="background:#064e3b; color:#a7f3d0; font-weight:700; border:1px solid #059669;" title="Adicionar este produto ao pedido do fornecedor no Paraguai" onclick="window.CRM.adicionarAoPedidoFornecedor(${p.id})">🇵🇾 Pedir PY</button>
                 <button class="btn" onclick="window.CRM.copySingleWhatsApp(${p.id})">📲 Copiar Linha</button>
+                <button class="btn internal-only" title="Extrato de movimentações e saldo" onclick="window.CRM.openExtratoModal(${p.id})">📜</button>
                 <button class="btn internal-only" title="Editar preço/descrição" onclick="window.CRM.openEditModal(${p.id})">✏️</button>
               </div>
             </div>
@@ -1946,8 +2273,11 @@
     renderDecisionStrip();
     renderDispStatusStrip();
     renderSavedFilters();
+    renderAlertasPanel();
     const cliBadge = document.getElementById('countClientesBadge');
     if (cliBadge) cliBadge.textContent = String((state.clientes || []).length);
+    const listaDiaBadge = document.getElementById('countListaDiaBadge');
+    if (listaDiaBadge) listaDiaBadge.textContent = String(getListaDoDiaItems().length);
 
     const opCont = document.getElementById('operacaoDiaContainer');
     const prodCont = document.getElementById('productsContainer');
@@ -2232,6 +2562,201 @@
       }
       navigator.clipboard?.writeText(`CLIENTES PARA AVISAR (PEDIDO #${ped.id}):\n${resumo}`);
       alert(`📲 Clientes aguardando itens do pedido #${ped.id} (lista copiada!):\n\n${resumo}\n\nUse o painel "⚡ Operação do Dia" -> "Clientes para Avisar Hoje" para disparar 1 a 1 no WhatsApp.`);
+    },
+
+    // =========================================================================
+    // MOTOR DE ALERTAS, EXTRATO DE MOVIMENTAÇÕES & LISTA DO DIA (FUNIL)
+    // =========================================================================
+    calcularAlertas(force = false) {
+      return calcularAlertas(force);
+    },
+
+    renderAlertasPanel(force = false) {
+      renderAlertasPanel(force);
+    },
+
+    toggleAlertasPanel() {
+      _alertasExpanded = !_alertasExpanded;
+      const listEl = document.getElementById('alertasList');
+      const chev = document.getElementById('alertasChevron');
+      if (listEl) listEl.style.display = _alertasExpanded ? 'flex' : 'none';
+      if (chev) chev.textContent = _alertasExpanded ? '▴' : '▾';
+    },
+
+    executarAcaoAlerta(idx) {
+      const alertas = calcularAlertas();
+      const a = alertas[Number(idx)];
+      if (!a) return;
+      if (a.acaoFn === 'pedirFornecedor' && a.dados && a.dados.produtoId) {
+        window.CRM.adicionarAoPedidoFornecedor(a.dados.produtoId);
+      } else if (a.acaoFn === 'vendaDose' && a.dados && a.dados.produtoId) {
+        window.CRM.openVendaRapidaModal(a.dados.produtoId);
+      } else if (a.acaoFn === 'abrirEncomenda') {
+        window.CRM.openEncomendasModal('clientes');
+      } else if (a.acaoFn === 'abrirTransito') {
+        window.CRM.openTransitoModal();
+      } else if (a.acaoFn === 'abrirListaDia') {
+        window.CRM.openListaDoDiaModal();
+      }
+    },
+
+    getSaldo(produtoId) {
+      return getSaldo(produtoId);
+    },
+
+    registrarMovimento(tipo, produtoId, qtd, referenciaId, motivo, custoUnitReal = null) {
+      return registrarMovimento(tipo, produtoId, qtd, referenciaId, motivo, custoUnitReal);
+    },
+
+    openExtratoModal(pid) {
+      const modal = document.getElementById('extratoModal');
+      const title = document.getElementById('extratoModalTitle');
+      const sub = document.getElementById('extratoModalSub');
+      const body = document.getElementById('extratoModalBody');
+      if (!modal || !body) return;
+
+      const raw = rawCatalog.find(p => Number(p.id) === Number(pid));
+      const nome = raw ? raw.nombre : `SKU #${pid}`;
+      const saldoInfo = getSaldo(pid);
+      const disp = getDisponibilidade(pid);
+      const custoReal = state.custosReais && state.custosReais[pid] ? Number(state.custosReais[pid]) : null;
+      const movs = (state.movimentacoes || []).filter(m => Number(m.produtoId) === Number(pid));
+
+      if (title) title.textContent = `📜 Extrato: ${nome}`;
+      if (sub) {
+        sub.textContent = `Estoque BH: ${saldoInfo.saldoBH} un · Disponível: ${disp.disponivel} un · Reservado: ${disp.reservado} un · Saldo Movimentos: ${saldoInfo.saldoMov} un${custoReal ? ` · Custo Real: ${formatBRL(custoReal)}` : ''}`;
+      }
+
+      if (!movs.length) {
+        body.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:24px;">Nenhuma movimentação registrada para este produto ainda. Toda entrada, venda, reserva ou ajuste a partir de agora aparecerá aqui.</div>`;
+      } else {
+        const tipoBadge = {
+          entrada: '<span style="color:#34d399;font-weight:800;">📥 ENTRADA</span>',
+          venda: '<span style="color:#f87171;font-weight:800;">💰 VENDA</span>',
+          devolucao: '<span style="color:#38bdf8;font-weight:800;">↩️ DEVOLUÇÃO</span>',
+          ajuste: '<span style="color:#fbbf24;font-weight:800;">⚙️ AJUSTE</span>',
+          perda: '<span style="color:#ef4444;font-weight:800;">⚠️ PERDA</span>',
+          reserva: '<span style="color:#c084fc;font-weight:800;">🔒 RESERVA</span>',
+          liberacao: '<span style="color:#94a3b8;font-weight:800;">🔓 LIBERAÇÃO</span>'
+        };
+        body.innerHTML = `
+          <table class="crm-table" style="font-size:12px;">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Tipo</th>
+                <th>Qtd</th>
+                <th>Motivo / Ref</th>
+                <th>Custo Real</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${movs.map(m => `
+                <tr>
+                  <td>${m.data ? new Date(m.data).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '-'}</td>
+                  <td>${tipoBadge[m.tipo] || escapeHtml(m.tipo)}</td>
+                  <td style="font-weight:800; color:${m.qtd > 0 ? '#34d399' : '#f87171'};">${m.qtd > 0 ? '+' : ''}${m.qtd}</td>
+                  <td>${escapeHtml(m.motivo || m.referenciaId || '-')}</td>
+                  <td>${m.custoUnitReal ? formatBRL(m.custoUnitReal) : '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+      modal.classList.add('open');
+    },
+
+    openListaDoDiaModal() {
+      const modal = document.getElementById('listaDoDiaModal');
+      const body = document.getElementById('listaDoDiaBody');
+      if (!modal || !body) return;
+
+      const items = getListaDoDiaItems();
+      if (!items.length) {
+        body.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:26px;">✅ Nenhuma tarefa vencida ou para hoje! Todas as encomendas ativas estão com próxima ação futura agendada.</div>`;
+        modal.classList.add('open');
+        return;
+      }
+
+      body.innerHTML = items.map(e => {
+        const etapaAtual = e.etapa || 'negociacao';
+        const proxData = e.proximaAcaoEm || addDaysIsoDate(0);
+        const telLimpo = String(e.telefone || '').replace(/\D/g, '');
+        const waUrl = telLimpo ? `https://wa.me/55${telLimpo.replace(/^55/, '')}` : '';
+        const itensTxt = getEncomendaItens(e).map(it => `${it.qtd}x ${it.produtoNome}`).join(', ');
+        const optionsHtml = FUNIL_ETAPAS.map(et => `<option value="${et.id}" ${et.id === etapaAtual ? 'selected' : ''}>${et.label}</option>`).join('');
+        return `
+          <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+              <div>
+                <b style="color:#fff;font-size:13.5px;">👤 ${escapeHtml(e.cliente || 'Cliente')}</b>
+                <span style="font-size:11px;color:#fbbf24;margin-left:6px;">${formatBRL(e.valorTotal || 0)}</span>
+                <div style="font-size:11.5px;color:#94a3b8;margin-top:2px;">${escapeHtml(itensTxt || 'Item não informado')}</div>
+              </div>
+              <div style="display:flex;gap:6px;">
+                ${waUrl ? `<a href="${waUrl}" target="_blank" class="btn btn-green" style="font-size:11px;padding:4px 9px;text-decoration:none;">💬 WhatsApp</a>` : ''}
+                <button type="button" class="btn" style="font-size:11px;padding:4px 9px;" onclick="document.getElementById('listaDoDiaModal').classList.remove('open'); window.CRM.openEncomendasModal('clientes');">📝 Ver Pedido</button>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:160px 1fr 130px auto;gap:8px;align-items:center;">
+              <select id="ldEtapa_${e.id}" class="filter-select" style="font-size:11.5px;" onchange="window.CRM.onEtapaFunilChange('${e.id}', this.value)">
+                ${optionsHtml}
+              </select>
+              <input id="ldAcao_${e.id}" type="text" value="${escapeHtml(e.proximaAcao || '')}" placeholder="Próxima ação..." style="background:#020617;border:1px solid #334155;color:#fff;border-radius:6px;padding:6px 8px;font-size:12px;" />
+              <input id="ldData_${e.id}" type="date" value="${escapeHtml(proxData)}" style="background:#020617;border:1px solid #334155;color:#fff;border-radius:6px;padding:5px 7px;font-size:12px;" />
+              <button type="button" class="btn btn-primary" style="font-size:11.5px;padding:6px 10px;" onclick="window.CRM.updateEncomendaFunil('${e.id}')">💾 Salvar</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      modal.classList.add('open');
+    },
+
+    onEtapaFunilChange(encId, novaEtapa) {
+      const sug = FUNIL_SUGESTOES[novaEtapa];
+      const acaoEl = document.getElementById(`ldAcao_${encId}`);
+      const dataEl = document.getElementById(`ldData_${encId}`);
+      if (sug) {
+        if (acaoEl && sug.acao) acaoEl.value = sug.acao;
+        if (dataEl) dataEl.value = addDaysIsoDate(sug.dias || 0);
+      }
+    },
+
+    updateEncomendaFunil(encId) {
+      const enc = (state.encomendas || []).find(e => String(e.id) === String(encId));
+      if (!enc) return;
+      const novaEtapa = document.getElementById(`ldEtapa_${encId}`)?.value || enc.etapa || 'negociacao';
+      const novaAcao = (document.getElementById(`ldAcao_${encId}`)?.value || '').trim();
+      const novaData = document.getElementById(`ldData_${encId}`)?.value || addDaysIsoDate(0);
+
+      if (novaEtapa === 'perdido' && !enc.motivoPerda) {
+        const motivo = prompt('Informe o motivo da perda (preço, comprou de outro, sem dinheiro, sumiu, produto indisponível, desconfiança, fora do perfil):');
+        if (!motivo || !motivo.trim()) {
+          alert('Motivo de perda é obrigatório para marcar como Perdido.');
+          return;
+        }
+        enc.motivoPerda = motivo.trim();
+        // Libera reserva se estava reservado
+        if (enc.status === 'pendente' || enc.status === 'pedido_ao_fornecedor') {
+          getEncomendaItens(enc).forEach(it => {
+            registrarMovimento('liberacao', it.produtoId, -(Number(it.qtd) || 1), enc.id, `Perda: ${enc.motivoPerda}`);
+          });
+          enc.status = 'cancelada';
+        }
+      }
+
+      if (enc.etapa !== novaEtapa) {
+        enc.etapa = novaEtapa;
+        enc.etapaDesde = new Date().toISOString();
+      }
+      enc.proximaAcao = novaAcao;
+      enc.proximaAcaoEm = novaData;
+
+      saveState();
+      renderAll();
+      window.CRM.openListaDoDiaModal();
+      showToast('Etapa e próxima ação atualizadas!');
     },
 
     // =========================================================================
@@ -2620,6 +3145,7 @@
 
       const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
       const encId = 'enc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      registrarMovimento('venda', p.id, -qty, saleId, `Venda Rápida: ${cliente}`);
       state.vendas = state.vendas || [];
       state.vendas.unshift({
         id: saleId, data: nowIso, produtoId: p.id, produtoNome: p.nombre,
@@ -2933,6 +3459,10 @@
         delete state.meuEstoque[id];
       } else {
         state.meuEstoque[id] = next;
+      }
+      const realDelta = next - current;
+      if (realDelta !== 0) {
+        registrarMovimento('ajuste', id, realDelta, '', 'Ajuste manual +/- no card');
       }
       logAuditoria('ajuste_estoque', `SKU ${id}: ${current} -> ${next}`);
       saveState();
@@ -3519,6 +4049,7 @@
       const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
       const encId = 'enc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
       const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
+      registrarMovimento('venda', p.id, -qty, saleId, `Venda: ${client}`);
 
       const venda = {
         id: saleId,
@@ -3995,11 +4526,40 @@
 
       const totalItens = (ped.itens || []).reduce((s, it) => s + Number(it.qtd || 0), 0);
       if (confirm(`Confirmar o recebimento físico do pedido #${ped.id}? ${totalItens} unidades serão adicionadas automaticamente ao seu Estoque de Pronta Entrega em BH.`)) {
+        const extrasRaw = prompt('Despesas extras da compra (freteiro, taxa, preparo em R$ — digite 0 se não houver):', '0');
+        const despesasExtras = Math.max(0, Number(String(extrasRaw || '0').replace(',', '.')) || 0);
+        const custoBasePed = Number(ped.custo_total_reais || 0);
+
         if (!state.meuEstoque) state.meuEstoque = {};
+        if (!state.custosReais) state.custosReais = {};
+
+        // Soma valor base por item para rateio proporcional das despesas extras
+        const totalValorItens = (ped.itens || []).reduce((acc, it) => {
+          const rawIt = rawCatalog.find(p => Number(p.id) === Number(it.id_catalogo));
+          const unitBase = Number(it.custo_unit_brl || (rawIt ? computeProduct(rawIt).custo : 0)) || 1;
+          return acc + unitBase * (Number(it.qtd) || 0);
+        }, 0);
 
         (ped.itens || []).forEach(it => {
-          const pid = it.id_catalogo;
-          state.meuEstoque[pid] = (Number(state.meuEstoque[pid]) || 0) + Number(it.qtd || 0);
+          const pid = Number(it.id_catalogo);
+          const qIn = Number(it.qtd || 0);
+          const prevQtd = Number(state.meuEstoque[pid] || 0);
+          state.meuEstoque[pid] = prevQtd + qIn;
+
+          const rawIt = rawCatalog.find(p => Number(p.id) === pid);
+          const unitBase = Number(it.custo_unit_brl || (rawIt ? computeProduct(rawIt).custo : 0)) || (totalItens > 0 ? custoBasePed / totalItens : 0);
+          const propExtra = totalValorItens > 0
+            ? (despesasExtras * ((unitBase * qIn) / totalValorItens)) / Math.max(1, qIn)
+            : (totalItens > 0 ? despesasExtras / totalItens : 0);
+          const custoUnitReal = Math.round((unitBase + propExtra) * 100) / 100;
+
+          // Atualiza custo real por média ponderada quando já havia saldo em BH
+          const prevCusto = Number(state.custosReais[pid] || unitBase || 0);
+          state.custosReais[pid] = (prevQtd > 0 && prevCusto > 0)
+            ? Math.round((((prevQtd * prevCusto) + (qIn * custoUnitReal)) / (prevQtd + qIn)) * 100) / 100
+            : custoUnitReal;
+
+          registrarMovimento('entrada', pid, qIn, `TR-${ped.id}`, `Entrada Trânsito #${ped.id}${despesasExtras > 0 ? ` (+R$${despesasExtras} rateado)` : ''}`, custoUnitReal);
         });
 
         // Marca encomendas de clientes ligadas aos itens recebidos como 'chegou_bh' para avisar hoje
@@ -5446,6 +6006,10 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         telefone,
         endereco,
         status: isProntaEntrega ? 'entregue' : 'pendente',
+        etapa: isProntaEntrega ? 'entrega' : 'fechamento',
+        etapaDesde: new Date().toISOString(),
+        proximaAcao: isProntaEntrega ? 'Pós-venda D+2: conferir entrega e uso' : 'Confirmar pagamento/sinal e separar ou pedir ao fornecedor',
+        proximaAcaoEm: isProntaEntrega ? addDaysIsoDate(2) : addDaysIsoDate(1),
         tipoOperacao: currentPedidoOperacao,
         produtoId: primeiroItem.produtoId,
         produtoNome: primeiroItem.produtoNome,
@@ -5463,6 +6027,13 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         loteId: null,
         vendaId: isProntaEntrega ? saleId : null
       };
+      novaEncomendaItens.forEach(it => {
+        if (isProntaEntrega) {
+          registrarMovimento('venda', it.produtoId, -(Number(it.qtd) || 1), saleId, `Pronta Entrega (${encId}): ${cliente}`);
+        } else {
+          registrarMovimento('reserva', it.produtoId, Number(it.qtd) || 1, encId, `Reserva Encomenda: ${cliente}`);
+        }
+      });
 
       if (!Array.isArray(state.encomendas)) state.encomendas = [];
       state.encomendas.unshift(newEnc);
@@ -5614,8 +6185,17 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       state.vendas.unshift(venda);
       upsertClienteFromOperacao({ nome: client, telefone: phone, endereco: address, valor: totalComFrete, data: dateVal, obs: notes }, true);
 
-      // 3. Atualiza status da encomenda
+      // 3. Atualiza status da encomenda, baixa reserva e registra movimento de venda
+      itens.forEach(it => {
+        const q = Number(it.qtd) || 1;
+        registrarMovimento('liberacao', it.produtoId, -q, enc.id, `Baixa p/ entrega: ${enc.cliente}`);
+        registrarMovimento('venda', it.produtoId, -q, saleId, `Entrega encomenda ${enc.id}: ${enc.cliente}`);
+      });
       enc.status = 'entregue';
+      enc.etapa = 'entrega';
+      enc.etapaDesde = new Date().toISOString();
+      enc.proximaAcao = 'Pós-venda D+2: conferir entrega e uso';
+      enc.proximaAcaoEm = addDaysIsoDate(2);
       enc.vendaId = saleId;
 
       saveState();
@@ -5645,8 +6225,11 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       // 1. Devolve os medicamentos ao estoque físico em BH
       if (!state.meuEstoque) state.meuEstoque = {};
       itens.forEach(it => {
+        const q = Number(it.qtd) || 1;
         const curStock = Number(state.meuEstoque[it.produtoId] || 0);
-        state.meuEstoque[it.produtoId] = curStock + (Number(it.qtd) || 1);
+        state.meuEstoque[it.produtoId] = curStock + q;
+        registrarMovimento('devolucao', it.produtoId, q, enc.id, `Estorno entrega: ${enc.cliente}`);
+        registrarMovimento('reserva', it.produtoId, q, enc.id, `Retorno para pendente: ${enc.cliente}`);
       });
 
       // 2. Se houver venda registrada no histórico oficial, estorna
@@ -5684,7 +6267,9 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (enc.status === 'entregue') {
         if (!state.meuEstoque) state.meuEstoque = {};
         itens.forEach(it => {
-          state.meuEstoque[it.produtoId] = (Number(state.meuEstoque[it.produtoId]) || 0) + (Number(it.qtd) || 1);
+          const q = Number(it.qtd) || 1;
+          state.meuEstoque[it.produtoId] = (Number(state.meuEstoque[it.produtoId]) || 0) + q;
+          registrarMovimento('devolucao', it.produtoId, q, enc.id, `Cancelamento encomenda entregue: ${enc.cliente}`);
         });
         if (enc.vendaId && Array.isArray(state.vendas)) {
           const v = state.vendas.find(x => String(x.id) === String(enc.vendaId));
@@ -5693,6 +6278,11 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
             v.estornadaEm = new Date().toISOString();
           }
         }
+      } else if (enc.status === 'pendente' || enc.status === 'pedido_ao_fornecedor' || enc.status === 'chegou_bh') {
+        itens.forEach(it => {
+          const q = Number(it.qtd) || 1;
+          registrarMovimento('liberacao', it.produtoId, -q, enc.id, `Cancelamento reserva: ${enc.cliente}`);
+        });
       }
 
       state.encomendas = state.encomendas.filter(e => e.id !== encId);
