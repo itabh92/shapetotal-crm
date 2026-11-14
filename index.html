@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="icon" type="image/png" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=20261114_0030" />
 </head>
 <body>
   <!-- Password Lock Screen -->
@@ -37,20 +37,35 @@
           <div class="brand-logo">ST</div>
           <div>
             <div class="brand-title">SHAPE TOTAL · CRM & ESTOQUE BH</div>
-            <div class="brand-sub">891 SKUs Oficiais · Gestão de Pronta Entrega BH, Compras em Trânsito & Baixa de Vendas</div>
+            <div class="brand-sub">938 SKUs Oficiais · Gestão de Pronta Entrega BH, Compras em Trânsito & Baixa de Vendas</div>
           </div>
         </div>
 
-        <div class="topbar-quick-actions">
-          <button class="btn btn-green internal-only" style="background:#059669; color:#ffffff; font-weight:800; border:1px solid #34d399;" onclick="window.CRM.openSaleModal()">⚡ Nova Venda</button>
-          <button class="btn internal-only" style="background:#4f46e5; color:#ffffff; font-weight:800; border:1px solid #818cf8;" onclick="window.CRM.openEncomendasModal()" title="Gerenciar Encomendas de Clientes & Concentrar Pedido p/ Fornecedor">📝 Encomendas (<span id="countEncomendasBadge">0</span>)</button>
-          <button class="btn internal-only" style="background:#047857; color:#ffffff; font-weight:800; border:1px solid #10b981;" onclick="window.CRM.openPedidoFornecedorModal()" title="Montar lista de compras e reserva para enviar ao fornecedor no WhatsApp">🇵🇾 Pedido Fornecedor</button>
-          <button class="btn btn-blue internal-only" style="font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">📋 Vendas (<span id="countVendasBadge">0</span>)</button>
-          <button class="btn internal-only" style="background:#0f766e; color:#ffffff; font-weight:800; border:1px solid #14b8a6;" onclick="window.CRM.openClientesModal()" title="CRM de Clientes, Histórico & WhatsApp">👥 Clientes (<span id="countClientesBadge">0</span>)</button>
-          <button class="btn btn-amber internal-only" style="font-weight:800; border:1px solid #fbbf24; background:#b45309; color:#fff;" onclick="window.CRM.openTransitoModal()">🚚 A Chegar (<span id="countTransitoBadge">27</span>)</button>
-          <button class="btn internal-only" style="background:#0284c7; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openSyncModal()" title="Sincronize estoque, vendas e doses entre celular e computador">☁️ Sincronizar</button>
-          <button id="btnClientMode" class="btn">👁️ Modo Cliente</button>
-          <button id="btnToggleTopbarTools" class="btn" style="background:#1e293b; border-color:#475569; color:#38bdf8; font-weight:800;" onclick="window.CRM.toggleTopbarTools()">🛠️ Ferramentas <span id="badgeAlertasTools" class="badge-alertas" style="display:none;">0</span> ▾</button>
+        <div class="topbar-quick-actions" role="navigation" aria-label="Ações principais do CRM">
+          <!-- Grupo 1: Venda -->
+          <div class="topbar-group internal-only" data-group-label="Venda">
+            <button class="btn btn-green" style="background:#059669; color:#ffffff; font-weight:800; border:1px solid #34d399;" onclick="window.CRM.openVendaRapidaModal()" title="Venda rápida em 3 cliques com baixa imediata e recibo WhatsApp (Ctrl+N)">⚡ Venda Rápida</button>
+            <button class="btn btn-blue" style="font-weight:700;" onclick="window.CRM.openSalesHistoryModal()" title="Histórico de vendas, lucro e contas a receber">💰 Vendas (<span id="countVendasBadge">0</span>)</button>
+          </div>
+
+          <!-- Grupo 2: Encomendas & Dia -->
+          <div class="topbar-group internal-only" data-group-label="Encomendas">
+            <button class="btn" style="background:#4f46e5; color:#ffffff; font-weight:800; border:1px solid #818cf8;" onclick="window.CRM.openEncomendasModal()" title="Gerenciar Encomendas de Clientes & Concentrar Pedido p/ Fornecedor">📝 Encomendas (<span id="countEncomendasBadge">0</span>)</button>
+            <button class="btn" style="background:#0c4a6e; border:1px solid #0284c7; color:#bae6fd; font-weight:800;" onclick="window.CRM.openListaDoDiaModal()" title="Ações vencidas, para hoje, reservas e avisos de chegada">📋 Lista do Dia (<span id="countListaDiaBadge">0</span>)</button>
+            <button class="btn" style="background:#0f766e; color:#ffffff; font-weight:800; border:1px solid #14b8a6;" onclick="window.CRM.openClientesModal()" title="CRM de Clientes, Histórico & WhatsApp">👥 Clientes (<span id="countClientesBadge">0</span>)</button>
+          </div>
+
+          <!-- Grupo 3: Estoque/Compras -->
+          <div class="topbar-group internal-only" data-group-label="Estoque/Compras">
+            <button class="btn" style="background:#047857; color:#ffffff; font-weight:800; border:1px solid #10b981;" onclick="window.CRM.gerarPedidoFornecedorDasEncomendas()" title="Gerar pedido consolidado ao fornecedor a partir das encomendas pendentes">🇵🇾 Gerar Pedido Fornecedor</button>
+            <button class="btn btn-amber" style="font-weight:800; border:1px solid #fbbf24; background:#b45309; color:#fff;" onclick="window.CRM.openTransitoModal()" title="Cargas em trânsito e entrada com custo real">🚚 A Chegar (<span id="countTransitoBadge">27</span>)</button>
+          </div>
+
+          <!-- Grupo 4: Ferramentas -->
+          <div class="topbar-group" data-group-label="Ferramentas">
+            <button id="btnClientMode" class="btn" title="Ocultar custos, margens e botões administrativos para mostrar a tela ao cliente">👁️ Modo Cliente</button>
+            <button id="btnToggleTopbarTools" class="btn internal-only" style="background:#1e293b; border-color:#475569; color:#38bdf8; font-weight:800;" onclick="window.CRM.toggleTopbarTools()">🛠️ Ferramentas <span id="badgeAlertasTools" class="badge-alertas" style="display:none;">0</span> ▾</button>
+          </div>
         </div>
       </div>
 
@@ -78,19 +93,29 @@
           <button id="btnToggleMargins" class="btn btn-amber">⚙️ Margens por Grupo</button>
         </div>
 
-        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-          <button class="btn internal-only" style="background:#0891b2; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')">💉 Doses Avulsas WhatsApp</button>
-          <button class="btn btn-green internal-only" style="background:#065f46; color:#ffffff; font-weight:700;" onclick="window.CRM.openWhatsAppCatalogModal('meu_estoque')">📍 WhatsApp Pronta Entrega</button>
-          <button class="btn btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_especial')">📋 Tabela Tirzepatida & Reta</button>
-          <button class="btn btn-primary" onclick="window.CRM.openWhatsAppCatalogModal('grok')">🧬 Guia Grok WhatsApp</button>
-          <button class="btn btn-blue" onclick="window.CRM.openWhatsAppCatalogModal('filtro')">📲 Lista WhatsApp Atual</button>
-          <button class="btn internal-only" style="background:#7c3aed; color:#ffffff; font-weight:800;" onclick="window.CRM.openNewProductModal()" title="Cadastrar um produto novo no catálogo local">➕ Novo Produto</button>
-          <button id="btnViewMode" class="btn">📊 Ver Planilha</button>
-          <button class="btn internal-only" style="background:#1e293b; color:#94a3b8; font-size:11px;" title="Restaura os 32 itens físicos canônicos de BH" onclick="window.CRM.resetEstoqueBase()">🔄 Reset Estoque (32 un)</button>
-          <button class="btn internal-only" onclick="window.CRM.exportCSV()">📥 Excel/CSV</button>
-          <button class="btn internal-only" onclick="window.CRM.verLogAuditoria()" title="Ver log das últimas ações críticas">📜 Auditoria</button>
-          <button class="btn internal-only" onclick="window.CRM.alterarSenhaAcesso()" title="Alterar senha personalizada de acesso">🔑 Alterar Senha</button>
-          <button class="btn" onclick="window.CRM.lockApp()" title="Bloquear tela">🔒 Sair</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+          <!-- Barra Consolidada de Mensagens WhatsApp -->
+          <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center; background:#0b1120; padding:4px 8px; border-radius:8px; border:1px solid #1e293b;">
+            <span style="font-size:11px; font-weight:800; color:#34d399; margin-right:2px;">📲 Gerar Mensagem WhatsApp:</span>
+            <button class="btn btn-xs btn-green internal-only" style="background:#065f46; color:#ffffff; font-weight:700;" onclick="window.CRM.openWhatsAppCatalogModal('meu_estoque')" title="Lista do estoque pronta entrega em BH">📍 Pronta Entrega</button>
+            <button class="btn btn-xs internal-only" style="background:#0891b2; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')" title="Tabela de doses fracionadas">💉 Doses Avulsas</button>
+            <button class="btn btn-xs btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_especial')" title="Tabela oficial Tirzepatida e Retatrutida">📋 Tirz &amp; Reta</button>
+            <button class="btn btn-xs btn-primary" onclick="window.CRM.openWhatsAppCatalogModal('grok')" title="Guia explicativo de peptídeos e blends">🧬 Guia Peptídeos</button>
+            <button class="btn btn-xs btn-blue" onclick="window.CRM.openWhatsAppCatalogModal('filtro')" title="Lista com os produtos do filtro atual">📲 Lista Filtro Atual</button>
+          </div>
+
+          <!-- Ações Administrativas e Sistema -->
+          <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+            <button class="btn btn-xs internal-only" style="background:#1e1b4b; border:1px solid #6366f1; color:#c7d2fe; font-weight:800;" onclick="window.CRM.openPaineisComerciaisModal()" title="Top 10 mais vendidos, produtos parados e estoque crítico">📊 Painéis Comerciais</button>
+            <button class="btn btn-xs internal-only" style="background:#7c3aed; color:#ffffff; font-weight:800;" onclick="window.CRM.openNewProductModal()" title="Cadastrar um produto novo no catálogo local">➕ Novo Produto</button>
+            <button class="btn btn-xs internal-only" style="background:#0284c7; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openSyncModal()" title="Sincronizar ou exportar backup entre celular e computador">☁️ Sincronizar</button>
+            <button id="btnViewMode" class="btn btn-xs">📊 Ver Planilha</button>
+            <button class="btn btn-xs internal-only" onclick="window.CRM.exportCSV()" title="Exportar planilha CSV">📥 CSV</button>
+            <button class="btn btn-xs internal-only" onclick="window.CRM.verLogAuditoria()" title="Ver log das últimas ações críticas">📜 Auditoria</button>
+            <button class="btn btn-xs internal-only" style="background:#1e293b; color:#94a3b8;" title="Restaura os 32 itens físicos canônicos de BH" onclick="window.CRM.resetEstoqueBase()">🔄 Reset 32 un</button>
+            <button class="btn btn-xs internal-only" onclick="window.CRM.alterarSenhaAcesso()" title="Alterar senha personalizada de acesso">🔑 Senha</button>
+            <button class="btn btn-xs" onclick="window.CRM.lockApp()" title="Bloquear tela">🔒 Sair</button>
+          </div>
         </div>
       </div>
     </div>
@@ -113,7 +138,7 @@
     <section class="kpi-strip internal-only">
       <div class="kpi-card">
         <div id="kpiLabel1" class="kpi-label">Produtos Filtrados</div>
-        <div id="kpiCount" class="kpi-value">891 SKUs</div>
+        <div id="kpiCount" class="kpi-value">938 SKUs</div>
         <div id="kpiCountSub" class="kpi-sub">Carregando...</div>
       </div>
       <div class="kpi-card">
@@ -133,45 +158,32 @@
       </div>
     </section>
 
-    <!-- Disponibilidade Real Status Strip -->
+    <!-- Disponibilidade Real & Decisão Operacional Unificada (sem duplicidades) -->
     <section id="dispStatusStrip" class="disp-status-strip internal-only">
-      <button class="disp-stat-btn disp-green" onclick="window.CRM.filterByDisponibilidade('disponivel_agora')">
-        🟢 Pronta Entrega: <span id="statDispPronta">0</span>
+      <button class="disp-stat-btn disp-green" onclick="window.CRM.filterByDisponibilidade('disponivel_agora')" title="Filtrar produtos livres para venda imediata em BH">
+        🟢 Livre BH: <span id="statDispPronta">0</span>
       </button>
-      <button class="disp-stat-btn disp-amber" onclick="window.CRM.filterByDisponibilidade('reservado_clientes')">
+      <button class="disp-stat-btn disp-amber" onclick="window.CRM.filterByDisponibilidade('reservado_clientes')" title="Filtrar produtos reservados em encomendas de clientes">
         🟡 Reservado: <span id="statDispReservado">0</span>
       </button>
-      <button class="disp-stat-btn disp-blue" onclick="window.CRM.openTransitoModal()">
+      <button class="disp-stat-btn disp-blue" onclick="window.CRM.openTransitoModal()" title="Abrir cargas em trânsito chegando em BH">
         🔵 Chegando: <span id="statDispChegando">0</span>
       </button>
-      <button class="disp-stat-btn" style="background:rgba(168,85,247,0.14);color:#c084fc;border:1px solid rgba(168,85,247,0.45);" onclick="window.CRM.openEncomendasModal()">
-        📦 A pedir fornecedor: <span id="statDispPedir">0</span>
+      <button class="disp-stat-btn" style="background:rgba(16,185,129,0.14);color:#34d399;border:1px solid rgba(16,185,129,0.45);" onclick="window.CRM.gerarPedidoFornecedorDasEncomendas()" title="Consolidar encomendas pendentes e abrir Pedido ao Fornecedor">
+        🇵🇾 A pedir fornecedor: <span id="statDispPedir">0</span>
       </button>
-    </section>
-
-    <!-- Decision Strip (Compact Executive Alerts) -->
-    <section id="decisionStrip" class="internal-only" style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 14px 0;">
-      <button class="btn" style="background:#064e3b; border:1px solid #10b981; color:#a7f3d0; font-size:12px; font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">
+      <button class="disp-stat-btn" style="background:rgba(14,165,233,0.16);color:#38bdf8;border:1px solid rgba(56,189,248,0.5);" onclick="window.CRM.avisarClientesChegada()" title="Avisar no WhatsApp clientes cujas encomendas já chegaram em BH">
+        📲 Avisar Clientes que Chegaram (<span id="countAvisarChegadaBadge">0</span>)
+      </button>
+      <button id="decisionStrip" class="disp-stat-btn" style="background:#064e3b; border:1px solid #10b981; color:#a7f3d0;" onclick="window.CRM.openSalesHistoryModal()" title="Lucro confirmado no mês atual">
         💰 Lucro Mês: <span id="decLucroMes">R$ 0,00</span>
       </button>
-      <button class="btn" style="background:#422006; border:1px solid #f59e0b; color:#fde68a; font-size:12px; font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">
+      <button class="disp-stat-btn" style="background:#422006; border:1px solid #f59e0b; color:#fde68a;" onclick="window.CRM.openSalesHistoryModal()" title="Vendas pendentes de pagamento">
         ⏳ A Receber: <span id="decAReceber">R$ 0,00</span>
       </button>
-      <button class="btn" style="background:#1e293b; border:1px solid #475569; color:#cbd5e1; font-size:12px; font-weight:700;" onclick="window.CRM.filterByGroup('meu_estoque')">
-        📦 Estoque Baixo BH: <span id="decEstoqueBaixo">0</span>
-      </button>
-      <button class="btn" style="background:#3b0764; border:1px solid #a855f7; color:#e9d5ff; font-size:12px; font-weight:700;" onclick="window.CRM.filterByGroup('meu_estoque')">
-        💉 Frasco &lt;20%: <span id="decFrascoBaixo">0</span>
-      </button>
-      <button class="btn" style="background:#450a0a; border:1px solid #ef4444; color:#fecaca; font-size:12px; font-weight:700;" onclick="window.CRM.filterByMargin('margem_baixa')">
-        ⚠️ Margem Baixa: <span id="decMargemBaixa">0</span>
-      </button>
-      <button class="btn" style="background:#1e1b4b; border:1px solid #6366f1; color:#c7d2fe; font-size:12px; font-weight:800;" onclick="window.CRM.openPaineisComerciaisModal()">
-        📊 Painéis Comerciais (Top 10 / Parados / Crítico)
-      </button>
-      <button class="btn" style="background:#0c4a6e; border:1px solid #0284c7; color:#bae6fd; font-size:12px; font-weight:800;" onclick="window.CRM.openListaDoDiaModal()">
-        📋 Lista do Dia (<span id="countListaDiaBadge">0</span>)
-      </button>
+      <span id="decEstoqueBaixo" style="display:none;">0</span>
+      <span id="decFrascoBaixo" style="display:none;">0</span>
+      <span id="decMargemBaixa" style="display:none;">0</span>
     </section>
 
     <!-- Painel Proativo de Alertas (Desktop & Mobile) -->
@@ -441,8 +453,8 @@
             📦 Lista somada de todos os clientes para enviar ao fornecedor:
           </span>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="btn btn-green" style="background:#047857; color:#fff; font-weight:800; font-size:12px; border:1px solid #10b981;" onclick="window.CRM.openPedidoFornecedorModal()" title="Abrir montador completo de pedido/reserva para fornecedor com fotos">
-              🇵🇾 Solicitar ao Fornecedor
+            <button class="btn btn-green" style="background:#047857; color:#fff; font-weight:800; font-size:12px; border:1px solid #10b981;" onclick="window.CRM.gerarPedidoFornecedorDasEncomendas()" title="Puxa automaticamente todas as encomendas pendentes e abre o Pedido ao Fornecedor">
+              🇵🇾 Gerar Pedido Fornecedor
             </button>
             <button class="btn btn-blue" style="background:#2563eb; color:#fff; font-weight:800; font-size:12px; border-color:#60a5fa;" onclick="window.CRM.openOrdemCompraVisualModal()" title="Visualizar cartões de compra com fotos grandes dos produtos para o fornecedor">
               🖼️ Ordem de Compra c/ Fotos
@@ -490,9 +502,14 @@
             <button class="btn btn-xs enc-filter-btn" style="font-size:11px; padding:3px 8px; color:#34d399;" onclick="window.CRM.filterEncomendas('chegou_bh', this)">🟢 Chegou em BH (<span id="countFiltroChegou">0</span>)</button>
             <button class="btn btn-xs enc-filter-btn" style="font-size:11px; padding:3px 8px; color:#94a3b8;" onclick="window.CRM.filterEncomendas('entregue', this)">✅ Entregues (<span id="countFiltroEntregue">0</span>)</button>
           </div>
-          <button class="btn btn-green" style="font-size:12px; font-weight:800; background:#059669; color:#fff;" onclick="window.CRM.switchEncomendasTab('nova')">
-            ➕ Nova Encomenda
-          </button>
+          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+            <button class="btn btn-xs" style="background:#0284c7; color:#fff; font-size:11.5px; font-weight:800;" onclick="window.CRM.avisarClientesChegada()" title="Filtrar e avisar no WhatsApp todos os clientes cujos produtos já chegaram em BH">
+              🎉 Avisar Clientes que Chegaram
+            </button>
+            <button class="btn btn-green" style="font-size:12px; font-weight:800; background:#059669; color:#fff;" onclick="window.CRM.switchEncomendasTab('nova')">
+              ➕ Nova Encomenda
+            </button>
+          </div>
         </div>
 
         <div style="max-height:380px; overflow-y:auto; border:1px solid #1e293b; border-radius:8px; background:#0b1120;">
@@ -1591,10 +1608,10 @@
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script type="module" src="dominio/index.js?v=20261114_0010"></script>
-  <script src="dados_catalogo.js?v=20261114_0010"></script>
-  <script src="app.js?v=20261114_0010"></script>
-  <script type="module" src="store/index.js?v=20261114_0010"></script>
+  <script type="module" src="dominio/index.js?v=20261114_0030"></script>
+  <script src="dados_catalogo.js?v=20261114_0030"></script>
+  <script src="app.js?v=20261114_0030"></script>
+  <script type="module" src="store/index.js?v=20261114_0030"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

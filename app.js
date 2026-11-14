@@ -446,6 +446,8 @@
       canonVistos: state.canonVistos || [],
       movimentacoes: state.movimentacoes || [],
       custosReais: state.custosReais || {},
+      pedidoFornecedorItens: state.pedidoFornecedorItens || [],
+      telefoneFornecedor: state.telefoneFornecedor || '',
       estoqueAtualizadoEm: state.estoqueAtualizadoEm || new Date().toISOString()
     };
   }
@@ -749,6 +751,8 @@
         canonVistos: state.canonVistos || [],
         movimentacoes: state.movimentacoes || [],
         custosReais: state.custosReais || {},
+        pedidoFornecedorItens: state.pedidoFornecedorItens || [],
+        telefoneFornecedor: state.telefoneFornecedor || '',
         estoqueAtualizadoEm: state.estoqueAtualizadoEm || new Date().toISOString(),
         ultimaVerificacaoAlertas: state.ultimaVerificacaoAlertas || null
       }));
@@ -1417,7 +1421,7 @@
     let reservado = 0;
     const reservasDetalhes = [];
     (state.encomendas || []).forEach(enc => {
-      if (enc.status !== 'pendente' && enc.status !== 'pedido_ao_fornecedor') return;
+      if (enc.status !== 'pendente' && enc.status !== 'pedido_ao_fornecedor' && enc.status !== 'chegou_bh') return;
       getEncomendaItens(enc).forEach(it => {
         if (Number(it.produtoId) === pid) {
           const q = Math.max(0, Number(it.qtd) || 0);
@@ -1473,7 +1477,7 @@
     const estoque = state.meuEstoque || {};
     const idsComMovimento = new Set(Object.keys(estoque).map(Number));
     (state.encomendas || []).forEach(e => {
-      if (e.status === 'pendente' || e.status === 'pedido_ao_fornecedor') {
+      if (e.status === 'pendente' || e.status === 'pedido_ao_fornecedor' || e.status === 'chegou_bh') {
         getEncomendaItens(e).forEach(it => {
           idsComMovimento.add(Number(it.produtoId));
           if (e.status === 'pendente') pedirFornecedor += Number(it.qtd) || 0;
@@ -1856,17 +1860,16 @@
                 </div>
               </div>
 
-              ${((state.meuEstoque || {})[p.id] || 0) > 0 ? `
-                <button class="btn btn-green internal-only" style="width:100%; margin:4px 0 8px 0; background:#059669; color:#fff; font-weight:800; padding:7px 10px; border-radius:6px; font-size:12px; display:flex; align-items:center; justify-content:center; gap:6px; border:1px solid #34d399;" onclick="window.CRM.openSaleModal(${p.id})">
-                  💰 Dar Baixa / Registrar Venda
-                </button>
-              ` : ''}
+              <div class="p-actions-primary internal-only">
+                <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; border:1px solid #34d399;" title="Venda Rápida com baixa automática e recibo WhatsApp" onclick="window.CRM.openVendaRapidaModal(${p.id})">⚡ Vender</button>
+                <button class="btn" style="background:#312e81; color:#c7d2fe; font-weight:700; border:1px solid #4338ca;" title="Criar encomenda sob demanda (entra no concentrador do fornecedor)" onclick="window.CRM.openNovaEncomendaModal(${p.id}, 'encomenda')">📝 Encomendar</button>
+                <button class="btn" style="background:#78350f; color:#fde68a; font-weight:700; border:1px solid #d97706;" title="Reservar unidade para cliente" onclick="window.CRM.reservarProdutoRapido(${p.id})">📌 Reservar</button>
+                <button class="btn" style="background:#064e3b; color:#a7f3d0; font-weight:700; border:1px solid #059669;" title="Adicionar à lista de Pedido ao Fornecedor PY" onclick="window.CRM.adicionarAoPedidoFornecedor(${p.id})">🇵🇾 Pedir Fornecedor</button>
+              </div>
 
               <div class="p-actions">
                 <button class="btn btn-primary" onclick="window.CRM.addToCart(${p.id})">➕ Orçamento</button>
-                <button class="btn internal-only" style="background:#312e81; color:#c7d2fe; font-weight:700; border:1px solid #4338ca;" title="Registrar encomenda deste produto para cliente" onclick="window.CRM.openNovaEncomendaModal(${p.id})">📝 Encomendar</button>
-                <button class="btn internal-only" style="background:#064e3b; color:#a7f3d0; font-weight:700; border:1px solid #059669;" title="Adicionar este produto ao pedido do fornecedor no Paraguai" onclick="window.CRM.adicionarAoPedidoFornecedor(${p.id})">🇵🇾 Pedir PY</button>
-                <button class="btn" onclick="window.CRM.copySingleWhatsApp(${p.id})">📲 Copiar Linha</button>
+                <button class="btn" onclick="window.CRM.copySingleWhatsApp(${p.id})">📲 WhatsApp</button>
                 <button class="btn internal-only" title="Extrato de movimentações e saldo" onclick="window.CRM.openExtratoModal(${p.id})">📜</button>
                 <button class="btn internal-only" title="Editar preço/descrição" onclick="window.CRM.openEditModal(${p.id})">✏️</button>
               </div>
@@ -1941,11 +1944,13 @@
                 <td class="internal-only" style="color:#34d399;font-weight:700">${formatBRL(p.lucroFinal)} (${p.margemAplicada}%)</td>
                 <td>
                   <div style="display:flex;gap:4px">
-                    ${((state.meuEstoque || {})[p.id] || 0) > 0 ? `<button class="btn btn-green internal-only" style="background:#059669; color:#fff; font-weight:800;" title="Dar Baixa / Registrar Venda" onclick="window.CRM.openSaleModal(${p.id})">💰</button>` : ''}
-                    <button class="btn internal-only" style="background:#312e81; color:#c7d2fe; font-weight:700; border:1px solid #4338ca;" title="Cadastrar Encomenda p/ Cliente" onclick="window.CRM.openNovaEncomendaModal(${p.id})">📝</button>
-                    <button class="btn btn-primary" onclick="window.CRM.addToCart(${p.id})">➕</button>
-                    <button class="btn" onclick="window.CRM.copySingleWhatsApp(${p.id})">📲</button>
-                    <button class="btn internal-only" onclick="window.CRM.openEditModal(${p.id})">✏️</button>
+                    <button class="btn btn-green internal-only" style="background:#059669; color:#fff; font-weight:800;" title="Venda Rápida" onclick="window.CRM.openVendaRapidaModal(${p.id})">⚡</button>
+                    <button class="btn internal-only" style="background:#312e81; color:#c7d2fe; font-weight:700; border:1px solid #4338ca;" title="Encomendar p/ Cliente" onclick="window.CRM.openNovaEncomendaModal(${p.id}, 'encomenda')">📝</button>
+                    <button class="btn internal-only" style="background:#78350f; color:#fde68a; font-weight:700; border:1px solid #d97706;" title="Reservar p/ Cliente" onclick="window.CRM.reservarProdutoRapido(${p.id})">📌</button>
+                    <button class="btn internal-only" style="background:#064e3b; color:#a7f3d0; font-weight:700; border:1px solid #059669;" title="Pedir ao Fornecedor PY" onclick="window.CRM.adicionarAoPedidoFornecedor(${p.id})">🇵🇾</button>
+                    <button class="btn btn-primary" title="Adicionar ao Orçamento" onclick="window.CRM.addToCart(${p.id})">➕</button>
+                    <button class="btn" title="Copiar Linha WhatsApp" onclick="window.CRM.copySingleWhatsApp(${p.id})">📲</button>
+                    <button class="btn internal-only" title="Editar" onclick="window.CRM.openEditModal(${p.id})">✏️</button>
                   </div>
                 </td>
               </tr>
@@ -2152,6 +2157,11 @@
     if (elFr) elFr.textContent = String(frascoBaixo);
     const elMb = document.getElementById('decMargemBaixa');
     if (elMb) elMb.textContent = String(margemBaixa);
+    const elChegada = document.getElementById('countAvisarChegadaBadge');
+    if (elChegada) {
+      const chegadasCount = (state.encomendas || []).filter(e => e && e.status === 'chegou_bh').length;
+      elChegada.textContent = String(chegadasCount);
+    }
   }
 
   const PRESET_FILTERS = [
@@ -3173,7 +3183,14 @@
 
       const disp = getDisponibilidade(pid);
       if (disp.estoqueBH <= 0) {
-        alert('Item sem estoque físico em BH! Use Encomenda.');
+        if (confirm(`⚠️ "${p.nombre}" está sem estoque físico em BH no momento.\nDeseja converter esta operação em Encomenda / Reserva para ${cliente}?`)) {
+          document.getElementById('vendaRapidaModal').classList.remove('open');
+          window.CRM.openNovaEncomendaModal(pid, 'encomenda');
+          const cInp = document.getElementById('encNovoCliente');
+          const tInp = document.getElementById('encNovoTelefone');
+          if (cInp && cliente !== 'Cliente') cInp.value = cliente;
+          if (tInp && telefone) tInp.value = telefone;
+        }
         return;
       }
       const custoUnitTravado = getCustoUnitarioReal(p);
@@ -3532,7 +3549,10 @@
       if (!drawer) return;
       const isCollapsed = drawer.classList.toggle('collapsed');
       if (btn) {
-        btn.textContent = isCollapsed ? '🛠️ Ferramentas ▸' : '🛠️ Ferramentas ▾';
+        const badge = document.getElementById('badgeAlertasTools');
+        const badgeText = badge ? badge.textContent : '0';
+        const badgeStyle = badge ? badge.getAttribute('style') || '' : 'display:none;';
+        btn.innerHTML = `🛠️ Ferramentas <span id="badgeAlertasTools" class="badge-alertas" style="${badgeStyle}">${badgeText}</span> ${isCollapsed ? '▸' : '▾'}`;
       }
     },
 
@@ -6566,18 +6586,24 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (t) t.textContent = '🎉 Aviso de Chegada em BH';
       if (s) s.textContent = 'Mensagem comemorativa avisando o cliente que o medicamento acabou de desembarcar:';
 
+      const itens = getEncomendaItens(enc);
+      const cNomeEl = document.getElementById('encReceiptClienteNome');
+      if (cNomeEl) cNomeEl.textContent = enc.cliente;
+      const dEl = document.getElementById('encReceiptData');
+      if (dEl) dEl.textContent = enc.data ? new Date(enc.data).toLocaleDateString('pt-BR') : '';
+
       const raw = rawCatalog.find(p => p.id === enc.produtoId) || { id: enc.produtoId, nombre: enc.produtoNome, marca: enc.marca, foto: '' };
       const p = computeProduct(raw);
-      const foto = p.localFoto || p.remoteFoto || '';
       const fotoPublicUrl = p.localFoto ? `https://itabh92.github.io/shapetotal-crm/${p.localFoto}` : (p.remoteFoto || '');
 
       const saldo = Number(enc.saldoRestante) || Math.max(0, enc.valorTotal - (Number(enc.sinal) || 0));
+      const descItens = itens.map(it => `*${it.produtoNome}* (${it.qtd} cx)`).join(' + ');
 
       const lines = [
         `*BOA NOTÍCIA! SEU PEDIDO CHEGOU EM BH* 🎉📦`,
         ``,
         `Olá, *${enc.cliente}*!`,
-        `A sua encomenda de *${enc.produtoNome}* (${enc.qtd} cx) acabou de desembarcar em nosso estoque em Belo Horizonte.`,
+        `A sua encomenda de ${descItens} acabou de desembarcar em nosso estoque em Belo Horizonte.`,
         ``
       ];
 
@@ -6927,6 +6953,62 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       showToast('Medicamento adicionado ao pedido do fornecedor!');
     },
 
+    reservarProdutoRapido(produtoId) {
+      window.CRM.openNovaEncomendaModal(produtoId, 'encomenda');
+      setTimeout(() => {
+        const cliInp = document.getElementById('encNovoCliente');
+        if (cliInp) cliInp.focus();
+      }, 60);
+      showToast('📌 Informe o cliente para reservar a unidade!');
+    },
+
+    gerarPedidoFornecedorDasEncomendas() {
+      const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente');
+      if (!Array.isArray(state.pedidoFornecedorItens)) state.pedidoFornecedorItens = [];
+      if (pendentes.length > 0) {
+        // Mantém itens manuais e consolida de forma idempotente as encomendas pendentes
+        const manuais = state.pedidoFornecedorItens.filter(x => x.origem === 'manual');
+        const consolidadoMap = new Map();
+        pendentes.forEach(e => {
+          getEncomendaItens(e).forEach(it => {
+            const pid = Number(it.produtoId);
+            const q = Math.max(1, Number(it.qtd) || 1);
+            consolidadoMap.set(pid, (consolidadoMap.get(pid) || 0) + q);
+          });
+        });
+        const novosItens = [...manuais];
+        consolidadoMap.forEach((qtdTotal, pid) => {
+          const ex = novosItens.find(x => Number(x.produtoId) === pid);
+          if (ex) ex.qtd = Math.max(Number(ex.qtd) || 0, qtdTotal);
+          else novosItens.push({ produtoId: pid, qtd: qtdTotal, origem: 'encomenda_cliente' });
+        });
+        state.pedidoFornecedorItens = novosItens;
+        saveState();
+      }
+      const mEnc = document.getElementById('encomendasModal');
+      if (mEnc) mEnc.classList.remove('open');
+      window.CRM.openPedidoFornecedorModal();
+      if (pendentes.length > 0) {
+        showToast(`🇵🇾 ${pendentes.length} encomenda(s) pendente(s) consolidada(s) no pedido ao fornecedor!`);
+      }
+    },
+
+    avisarClientesChegada() {
+      const chegaram = (state.encomendas || []).filter(e => e && e.status === 'chegou_bh');
+      if (chegaram.length === 1) {
+        window.CRM.openAvisoChegadaWhatsApp(chegaram[0].id);
+        return;
+      }
+      window.CRM.openEncomendasModal('clientes');
+      const btnChegou = Array.from(document.querySelectorAll('.enc-filter-btn')).find(b => (b.getAttribute('onclick') || '').includes("'chegou_bh'"));
+      window.CRM.filterEncomendas('chegou_bh', btnChegou || null);
+      if (chegaram.length > 1) {
+        showToast(`🎉 ${chegaram.length} encomendas chegaram em BH! Clique em "🎉 Avisar Chegada" em cada cliente.`);
+      } else {
+        showToast('Nenhuma encomenda com status "Chegou em BH" no momento.');
+      }
+    },
+
     carregarEncomendasClientesNoPedidoFornecedor() {
       const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente' || e.status === 'pedido_ao_fornecedor');
       if (!pendentes.length) {
@@ -6935,25 +7017,34 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       }
 
       if (!Array.isArray(state.pedidoFornecedorItens)) state.pedidoFornecedorItens = [];
+      const manuais = state.pedidoFornecedorItens.filter(x => x.origem === 'manual');
+      const consolidadoMap = new Map();
       let adicionados = 0;
 
       pendentes.forEach(e => {
         const itens = getEncomendaItens(e);
         itens.forEach(it => {
-          const pid = it.produtoId;
-          const exist = state.pedidoFornecedorItens.find(x => x.produtoId === pid);
-          if (exist) {
-            exist.qtd = (Number(exist.qtd) || 0) + (Number(it.qtd) || 1);
-          } else {
-            state.pedidoFornecedorItens.push({ produtoId: pid, qtd: Number(it.qtd) || 1, origem: 'encomenda_cliente' });
-          }
-          adicionados += Number(it.qtd) || 1;
+          const pid = Number(it.produtoId);
+          const q = Number(it.qtd) || 1;
+          consolidadoMap.set(pid, (consolidadoMap.get(pid) || 0) + q);
+          adicionados += q;
         });
       });
 
+      const novosItens = [...manuais];
+      consolidadoMap.forEach((qtdTotal, pid) => {
+        const exist = novosItens.find(x => Number(x.produtoId) === pid);
+        if (exist) {
+          exist.qtd = Math.max(Number(exist.qtd) || 0, qtdTotal);
+        } else {
+          novosItens.push({ produtoId: pid, qtd: qtdTotal, origem: 'encomenda_cliente' });
+        }
+      });
+      state.pedidoFornecedorItens = novosItens;
+
       saveState();
       window.CRM.renderItensPedidoFornecedor();
-      alert(`✅ ${adicionados} caixas de encomendas de clientes adicionadas à lista do fornecedor!`);
+      showToast(`✅ ${adicionados} caixas de encomendas sincronizadas na lista do fornecedor!`);
     },
 
     limparPedidoFornecedor() {
@@ -7168,9 +7259,13 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         }
       });
 
+      state.pedidoFornecedorItens = [];
       saveState();
       renderAll();
       window.CRM.renderEncomendas();
+      window.CRM.renderItensPedidoFornecedor();
+      const mPedForn = document.getElementById('pedidoFornecedorModal');
+      if (mPedForn) mPedForn.classList.remove('open');
 
       alert(`🚚 Pedido ${loteId} salvo como Carga em Trânsito com sucesso! (${itensTransito.reduce((a, b) => a + b.qtd, 0)} caixas).\n\nAgora você pode acompanhar a chegada pelo botão "🚚 A Chegar".`);
     }

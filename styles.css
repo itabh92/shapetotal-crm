@@ -1006,3 +1006,35 @@ body.client-mode .fab-venda-rapida { display: none !important; }
   .alertas-section { margin-bottom: 8px; }
   .alertas-header { padding: 8px 10px; }
 }
+
+/* Header Groups (Venda | Encomendas | Estoque/Compras | Ferramentas) */
+.topbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 8px;
+  border-right: 1px solid #334155;
+}
+.topbar-group:last-child {
+  padding-right: 0;
+  border-right: none;
+}
+
+/* Product Card Primary Actions (Vender | Encomendar | Reservar | Pedir Fornecedor) */
+.p-actions-primary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 6px 0;
+}
+.p-actions-primary .btn {
+  width: 100%;
+  justify-content: center;
+  padding: 6px 8px;
+  font-size: 11.5px;
+}
+
+body.client-mode #fabVendaRapida,
+body.client-mode .p-actions-primary {
+  display: none !important;
+}
