@@ -997,4 +997,12 @@ body.client-mode .fab-venda-rapida { display: none !important; }
 @media (max-width: 768px) {
   .alerta-item { flex-direction: column; align-items: stretch; gap: 8px; }
   .alerta-btn { width: 100%; text-align: center; }
+  .kpi-strip { grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+  .kpi-card { padding: 8px 10px; }
+  .kpi-value { font-size: 15px; }
+  .kpi-sub { font-size: 10px; }
+  .disp-status-strip, #decisionStrip { gap: 5px !important; margin-bottom: 8px !important; }
+  .disp-stat-btn, #decisionStrip .btn { font-size: 11px !important; padding: 5px 8px !important; }
+  .alertas-section { margin-bottom: 8px; }
+  .alertas-header { padding: 8px 10px; }
 }

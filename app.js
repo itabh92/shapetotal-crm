@@ -6199,7 +6199,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       itens.forEach(it => {
         const raw = rawCatalog.find(x => x.id === it.produtoId) || {};
         const p = computeProduct(raw);
-        custoTotal += (p.custo || 0) * it.qtd;
+        custoTotal += getCustoUnitarioReal(p) * it.qtd;
       });
       const lucroEst = valorProdutos - custoTotal;
 
@@ -6226,6 +6226,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         valorFrete: frete,
         valorTotal: valorTotal,
         formaPagamento: enc.formaPagamento === 'cartao' ? '💳 Cartão de Crédito (até 12x s/ juros)' : '💠 À vista no PIX',
+        statusPagamento: 'pago',
         cliente: enc.cliente,
         telefone: enc.telefone,
         obs: `Encomenda entregue (${enc.id}) · ${enc.obs || ''}`.trim(),
@@ -6235,7 +6236,14 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
       if (!state.vendas) state.vendas = [];
       state.vendas.unshift(venda);
-      upsertClienteFromOperacao({ nome: client, telefone: phone, endereco: address, valor: totalComFrete, data: dateVal, obs: notes }, true);
+      upsertClienteFromOperacao({
+        nome: enc.cliente,
+        telefone: enc.telefone,
+        endereco: enc.endereco || '',
+        valor: valorTotal,
+        data: venda.data,
+        obs: enc.obs || ''
+      }, true);
 
       // 3. Atualiza status da encomenda, baixa reserva e registra movimento de venda
       itens.forEach(it => {
@@ -7382,14 +7390,35 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
     initEvents();
     renderAll();
 
-    // Em telas mobile/tablet (<= 900px), inicia a gaveta de ferramentas recolhida para liberar 88% da tela para os produtos
+    // Em telas mobile/tablet (<= 900px), inicia a gaveta de ferramentas recolhida sem apagar o badge de alertas
     if (window.innerWidth <= 900) {
       const drawer = document.getElementById('topbarToolsDrawer');
-      const btn = document.getElementById('btnToggleTopbarTools');
       if (drawer && !drawer.classList.contains('collapsed')) {
         drawer.classList.add('collapsed');
-        if (btn) btn.textContent = '🛠️ Ferramentas ▸';
       }
+    }
+
+    // Atalhos rápidos no teclado (Ctrl+K busca, Ctrl+N Venda Rápida, Esc fecha modais)
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        const s = document.getElementById('searchInput');
+        if (s) { s.focus(); s.select && s.select(); }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        if (!state.clientMode && window.CRM && window.CRM.openVendaRapidaModal) {
+          window.CRM.openVendaRapidaModal();
+        }
+      } else if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
+      }
+    });
+
+    // Atualiza Service Worker em segundo plano para nunca prender em cache antigo
+    if (navigator.serviceWorker && typeof navigator.serviceWorker.getRegistration === 'function') {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (reg && typeof reg.update === 'function') reg.update().catch(() => {});
+      }).catch(() => {});
     }
 
     // Check initial authentication
