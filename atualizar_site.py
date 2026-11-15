@@ -12,6 +12,8 @@ import urllib.request
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+from pricing_engine import write_pricing_config_js
+
 BASE_DIR = '/Users/italosouza/Medicamentos/ShapeTotalCRM'
 FOTOS_DIR = os.path.join(BASE_DIR, 'fotos')
 API_URL = 'https://shapetotal.com/api/catalogo'
@@ -78,7 +80,7 @@ def main():
         api_ids.add(pid)
         old = local_by_id.get(pid, {})
 
-        # Preserva coleções, descrição comercial e preços fixos
+        # Preserva coleções e descrição comercial; remove qualquer preço fixo legado
         if old.get('colecao_id'):
             p['colecao_id'] = old['colecao_id']
             p['colecao_nome'] = old.get('colecao_nome', '')
@@ -87,23 +89,28 @@ def main():
             p['colecao_id'] = cid
             p['colecao_nome'] = cnome
 
-        for k in ('desc_comercial', 'preco_pix_fixo', 'preco_cartao_fixo'):
-            if k in old:
-                p[k] = old[k]
+        if 'desc_comercial' in old:
+            p['desc_comercial'] = old['desc_comercial']
+        p.pop('preco_pix_fixo', None)
+        p.pop('preco_cartao_fixo', None)
         p.pop('meu_estoque_qtd', None)
 
         merged_prods.append(p)
 
-    # Re-adiciona SKUs exclusivos locais (id >= 9000) sem dados operacionais
+    # Re-adiciona SKUs exclusivos locais (id >= 9000) sem dados operacionais nem preços fixos legados
     for custom_p in local_custom_skus:
         if custom_p.get('id') not in api_ids:
             clean_custom = dict(custom_p)
+            clean_custom.pop('preco_pix_fixo', None)
+            clean_custom.pop('preco_cartao_fixo', None)
             clean_custom.pop('meu_estoque_qtd', None)
             merged_prods.append(clean_custom)
 
     raw_data['productos'] = merged_prods
     raw_data.pop('meu_estoque_qtds', None)
     raw_data.pop('meu_estoque_resumo', None)
+
+    write_pricing_config_js()
 
     # Salva catalogo_dados.json público (sem estoque privado ou trânsito)
     with open(JSON_PATH, 'w', encoding='utf-8') as f:

@@ -2,28 +2,28 @@
 # -*- coding: utf-8 -*-
 """
 Gerador de Catálogo Exclusivo: TABELA DE PREÇOS TIRZEPATIDAS & RETATRUTIDA.
-Catálogo único em PDF contendo APENAS a seleção oficial solicitada por Italo:
-- Linha 60 mg (TG, Tirzec 4v, Lipoless 4v, Lipoland 4v, Lipoless MD, Tirzec MD, Tirzedral 4v, T36 MD, Gluconex 4v) a R$ 900 Pix / R$ 1.000 Cartão
-- Tirzepatida Synedica 60 mg a R$ 500 cada ampola
-- Retatrutida 60 mg GEN HEALTH a R$ 1.000 Pix / R$ 1.100 Cartão
-- Ampolas avulsas de 15 mg (Tirzepatida, Lipoless, TG, Tirzec, Lipoland) a R$ 250 Pix / R$ 300 Cartão
+Todos os valores são calculados dinamicamente a partir de catalogo_dados.json + pricing_config.json
+(USD site * Dólar 5,80 * 1,30 frete + margem recomendada de mercado + 12% cartão).
 """
 
-import os
-import math
-import shutil
 import glob
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage, KeepTogether
-)
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+import json
+import os
+import shutil
 from PIL import Image as PILImage
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import (
+    Image as RLImage, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+)
+
+from pricing_engine import compute_product_pricing, load_pricing_config
 
 BASE_DIR = '/Users/italosouza/Medicamentos/ShapeTotalCRM'
 FOTOS_DIR = os.path.join(BASE_DIR, 'fotos')
+JSON_PATH = os.path.join(BASE_DIR, 'catalogo_dados.json')
 DOWNLOADS_DIR = '/Users/italosouza/Downloads'
 DESKTOP_DIR = '/Users/italosouza/Desktop'
 
@@ -32,160 +32,131 @@ PDF_CRM = os.path.join(BASE_DIR, PDF_FILENAME)
 PDF_DOWNLOADS = os.path.join(DOWNLOADS_DIR, PDF_FILENAME)
 PDF_DESKTOP = os.path.join(DESKTOP_DIR, PDF_FILENAME)
 
-# Lista estruturada dos produtos oficiais da Tabela
 TABELA_ITEMS = [
-    # -------------------------------------------------------------
-    # SEÇÃO 1: LINHA 60 MG — DURAÇÃO DE ATÉ 6 MESES
-    # -------------------------------------------------------------
     {
         'secao': 'LINHA_60MG',
-        'secao_titulo': '📦 LINHA 60 MG — DURAÇÃO DE ATÉ 6 MESES',
-        'secao_sub': 'Dose completa para protocolo de emagrecimento com até 6 meses de duração',
+        'secao_titulo': '📦 LINHA 60 MG — TIRZEPATIDA (4 VIAS OU MULTIDOSE)',
+        'secao_sub': 'Preços individuais por laboratório conforme cotação e custo real atualizado',
         'secao_cor': '#064e3b',
         'secao_bg': '#dcfce7',
         'secao_border': '#86efac',
         'produtos': [
             {
+                'id_catalogo': 2848,
                 'id_foto': 2848,
                 'nome': 'TG 60 MG (TIRZEPATIDA INDUFAR)',
                 'marca': 'INDUFAR PHARMA',
                 'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-                'duracao': 'Até 6 meses de tratamento',
-                'desc': 'Tirzepatida pura lacrada com alto padrão farmacêutico e ação prolongada.',
-                'pix': 900,
-                'cartao': 1000
+                'duracao': 'Até 6 meses de tratamento'
             },
             {
+                'id_catalogo': 3207,
                 'id_foto': 3207,
                 'nome': 'TIRZEC 60 MG (4 VIAS)',
                 'marca': 'QUIMFA PHARMA',
                 'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-                'duracao': 'Até 6 meses de tratamento',
-                'desc': 'Fórmula premium para controle glicêmico, saciedade profunda e perda de peso.',
-                'pix': 900,
-                'cartao': 1000
+                'duracao': 'Até 6 meses de tratamento'
             },
             {
+                'id_catalogo': 2889,
                 'id_foto': 2889,
                 'nome': 'LIPOLESS 60 MG (4 VIAS)',
                 'marca': 'ETICOS LABS',
                 'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-                'duracao': 'Até 6 meses de tratamento',
-                'desc': 'Tirzepatida liofilizada de máxima biodisponibilidade para queima acelerada.',
-                'pix': 900,
-                'cartao': 1000
+                'duracao': 'Até 6 meses de tratamento'
             },
             {
+                'id_catalogo': 2988,
                 'id_foto': 2988,
                 'nome': 'LIPOLAND 60 MG (4 VIAS)',
                 'marca': 'LANDERLAN OFICIAL',
                 'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-                'duracao': 'Até 6 meses de tratamento',
-                'desc': 'Linha Lipoland oficial Landerlan com autenticidade verificável via aplicativo.',
-                'pix': 900,
-                'cartao': 1000
+                'duracao': 'Até 6 meses de tratamento'
             },
             {
+                'id_catalogo': 2997,
                 'id_foto': 2997,
-                'nome': 'LIPOLESS MD 15 MG (FRASCO MULTIDOSE)',
+                'nome': 'LIPOLESS MD 15 MG (MULTIDOSE)',
                 'marca': 'ETICOS LABS',
                 'apresentacao': 'Frasco Multidose (MD) de 15 mg de alta concentração',
-                'duracao': 'Flexibilidade total no fracionamento das doses',
-                'desc': 'Apresentação prática em frasco multidose para ajuste fino da posologia semanal.',
-                'pix': 900,
-                'cartao': 1000
+                'duracao': 'Flexibilidade total no fracionamento das doses'
             },
             {
+                'id_catalogo': 2996,
                 'id_foto': 2996,
-                'nome': 'TIRZEC MD 15 MG (FRASCO MULTIDOSE)',
+                'nome': 'TIRZEC MD 15 MG (FRASCO ÚNICO)',
                 'marca': 'QUIMFA PHARMA',
-                'apresentacao': 'Frasco Multidose (MD) de 15 mg de alta estabilidade',
-                'duracao': 'Flexibilidade total no fracionamento das doses',
-                'desc': 'Praticidade de aplicação com tampa flip-off lacrada e diluição homogênea.',
-                'pix': 900,
-                'cartao': 1000
+                'apresentacao': 'Frasco Multidose (MD) de alta estabilidade',
+                'duracao': 'Flexibilidade total no fracionamento das doses'
             },
             {
+                'id_catalogo': 3136,
                 'id_foto': 3136,
                 'nome': 'TIRZEDRAL 60 MG (4 VIAS)',
                 'marca': 'CATEDRAL LABS',
                 'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-                'duracao': 'Até 6 meses de tratamento',
-                'desc': 'Duplo agonista GIP/GLP-1 com excelente tolerabilidade e redução de apetite.',
-                'pix': 900,
-                'cartao': 1000
+                'duracao': 'Até 6 meses de tratamento'
             },
             {
+                'id_catalogo': 3308,
                 'id_foto': 3308,
                 'nome': 'T36 MD 15 MG (FRASCO MULTIDOSE)',
                 'marca': 'CATEDRAL LABS',
                 'apresentacao': 'Frasco Multidose (MD) de 15 mg',
-                'duracao': 'Ajuste posológico customizado',
-                'desc': 'Tirzepatida formulada para aplicação precisa semanal com controle de saciedade.',
-                'pix': 900,
-                'cartao': 1000
+                'duracao': 'Ajuste posológico customizado'
             },
             {
+                'id_catalogo': 3039,
                 'id_foto': 3039,
                 'nome': 'GLUCONEX 60 MG (4 VIAS)',
                 'marca': 'LASCA PHARMA',
                 'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-                'duracao': 'Até 6 meses de tratamento',
-                'desc': 'Tratamento de excelência com comprovada ação na perda de massa gorda.',
-                'pix': 900,
-                'cartao': 1000
+                'duracao': 'Até 6 meses de tratamento'
             },
             {
+                'id_catalogo': 3014,
                 'id_foto': 3014,
-                'nome': 'TIRZEPATIDA SYNEDICA 60 MG (AMPOLA)',
+                'nome': 'TIRZEPATIDA SYNEDICA 60 MG',
                 'marca': 'SYNEDICA LABS',
-                'apresentacao': 'Ampola de 60 mg de alta pureza analítica',
-                'duracao': 'Alta concentração por unidade',
-                'desc': 'Preço especial por ampola: Tirzepatida Synedica importada de grau hospitalar.',
-                'pix': 500,
-                'cartao': 600,
-                'destaque_preco': 'R$ 500 CADA AMPOLA'
+                'apresentacao': 'Caixa com 4 ampolas / 60 mg de alta pureza analítica',
+                'duracao': 'Até 6 meses de tratamento'
             }
         ]
     },
-
-    # -------------------------------------------------------------
-    # SEÇÃO 2: RETATRUTIDA 60 MG GEN HEALTH (TRIPLO AGONISTA)
-    # -------------------------------------------------------------
     {
         'secao': 'RETATRUTIDA_60MG',
-        'secao_titulo': '🧬 RETATRUTIDA 60 MG — GEN HEALTH (TRIPLO AGONISTA)',
-        'secao_sub': 'Tecnologia de ponta GLP-1 + GIP + Glucagon para queima calórica máxima',
+        'secao_titulo': '🧬 RETATRUTIDA 60 MG — TRIPLO AGONISTA (GLP-1 / GIP / GLUCAGON)',
+        'secao_sub': 'Atuação tripla no metabolismo, tecido adiposo e saciedade central',
         'secao_cor': '#78350f',
         'secao_bg': '#fef3c7',
         'secao_border': '#fcd34d',
         'produtos': [
             {
+                'id_catalogo': 2830,
                 'id_foto': 2830,
                 'nome': 'GEN-HEALTH RETATRUTIDE 60 MG (FRASCO)',
                 'marca': 'GEN-HEALTH BIOTECH',
                 'apresentacao': 'Frasco de 60 mg liofilizado com diluente',
-                'duracao': 'Protocolo de alta intensidade',
-                'desc': 'Triplo agonista que atua no fígado, tecido adiposo e saciedade central.',
-                'pix': 1000,
-                'cartao': 1100
+                'duracao': 'Protocolo de alta intensidade'
             },
             {
+                'id_catalogo': 2942,
                 'id_foto': 2942,
-                'nome': 'GEN-HEALTH RETATRUTIDE 60 MG (CANETA APLICADORA)',
+                'nome': 'GEN-HEALTH RETATRUTIDE 60 MG (CANETA)',
                 'marca': 'GEN-HEALTH BIOTECH',
                 'apresentacao': 'Caneta pré-carregada dosadora de 60 mg',
-                'duracao': 'Máxima conveniência e precisão milimétrica',
-                'desc': 'Pronta para uso: sistema de caneta rotativa que dispensa manuseio de seringas.',
-                'pix': 1000,
-                'cartao': 1100
+                'duracao': 'Conveniência e precisão milimétrica'
+            },
+            {
+                'id_catalogo': 2965,
+                'id_foto': 2965,
+                'nome': 'ZPHC RETATRUTIDE 60 MG (5x12 MG)',
+                'marca': 'ZPHC BIOTECH',
+                'apresentacao': 'Caixa importada 5 frascos de 12 mg (60 mg total)',
+                'duracao': 'Pureza internacional certificada'
             }
         ]
     },
-
-    # -------------------------------------------------------------
-    # SEÇÃO 3: AMPOLAS AVULSAS DE 15 MG
-    # -------------------------------------------------------------
     {
         'secao': 'AMPOLAS_AVULSAS',
         'secao_titulo': '💉 AMPOLAS AVULSAS DE 15 MG (DOSE INDIVIDUAL)',
@@ -195,59 +166,44 @@ TABELA_ITEMS = [
         'secao_border': '#93c5fd',
         'produtos': [
             {
-                'id_foto': 2875,
-                'nome': 'TIRZEPATIDA 15 MG (AMPOLA AVULSA)',
-                'marca': 'IMPORTAÇÃO DIRETA',
-                'apresentacao': '1 ampola liofilizada de 15 mg',
-                'duracao': 'Ideal para fase inicial de adaptação',
-                'desc': 'Tirzepatida estéril avulsa com solvente para 3 a 6 semanas iniciais.',
-                'pix': 250,
-                'cartao': 300,
-                'destaque_preco': 'R$ 250 CADA'
-            },
-            {
-                'id_foto': 2889,
-                'nome': 'LIPOLESS 15 MG (AMPOLA AVULSA)',
-                'marca': 'ETICOS LABS',
-                'apresentacao': '1 ampola liofilizada de 15 mg',
-                'duracao': 'Dose única de alta pureza',
-                'desc': 'Ampola avulsa de Lipoless lacrada para reposição fracionada.',
-                'pix': 250,
-                'cartao': 300,
-                'destaque_preco': 'R$ 250 CADA'
-            },
-            {
-                'id_foto': 2848,
-                'nome': 'TG 15 MG (AMPOLA AVULSA)',
-                'marca': 'INDUFAR PHARMA',
-                'apresentacao': '1 ampola liofilizada de 15 mg',
-                'duracao': 'Dose individual lacrada',
-                'desc': 'Ampola individual de TG Indufar para continuação ou início de ciclo.',
-                'pix': 250,
-                'cartao': 300,
-                'destaque_preco': 'R$ 250 CADA'
-            },
-            {
-                'id_foto': 3207,
-                'nome': 'TIRZEC 15 MG (AMPOLA AVULSA)',
-                'marca': 'QUIMFA PHARMA',
-                'apresentacao': '1 ampola liofilizada de 15 mg',
-                'duracao': 'Dose individual lacrada',
-                'desc': 'Ampola avulsa de Tirzec Quimfa com máxima garantia farmacêutica.',
-                'pix': 250,
-                'cartao': 300,
-                'destaque_preco': 'R$ 250 CADA'
-            },
-            {
+                'id_catalogo': 9001,
                 'id_foto': 2988,
                 'nome': 'LIPOLAND 15 MG (AMPOLA AVULSA)',
                 'marca': 'LANDERLAN OFICIAL',
                 'apresentacao': '1 ampola liofilizada de 15 mg',
-                'duracao': 'Dose individual lacrada',
-                'desc': 'Ampola avulsa Lipoland oficial Landerlan com selo holográfico.',
-                'pix': 250,
-                'cartao': 300,
-                'destaque_preco': 'R$ 250 CADA'
+                'duracao': 'Ideal para início de ciclo (3 a 6 semanas)'
+            },
+            {
+                'id_catalogo': 9002,
+                'id_foto': 3207,
+                'nome': 'TIRZEC 15 MG (AMPOLA AVULSA)',
+                'marca': 'QUIMFA PHARMA',
+                'apresentacao': '1 ampola liofilizada de 15 mg',
+                'duracao': 'Dose individual lacrada'
+            },
+            {
+                'id_catalogo': 9003,
+                'id_foto': 2848,
+                'nome': 'TG 15 MG (AMPOLA AVULSA)',
+                'marca': 'INDUFAR PHARMA',
+                'apresentacao': '1 ampola liofilizada de 15 mg',
+                'duracao': 'Dose individual lacrada'
+            },
+            {
+                'id_catalogo': 9004,
+                'id_foto': 2889,
+                'nome': 'LIPOLESS 15 MG (AMPOLA AVULSA)',
+                'marca': 'ETICOS LABS',
+                'apresentacao': '1 ampola liofilizada de 15 mg',
+                'duracao': 'Dose individual lacrada'
+            },
+            {
+                'id_catalogo': 9007,
+                'id_foto': 3136,
+                'nome': 'TIRZEDRAL 15 MG (AMPOLA AVULSA)',
+                'marca': 'CATEDRAL LABS',
+                'apresentacao': '1 ampola liofilizada de 15 mg',
+                'duracao': 'Dose individual lacrada'
             }
         ]
     }
@@ -267,7 +223,11 @@ def get_product_image(pid, max_w=95, max_h=95):
 
 def main():
     print("Iniciando geração do Catálogo Exclusivo: Tabela de Preços Tirzepatidas...")
-    
+    pricing_cfg = load_pricing_config()
+    with open(JSON_PATH, 'r', encoding='utf-8') as f:
+        cat_data = json.load(f)
+    cat_by_id = {int(p['id']): p for p in cat_data.get('productos', []) if p.get('id') is not None}
+
     styles = getSampleStyleSheet()
     
     prod_name_style = ParagraphStyle(
@@ -328,7 +288,7 @@ def main():
     topbar_data = [
         [
             Paragraph("<b>SHAPE TOTAL · TABELA DE PREÇOS OFICIAL</b><br/><font size='8.5' color='#94a3b8'>TIRZEPATIDAS & RETATRUTIDA · LINHA 60 MG & AMPOLAS AVULSAS</font>", ParagraphStyle('TopL', fontName='Helvetica-Bold', fontSize=12, leading=15, textColor=colors.HexColor('#ffffff'))),
-            Paragraph("<b>📋 TABELA OFICIAL</b><br/><font size='8' color='#34d399'>Preços Fixos Garantidos · Pronta Entrega</font>", ParagraphStyle('TopR', fontName='Helvetica-Bold', fontSize=10.5, leading=13.5, textColor=colors.HexColor('#34d399'), alignment=TA_RIGHT))
+            Paragraph("<b>📋 TABELA ATUALIZADA</b><br/><font size='8' color='#34d399'>Margens de Mercado Shape Total · PIX &amp; 12x</font>", ParagraphStyle('TopR', fontName='Helvetica-Bold', fontSize=10.5, leading=13.5, textColor=colors.HexColor('#34d399'), alignment=TA_RIGHT))
         ]
     ]
     t_topbar = Table(topbar_data, colWidths=[340, 203])
@@ -377,20 +337,18 @@ def main():
         sec_flow = [sec_bar, Spacer(1, 5)]
         
         for p in sec['produtos']:
-            pix = p['pix']
-            cartao = p['cartao']
-            parc = round(cartao / 12, 2)
-            
+            prod_raw = cat_by_id.get(int(p['id_catalogo']), {'id': p['id_catalogo'], 'precio': 0, 'categoria': 'emagrecedores'})
+            pricing = compute_product_pricing(prod_raw, tier='rec', cfg=pricing_cfg)
+            pix = pricing['preco_pix']
+            cartao = pricing['preco_cartao']
+            parc = round(cartao / 12, 2) if cartao > 0 else 0
+
             nome = p['nome']
             marca = p['marca']
             apres = p['apresentacao']
             duracao = p['duracao']
-            desc = p['desc']
-            destaque = p.get('destaque_preco', '')
-            
-            tag_fixo = f"<font color='#047857'><b>● VALOR OFICIAL</b></font>"
-            if destaque:
-                tag_fixo += f" &nbsp;|&nbsp; <font color='#b45309'><b>{destaque}</b></font>"
+
+            tag_fixo = "<font color='#047857'><b>● TABELA SHAPE TOTAL</b></font>"
                 
             details_cell = [
                 Paragraph(f"<b>{nome}</b>", prod_name_style),

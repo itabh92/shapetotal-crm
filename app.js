@@ -1,99 +1,75 @@
 
-  const SPECIAL_FIXED_REC = {
-    // Linha 60 mg / 4 vias x 15 mg / MD 15 mg -> Pix: R$ 900,00 | Cartão: R$ 1.000,00
-    2848: { rec: 900, cartao: 1000, label: 'TG 15mg x 4 (60mg)' },
-    3207: { rec: 900, cartao: 1000, label: 'Tirzec 15mg x 4 (60mg)' },
-    2889: { rec: 900, cartao: 1000, label: 'Lipoless 15mg x 4 (60mg)' },
-    2988: { rec: 900, cartao: 1000, label: 'Lipoland 15mg x 4 (60mg)' },
-    3072: { rec: 900, cartao: 1000, label: 'Lipoland MD 15mg' },
-    2997: { rec: 900, cartao: 1000, label: 'Lipoless MD 15mg' },
-    2996: { rec: 900, cartao: 1000, label: 'Quimfa Tirzec 60mg Ampola Única (1x2ml)' },
-    3308: { rec: 900, cartao: 1000, label: 'T36 MD 15mg' },
-    3381: { rec: 900, cartao: 1000, label: 'T36 15mg x 4 (60mg)' },
-    3039: { rec: 900, cartao: 1000, label: 'Gluconex 15mg x 4 (60mg)' },
-    3136: { rec: 900, cartao: 1000, label: 'Tirzedral 15mg x 4 (60mg)' },
-    3203: { rec: 900, cartao: 1000, label: 'Tirzedral MD 15mg' },
-    446:  { rec: 900, cartao: 1000, label: 'Lipoless 15mg x 4 Jer' },
-    3389: { rec: 900, cartao: 1000, label: 'Slimex 15mg x 4 (60mg)' },
-    3014: { rec: 900, cartao: 1000, label: 'Synedica Tirzepatida 60mg' },
-    3392: { rec: 900, cartao: 1000, label: 'Oxygen Tirzegen 60mg x 4' },
-    3271: { rec: 900, cartao: 1000, label: 'Oxygen Tirzegen 60mg Polvo' },
-    2877: { rec: 900, cartao: 1000, label: 'Sin Marca Tirzepatida 60mg' },
-    3149: { rec: 1467, cartao: 1567, label: 'Spectrum Mounjaos 60mg (Importado)' },
-    2765: { rec: 900, cartao: 1000, label: 'Gen-Tirz 60mg' },
-    3186: { rec: 900, cartao: 1000, label: 'Veltrane Tirzepatide 60mg' },
-
-    // Retatrutida 60 mg -> Pix: R$ 1.000,00 | Cartão: R$ 1.100,00
-    3340: { rec: 1000, cartao: 1100, label: 'Oxygen Retatrutide 60mg' },
-    2830: { rec: 1000, cartao: 1100, label: 'Gen Retatrutide 60mg' },
-    2942: { rec: 1000, cartao: 1100, label: 'Gen-Health Caneta 60mg' },
-    3156: { rec: 1000, cartao: 1100, label: 'Veltrane Retatrutide 60mg' },
-    3391: { rec: 1000, cartao: 1100, label: 'Synedica Retatrutide 60mg' },
-    3147: { rec: 2250, cartao: 2450, label: 'ZPHC Caneta Retatrutide 60mg' },
-    2965: { rec: 2000, cartao: 2200, label: 'ZPHC Retatrutide 60mg (5x12mg)' },
-    3370: { rec: 3800, cartao: 4200, label: 'Kit Retatrutida Gen-Health (4x60mg)' },
-
-    // Ampolas / Frascos avulsos 15 mg
-    3206: { rec: 735, cartao: 835, label: 'Pharmacom Jaros Tirzepatida 15mg (Importado)' },
-    2763: { rec: 450, cartao: 550, label: 'Gen-Tirz 15mg' },
-    2875: { rec: 250, cartao: 300, label: 'Sin Marca Tirzepatida 15mg' },
-    3008: { rec: 350, cartao: 400, label: 'ZPHC Tirzepatide 15mg' },
-
-    // Itens Exclusivos Pronta Entrega BH (Ampolas avulsas e frascos)
-    9001: { rec: 250, cartao: 300, label: 'Lipoland 15mg (Ampola Avulsa)' },
-    9002: { rec: 250, cartao: 300, label: 'Tirzec 15mg (Ampola Avulsa)' },
-    9003: { rec: 250, cartao: 300, label: 'TG 15mg (Ampola Avulsa)' },
-    9004: { rec: 250, cartao: 300, label: 'Lipoless 15mg (Ampola Avulsa)' },
-    9007: { rec: 250, cartao: 300, label: 'Tirzedral 15mg (Ampola Avulsa)' },
-    9005: { rec: 2000, cartao: 2200, label: 'Retatrutida Gen 120mg (Doses)' },
-    9006: { rec: 1800, cartao: 2000, label: 'Tirzepatida Gen-Tirz 120mg (Doses)' }
-  };
-
-  // Dados operacionais (estoque, pedidos em trânsito e clientes) ficam exclusivamente no armazenamento local do aparelho (localStorage/IndexedDB), nunca no bundle JS público.
-  const TABELA_DOSES_OFICIAIS = {
-    9006: {
-      id: 9006,
-      nome: 'Tirzepatide Injection 120mg/4ml (30mg/ml)',
-      marca: 'USA Peptides',
-      totalMg: 120,
-      fotoTabela: 'fotos/tabela_doses_tirzepatida_120mg.jpg',
-      doses: [
-        { mg: 2.5, preco: 65, label: '2,5 mg', fullLabel: '2,5 mg — R$ 65,00' },
-        { mg: 5.0, preco: 130, label: '5,0 mg', fullLabel: '5,0 mg — R$ 130,00' },
-        { mg: 7.5, preco: 185, label: '7,5 mg', fullLabel: '7,5 mg — R$ 185,00' }
-      ]
+  // Fonte canônica de precificação compartilhada com pricing_config.json / pricing_engine.py.
+  // Dados operacionais (estoque, pedidos em trânsito e clientes) ficam exclusivamente no armazenamento local do aparelho (localStorage/IndexedDB).
+  const FALLBACK_PRICING_CONFIG = {
+    version: '2026-11-14-v2',
+    cotacao: 5.80,
+    fretePct: 30,
+    taxaCartaoPct: 12,
+    minValidUsd: 0.05,
+    rounding: {
+      below50Step: 1,
+      from50To299Step: 5,
+      from300Step: 10,
+      doseStep: 5
     },
-    9005: {
-      id: 9005,
-      nome: 'Retatrutide 120 mg (GLP-1, GIP, Glucagon)',
-      marca: 'GEN-HEALTH',
-      totalMg: 120,
-      fotoTabela: 'fotos/tabela_doses_retatrutida_120mg.jpg',
-      doses: [
-        { mg: 2.5, preco: 80, label: '2,5 mg', fullLabel: '2,5 mg — R$ 80,00' },
-        { mg: 5.0, preco: 150, label: '5,0 mg', fullLabel: '5,0 mg — R$ 150,00' }
-      ]
+    groupMargins: {
+      emagrecedores: { label: '🔥 GLP-1 & Emagrecedores', min: 35, rec: 48, max: 65 },
+      anabolizante: { label: '💪 Anabolizantes', min: 40, rec: 55, max: 75 },
+      hgh: { label: '🧬 HGH Somatropina', min: 28, rec: 35, max: 48 },
+      peptideo: { label: '⚗️ Peptídeos Bio-Regenerativos', min: 35, rec: 52, max: 70 },
+      sarms_post: { label: '🧪 SARMs, Pós-Ciclo & HCG', min: 38, rec: 55, max: 75 },
+      estetico: { label: '✨ Estético, Botox & Pele', min: 38, rec: 55, max: 75 },
+      saude_mental: { label: '🧠 Saúde Mental, Nootrópicos & CBD', min: 38, rec: 55, max: 75 },
+      potencia_suporte: { label: '⚡ Potência, Diluentes & Suporte', min: 50, rec: 75, max: 100 }
+    },
+    doseVials: {
+      9006: {
+        id: 9006,
+        nome: 'Tirzepatide Injection 120mg/4ml (30mg/ml)',
+        marca: 'USA Peptides',
+        totalMg: 120,
+        fotoTabela: 'fotos/tabela_doses_tirzepatida_120mg.jpg',
+        doses: [
+          { mg: 2.5, label: '2,5 mg', fatorFracionamento: 2.5 },
+          { mg: 5.0, label: '5,0 mg', fatorFracionamento: 2.35 },
+          { mg: 7.5, label: '7,5 mg', fatorFracionamento: 2.25 }
+        ]
+      },
+      9005: {
+        id: 9005,
+        nome: 'Retatrutide 120 mg (GLP-1, GIP, Glucagon)',
+        marca: 'GEN-HEALTH',
+        totalMg: 120,
+        fotoTabela: 'fotos/tabela_doses_retatrutida_120mg.jpg',
+        doses: [
+          { mg: 2.5, label: '2,5 mg', fatorFracionamento: 3.0 },
+          { mg: 5.0, label: '5,0 mg', fatorFracionamento: 2.85 },
+          { mg: 7.5, label: '7,5 mg', fatorFracionamento: 2.7 }
+        ]
+      }
     }
   };
 
 (function () {
   const STORAGE_KEY = 'SHAPETOTAL_CRM_STATE_V1';
   const BACKUP_KEY = 'SHAPETOTAL_CRM_BACKUP_PRE_IMPORT';
+  const PRICING_CONFIG = (typeof window !== 'undefined' && window.SHAPETOTAL_PRICING_CONFIG)
+    ? window.SHAPETOTAL_PRICING_CONFIG
+    : FALLBACK_PRICING_CONFIG;
+  const PRICING_POLICY_VERSION = PRICING_CONFIG.version || '2026-11-14-v2';
+  const FIXED_FRETE_PCT = Number(PRICING_CONFIG.fretePct ?? 30);
+  const DEFAULT_GROUP_MARGINS = JSON.parse(JSON.stringify(PRICING_CONFIG.groupMargins));
 
-  const DEFAULT_GROUP_MARGINS = {
-    anabolizante: { label: '💪 Anabolizantes', min: 33, rec: 43, max: 60 },
-    emagrecedores: { label: '🔥 Emagrecedores & Queimadores', min: 32, rec: 42, max: 58 },
-    saude_mental: { label: '🧠 Saúde Mental & Nootrópicos', min: 32, rec: 47, max: 65 },
-    peptideo: { label: '🧬 Peptídeos & HGH', min: 30, rec: 48, max: 65 },
-    estetico: { label: '✨ Estético, Botox & Pele', min: 35, rec: 52, max: 75 },
-    sarms_post: { label: '🧪 SARMs, Pós-Ciclo & HCG', min: 30, rec: 44, max: 60 },
-    potencia_outros: { label: '⚡ Potência, Capilar & Outros', min: 32, rec: 47, max: 70 }
-  };
+  function cloneDefaultGroupMargins() {
+    return JSON.parse(JSON.stringify(DEFAULT_GROUP_MARGINS));
+  }
 
   let state = {
-    cotacao: 5.60,
-    fretePct: 30,
-    taxaCartaoFixa: 100,
+    pricingPolicyVersion: PRICING_POLICY_VERSION,
+    cotacao: Number(PRICING_CONFIG.cotacao) || 5.80,
+    fretePct: FIXED_FRETE_PCT,
+    taxaCartaoPct: Number(PRICING_CONFIG.taxaCartaoPct ?? 12),
     activeTier: 'rec', // 'min' | 'rec' | 'max'
     viewMode: 'grid', // 'grid' | 'table'
     clientMode: false,
@@ -104,7 +80,7 @@
     branchFilter: 'todas', // 'todas' | 'cde' | 'pj' | 'sg'
     sortBy: 'estoque_desc',
     search: '',
-    groupMargins: JSON.parse(JSON.stringify(DEFAULT_GROUP_MARGINS)),
+    groupMargins: cloneDefaultGroupMargins(),
     overrides: {}, // { [id]: { usd, tier, customPrice, customMargin, desc, fav } }
     meuEstoque: {}, // { [id]: qty }
     cart: {}, // { [id]: qty }
@@ -251,26 +227,50 @@
     // O estoque canônico só é semeado quando o aparelho nunca teve estoque salvo.
     // Estoque zerado por vendas é estado legítimo e não pode ser "recuperado".
     let temEstoqueSalvo = false;
+    let shouldPersistMigratedPolicy = false;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
+        const isCurrentPolicy = parsed.pricingPolicyVersion === PRICING_POLICY_VERSION;
+        if (!isCurrentPolicy) shouldPersistMigratedPolicy = true;
         temEstoqueSalvo = !!parsed.meuEstoque && typeof parsed.meuEstoque === 'object';
         state.canonVistos = Array.isArray(parsed.canonVistos) ? parsed.canonVistos.map(String) : [];
-        state.cotacao = Number(parsed.cotacao) || 5.60;
-        state.cotacaoAtualizadaEm = parsed.cotacaoAtualizadaEm || new Date().toISOString();
-        state._bhStockSyncKey = parsed._bhStockSyncKey || '';
-        state.fretePct = parsed.fretePct !== undefined ? Number(parsed.fretePct) : 30;
-        state.taxaCartaoFixa = parsed.taxaCartaoFixa !== undefined ? Number(parsed.taxaCartaoFixa) : 100;
-        state.activeTier = parsed.activeTier || 'rec';
-        if (parsed.groupMargins) {
-          for (const k of Object.keys(DEFAULT_GROUP_MARGINS)) {
-            if (parsed.groupMargins[k]) {
-              state.groupMargins[k] = { ...DEFAULT_GROUP_MARGINS[k], ...parsed.groupMargins[k] };
+        state.pricingPolicyVersion = PRICING_POLICY_VERSION;
+        if (isCurrentPolicy) {
+          state.cotacao = Number(parsed.cotacao) || Number(PRICING_CONFIG.cotacao) || 5.80;
+          state.fretePct = FIXED_FRETE_PCT;
+          state.taxaCartaoPct = parsed.taxaCartaoPct !== undefined ? Number(parsed.taxaCartaoPct) : Number(PRICING_CONFIG.taxaCartaoPct ?? 12);
+          state.activeTier = parsed.activeTier || 'rec';
+          if (parsed.groupMargins) {
+            for (const k of Object.keys(DEFAULT_GROUP_MARGINS)) {
+              if (parsed.groupMargins[k]) {
+                state.groupMargins[k] = { ...DEFAULT_GROUP_MARGINS[k], ...parsed.groupMargins[k] };
+              }
             }
           }
+          state.overrides = parsed.overrides || {};
+        } else {
+          // Migração automática da política legada: desconsidera cotação antiga, margens antigas e preços fixos individuais
+          state.cotacao = Number(PRICING_CONFIG.cotacao) || 5.80;
+          state.fretePct = FIXED_FRETE_PCT;
+          state.taxaCartaoPct = Number(PRICING_CONFIG.taxaCartaoPct ?? 12);
+          state.activeTier = 'rec';
+          state.groupMargins = cloneDefaultGroupMargins();
+          const cleanedOverrides = {};
+          if (parsed.overrides && typeof parsed.overrides === 'object') {
+            for (const [oid, ov] of Object.entries(parsed.overrides)) {
+              if (!ov || typeof ov !== 'object') continue;
+              const kept = {};
+              if (ov.desc) kept.desc = ov.desc;
+              if (ov.fav) kept.fav = ov.fav;
+              if (Object.keys(kept).length > 0) cleanedOverrides[oid] = kept;
+            }
+          }
+          state.overrides = cleanedOverrides;
         }
-        state.overrides = parsed.overrides || {};
+        state.cotacaoAtualizadaEm = parsed.cotacaoAtualizadaEm || new Date().toISOString();
+        state._bhStockSyncKey = parsed._bhStockSyncKey || '';
         state.meuEstoque = parsed.meuEstoque || {};
         state.vendas = Array.isArray(parsed.vendas) ? parsed.vendas : [];
         state.encomendas = Array.isArray(parsed.encomendas) ? parsed.encomendas : [];
@@ -323,6 +323,9 @@
     }
     backfillClientesFromHistory();
     rebuildSearchIndex();
+    if (shouldPersistMigratedPolicy) {
+      try { saveState(); } catch (e) { console.warn('Persistência pós-migração de preços:', e); }
+    }
   }
 
   function esc(v) {
@@ -334,11 +337,13 @@
   // Dados completos (para backup em arquivo JSON)
   function buildSyncData() {
     return {
+      pricingPolicyVersion: state.pricingPolicyVersion || PRICING_POLICY_VERSION,
       cotacao: state.cotacao,
       cotacaoAtualizadaEm: state.cotacaoAtualizadaEm,
       fretePct: state.fretePct,
-      taxaCartaoFixa: state.taxaCartaoFixa,
+      taxaCartaoPct: state.taxaCartaoPct,
       activeTier: state.activeTier,
+      groupMargins: state.groupMargins,
       meuEstoque: state.meuEstoque,
       vendas: state.vendas || [],
       encomendas: state.encomendas || [],
@@ -360,9 +365,10 @@
   // Payload compacto (para link de sincronização e QR Code: limita às últimas 30 vendas/encomendas)
   function buildCompactSyncData() {
     return {
+      pricingPolicyVersion: state.pricingPolicyVersion || PRICING_POLICY_VERSION,
       cotacao: state.cotacao,
       fretePct: state.fretePct,
-      taxaCartaoFixa: state.taxaCartaoFixa,
+      taxaCartaoPct: state.taxaCartaoPct,
       activeTier: state.activeTier,
       meuEstoque: state.meuEstoque,
       estoqueAtualizadoEm: state.estoqueAtualizadoEm || new Date().toISOString(),
@@ -385,10 +391,14 @@
     if (!imp || typeof imp !== 'object' || Array.isArray(imp)) return null;
     const out = {};
     const isObj = o => !!o && typeof o === 'object' && !Array.isArray(o);
-    ['cotacao', 'fretePct', 'taxaCartaoFixa'].forEach(k => {
-      if (imp[k] !== undefined && isFinite(Number(imp[k]))) out[k] = Number(imp[k]);
-    });
-    if (['min', 'rec', 'max'].includes(imp.activeTier)) out.activeTier = imp.activeTier;
+    if (imp.pricingPolicyVersion === PRICING_POLICY_VERSION) {
+      out.pricingPolicyVersion = PRICING_POLICY_VERSION;
+      ['cotacao', 'taxaCartaoPct'].forEach(k => {
+        if (imp[k] !== undefined && isFinite(Number(imp[k]))) out[k] = Number(imp[k]);
+      });
+      out.fretePct = FIXED_FRETE_PCT;
+      if (['min', 'rec', 'max'].includes(imp.activeTier)) out.activeTier = imp.activeTier;
+    }
     if (isObj(imp.meuEstoque)) {
       out.meuEstoque = {};
       Object.keys(imp.meuEstoque).forEach(k => {
@@ -637,11 +647,12 @@
   let _idbSnapshotTimer = null;
   function saveState() {
     const snapshot = {
+      pricingPolicyVersion: state.pricingPolicyVersion || PRICING_POLICY_VERSION,
       cotacao: state.cotacao,
       cotacaoAtualizadaEm: state.cotacaoAtualizadaEm || '',
       _bhStockSyncKey: state._bhStockSyncKey || '',
-      fretePct: state.fretePct,
-      taxaCartaoFixa: state.taxaCartaoFixa,
+      fretePct: FIXED_FRETE_PCT,
+      taxaCartaoPct: state.taxaCartaoPct,
       activeTier: state.activeTier,
       groupMargins: state.groupMargins,
       overrides: state.overrides,
@@ -1031,15 +1042,52 @@
 
   const rawCatalog = (window.SHAPETOTAL_RAW && window.SHAPETOTAL_RAW.productos) ? window.SHAPETOTAL_RAW.productos : [];
 
-  function mapCategoryToGroupKey(cat) {
-    const c = (cat || '').toLowerCase().trim();
+  function roundRetailBRL(val) {
+    const n = Number(val) || 0;
+    if (!isFinite(n) || n <= 0) return 0;
+    const r = PRICING_CONFIG.rounding || {};
+    const b50 = Number(r.below50Step) || 1;
+    const m50 = Number(r.from50To299Step) || 5;
+    const m300 = Number(r.from300Step) || 10;
+    if (n < 50) return Math.ceil(n / b50) * b50;
+    if (n < 300) return Math.ceil(n / m50) * m50;
+    return Math.ceil(n / m300) * m300;
+  }
+
+  function mapCategoryToGroupKey(prodOrCat) {
+    const isObj = prodOrCat && typeof prodOrCat === 'object';
+    const c = (isObj ? (prodOrCat.categoria || '') : (prodOrCat || '')).toLowerCase().trim();
+    const txt = isObj ? `${prodOrCat.nombre || ''} ${prodOrCat.composicion || ''}`.toLowerCase() : '';
+
+    // HGH / Somatropina mesmo quando rotulada como anabolizante pela API
+    if (c === 'hgh' || (
+      txt && !txt.includes('multi pen') && !txt.includes('caneta multi pen') &&
+      ['somatropin', 'somatrop', 'landertropin', 'plextropin', 'genotropin', 'omnitrope', 'kigtropin', 'spectrus'].some(k => txt.includes(k))
+    )) {
+      return 'hgh';
+    }
+
+    if (c === 'emagrecedores' || c === 'queimador' || c === 'insulina' || (
+      txt && !txt.includes('semax') &&
+      ['tirzepatid', 'tirzep', 'retatrutid', 'retratutid', 'semaglutid', 'mounjaro', 'ozempic', 'liraglutid'].some(k => txt.includes(k))
+    )) {
+      return 'emagrecedores';
+    }
+
     if (c === 'anabolizante') return 'anabolizante';
-    if (c === 'emagrecedores' || c === 'queimador') return 'emagrecedores';
-    if (c === 'saude mental') return 'saude_mental';
-    if (c === 'peptideo' || c === 'hgh') return 'peptideo';
-    if (c === 'estetico' || c === 'botox' || c === 'cosmetico' || c === 'anti acne') return 'estetico';
+
+    if (c === 'peptideo' || (!c && txt && ['igf1', 'igf-1', 'pt-141', 'pt 141', 'bpc-157', 'tb-500', 'cjc', 'ipamorelin', 'epithalon', 'mots-c'].some(k => txt.includes(k)))) {
+      return 'peptideo';
+    }
+
     if (c === 'sarms' || c === 'post ciclo' || c === 'hcg') return 'sarms_post';
-    return 'potencia_outros';
+    if (c === 'estetico' || c === 'botox' || c === 'cosmetico' || c === 'anti acne' || c === 'capilar' || c === 'mascara de cabello') return 'estetico';
+
+    if (c === 'saude mental' || c === 'cbd' || c === 'parar de fumar' || txt.includes('cannabidiol') || ['semax', 'selank', 'modafinil', 'lisdexanfetamina'].some(k => txt.includes(k))) {
+      return 'saude_mental';
+    }
+
+    return 'potencia_suporte';
   }
 
   function mapProductMainTab(p) {
@@ -1055,39 +1103,22 @@
   function computeProduct(p) {
     const ov = state.overrides[p.id] || {};
     const usd = ov.usd !== undefined && ov.usd !== '' ? Number(ov.usd) : Number(p.precio || 0);
-    const multCusto = state.cotacao * (1 + state.fretePct / 100);
+    const multCusto = Number(state.cotacao || 0) * (1 + FIXED_FRETE_PCT / 100);
     const custo = usd * multCusto;
 
-    const gKey = mapCategoryToGroupKey(p.categoria);
-    const gm = state.groupMargins[gKey] || DEFAULT_GROUP_MARGINS.potencia_outros;
+    const gKey = mapCategoryToGroupKey(p);
+    const gm = state.groupMargins[gKey] || DEFAULT_GROUP_MARGINS.potencia_suporte;
 
-    // Anabolizantes high-cost calibration when default rec is used
-    let recPct = gm.rec;
-    if (gKey === 'anabolizante' && gm.rec === 40) {
-      if (custo >= 500) recPct = 32;
-      else if (custo >= 300) recPct = 38;
-    }
+    const minPct = Number(gm.min);
+    const recPct = Number(gm.rec);
+    const maxPct = Number(gm.max);
+    const minValidUsd = Number(PRICING_CONFIG.minValidUsd ?? 0.05);
+    const hasExplicitPrice = ov.customPrice !== undefined && ov.customPrice !== '' && Number(ov.customPrice) > 0;
+    const hasPriceIssue = usd <= minValidUsd && !hasExplicitPrice;
 
-    let minPct = gm.min;
-    let maxPct = gm.max;
-
-    let precoMin = Math.ceil(custo * (1 + minPct / 100));
-    let precoRec = Math.ceil(custo * (1 + recPct / 100));
-    let precoMax = Math.ceil(custo * (1 + maxPct / 100));
-    const isSpecialFixed = SPECIAL_FIXED_REC[p.id];
-    if (isSpecialFixed) {
-      const fixedRec = isSpecialFixed.rec;
-      const fixedCartao = isSpecialFixed.cartao || (fixedRec + state.taxaCartaoFixa);
-      precoRec = fixedRec;
-      const pisoMin = Math.min(Math.ceil(custo * 1.18), fixedRec - 20);
-      precoMin = Math.min(precoMin, pisoMin, fixedRec - 10);
-      precoMax = Math.max(precoMax, fixedCartao, fixedRec + 50);
-      if (custo > 0) {
-        minPct = Math.round(((precoMin - custo) / custo) * 100);
-        recPct = Math.round(((precoRec - custo) / custo) * 100);
-        maxPct = Math.round(((precoMax - custo) / custo) * 100);
-      }
-    }
+    const precoMin = hasPriceIssue ? 0 : roundRetailBRL(custo * (1 + minPct / 100));
+    const precoRec = hasPriceIssue ? 0 : roundRetailBRL(custo * (1 + recPct / 100));
+    const precoMax = hasPriceIssue ? 0 : roundRetailBRL(custo * (1 + maxPct / 100));
 
     const lucroMin = Math.max(0, precoMin - custo);
     const lucroRec = Math.max(0, precoRec - custo);
@@ -1095,33 +1126,26 @@
 
     const chosenTier = ov.tier || state.activeTier;
     let precoFinal = precoRec;
-    let margemAplicada = recPct;
 
     if (chosenTier === 'min') {
       precoFinal = precoMin;
-      margemAplicada = minPct;
     } else if (chosenTier === 'max') {
       precoFinal = precoMax;
-      margemAplicada = maxPct;
     }
 
     if (ov.customMargin !== undefined && ov.customMargin !== '') {
-      margemAplicada = Number(ov.customMargin);
-      precoFinal = Math.ceil(custo * (1 + margemAplicada / 100));
+      precoFinal = hasPriceIssue ? 0 : roundRetailBRL(custo * (1 + Number(ov.customMargin) / 100));
     }
-    if (ov.customPrice !== undefined && ov.customPrice !== '') {
+    if (hasExplicitPrice) {
       precoFinal = Number(ov.customPrice);
-      margemAplicada = custo > 0 ? Math.round(((precoFinal - custo) / custo) * 100) : 0;
     }
 
-    if (isSpecialFixed && (!ov.tier || ov.tier === 'rec') && !ov.customPrice && !ov.customMargin) {
-      precoFinal = isSpecialFixed.rec;
-      margemAplicada = custo > 0 ? Math.round(((precoFinal - custo) / custo) * 100) : 0;
-    }
-    const lucroFinal = precoFinal - custo;
-    const precoCartao = (isSpecialFixed && (!ov.tier || ov.tier === 'rec') && !ov.customPrice)
-      ? isSpecialFixed.cartao
-      : precoFinal + state.taxaCartaoFixa;
+    const margemAplicada = (!hasPriceIssue && custo > 0) ? Math.round(((precoFinal - custo) / custo) * 100) : 0;
+    const lucroFinal = hasPriceIssue ? 0 : (precoFinal - custo);
+    const cardPct = Number(state.taxaCartaoPct ?? 12);
+    const precoCartao = (!hasPriceIssue && precoFinal > 0)
+      ? roundRetailBRL(precoFinal * (1 + cardPct / 100))
+      : 0;
 
     const cde = Number(p.stock_cde || 0);
     const pj = Number(p.stock_pj || 0);
@@ -1136,6 +1160,8 @@
       ...p,
       usd,
       custo,
+      groupKey: gKey,
+      hasPriceIssue,
       minPct,
       recPct,
       maxPct,
@@ -1161,6 +1187,34 @@
     };
   }
 
+  function computeDoseVialConfig(productId) {
+    const pidStr = String(productId);
+    const vialCfg = (PRICING_CONFIG.doseVials || {})[pidStr];
+    if (!vialCfg) return null;
+    const raw = rawCatalog.find(x => String(x.id) === pidStr);
+    const computed = raw ? computeProduct(raw) : computeProduct({ id: Number(productId), precio: 110, categoria: 'emagrecedores' });
+    const totalMg = Number(vialCfg.totalMg) || 120;
+    const doseStep = Number((PRICING_CONFIG.rounding && PRICING_CONFIG.rounding.doseStep) || 5);
+    const basePerMg = computed.precoFinal > 0 ? (computed.precoFinal / totalMg) : 0;
+    const doses = (vialCfg.doses || []).map(d => {
+      const mg = Number(d.mg);
+      const fator = Number(d.fatorFracionamento || 2.5);
+      const rawPrice = basePerMg * mg * fator;
+      const preco = rawPrice > 0 ? Math.ceil(rawPrice / doseStep) * doseStep : 0;
+      return {
+        mg,
+        label: d.label,
+        preco,
+        fullLabel: `${d.label} — ${formatBRL(preco)}`
+      };
+    });
+    return {
+      ...vialCfg,
+      frascoPricing: computed,
+      doses
+    };
+  }
+
   function escapeHtml(str) {
     if (!str) return '';
     return String(str)
@@ -1181,7 +1235,7 @@
 
   function isGlpProduct(p) {
     if (!p) return false;
-    if (SPECIAL_FIXED_REC[p.id]) return true;
+    if (Number(p.id) >= 9001 && Number(p.id) <= 9007) return true;
     const txt = `${p.nombre || ''} ${p.composicion || ''} ${p.desc || ''}`.toLowerCase();
     return (
       txt.includes('tirzepatid') || txt.includes('tirz') || txt.includes('retatrutid') ||
@@ -1774,11 +1828,11 @@
     if (lbl3) lbl3.textContent = 'Ticket Médio de Venda';
     if (lbl4) lbl4.textContent = 'Lucro Líquido Médio / Un';
 
-    const withStock = filtered.filter(p => p.stockTotal > 0);
+    const withStock = filtered.filter(p => p.stockTotal > 0 && !p.hasPriceIssue);
     const avgCost = withStock.length ? withStock.reduce((s, p) => s + p.custo, 0) / withStock.length : 0;
     const avgPrice = withStock.length ? withStock.reduce((s, p) => s + p.precoFinal, 0) / withStock.length : 0;
     const avgProfit = withStock.length ? withStock.reduce((s, p) => s + p.lucroFinal, 0) / withStock.length : 0;
-    const mult = (state.cotacao * (1 + state.fretePct / 100)).toFixed(2);
+    const mult = (state.cotacao * (1 + FIXED_FRETE_PCT / 100)).toFixed(2);
     let cotacaoAlerta = '';
     if (state.cotacaoAtualizadaEm) {
       const diffDias = Math.floor((Date.now() - new Date(state.cotacaoAtualizadaEm).getTime()) / 86400000);
@@ -1788,9 +1842,9 @@
     const skusComBhLivre = filtered.filter(p => getDisponibilidade(p.id).disponivel > 0).length;
     const totalLivreBh = filtered.reduce((s, p) => s + getDisponibilidade(p.id).disponivel, 0);
     document.getElementById('kpiCount').textContent = `${filtered.length} SKUs`;
-    document.getElementById('kpiCountSub').textContent = `${withStock.length} SKUs PY · ${skusComBhLivre} SKUs livres BH (${totalLivreBh} un)`;
+    document.getElementById('kpiCountSub').textContent = `${filtered.filter(p => p.stockTotal > 0).length} SKUs PY · ${skusComBhLivre} SKUs livres BH (${totalLivreBh} un)`;
     document.getElementById('kpiMult').textContent = `R$ ${mult}`;
-    document.getElementById('kpiMultSub').textContent = `Dólar R$ ${state.cotacao.toFixed(2)} + ${state.fretePct}% frete${cotacaoAlerta}`;
+    document.getElementById('kpiMultSub').textContent = `Dólar R$ ${state.cotacao.toFixed(2)} + ${FIXED_FRETE_PCT}% frete fixo${cotacaoAlerta}`;
     document.getElementById('kpiAvgPrice').textContent = formatBRL(avgPrice);
     document.getElementById('kpiAvgCost').textContent = `Custo médio: ${formatBRL(avgCost)}`;
     document.getElementById('kpiAvgProfit').textContent = formatBRL(avgProfit);
@@ -1908,13 +1962,13 @@
 
               <div class="p-price-hero">
                 <div>
-                  <div class="final-label">Preço PIX ${p.hasCustom ? '✏️' : ''}</div>
-                  <div class="card-val">Cartão: ${formatBRLInt(p.precoCartao)} <span style="font-size:10px; color:#38bdf8; font-weight:700;">(${isGlpProduct(p) ? 'até 12x s/j' : 'até 6x'})</span></div>
+                  <div class="final-label">${p.hasPriceIssue ? '⚠️ Preço USD pendente' : `Preço PIX ${p.hasCustom ? '✏️' : ''}`}</div>
+                  <div class="card-val">${p.hasPriceIssue ? 'Aguardando cotação no site' : `Cartão: ${formatBRLInt(p.precoCartao)} <span style="font-size:10px; color:#38bdf8; font-weight:700;">(${isGlpProduct(p) ? 'até 12x s/j' : 'até 6x'})</span>`}</div>
                 </div>
                 <div style="text-align:right">
-                  <div class="final-val">${formatBRLInt(p.precoFinal)}</div>
-                  <div class="t-profit internal-only" style="${p.margemAplicada < 0 ? 'color:#f87171;font-weight:800;' : (p.margemAplicada < 20 ? 'color:#fbbf24;font-weight:700;' : '')}">
-                    ${p.margemAplicada < 0 ? '🚨 PREJUÍZO' : (p.margemAplicada < 20 ? '⚠️ Margem Baixa:' : 'Lucro:')} ${formatBRL(p.lucroFinal)} (${p.margemAplicada}%)
+                  <div class="final-val">${p.hasPriceIssue ? 'Sob consulta' : formatBRLInt(p.precoFinal)}</div>
+                  <div class="t-profit internal-only" style="${p.hasPriceIssue ? 'color:#fbbf24;font-weight:700;' : (p.margemAplicada < 0 ? 'color:#f87171;font-weight:800;' : (p.margemAplicada < 20 ? 'color:#fbbf24;font-weight:700;' : ''))}">
+                    ${p.hasPriceIssue ? 'Edite o USD manualmente se precisar cotar' : `${p.margemAplicada < 0 ? '🚨 PREJUÍZO' : (p.margemAplicada < 20 ? '⚠️ Margem Baixa:' : 'Lucro:')} ${formatBRL(p.lucroFinal)} (${p.margemAplicada}%)`}
                   </div>
                   ${(state.frascosDoses && state.frascosDoses[p.id] && Number(state.frascosDoses[p.id].mgRestante) <= 24)
                     ? `<div class="internal-only" style="font-size:10px;color:#e879f9;font-weight:800;margin-top:2px;">💉 Frasco acabando: ${state.frascosDoses[p.id].mgRestante} mg (&lt;20%)</div>`
@@ -2017,8 +2071,8 @@
                   <b>${formatBRLInt(p.precoMax)}</b>
                   <div style="font-size:10px;color:#34d399">+${formatBRLInt(p.lucroMax)} (${p.maxPct}%)</div>
                 </td>
-                <td><b style="font-size:14px;color:var(--accent)">${formatBRLInt(p.precoFinal)}</b></td>
-                <td class="internal-only" style="color:#34d399;font-weight:700">${formatBRL(p.lucroFinal)} (${p.margemAplicada}%)</td>
+                <td><b style="font-size:14px;color:${p.hasPriceIssue ? '#fbbf24' : 'var(--accent)'}">${p.hasPriceIssue ? 'Sob consulta' : formatBRLInt(p.precoFinal)}</b></td>
+                <td class="internal-only" style="color:${p.hasPriceIssue ? '#fbbf24' : '#34d399'};font-weight:700">${p.hasPriceIssue ? 'USD pendente' : `${formatBRL(p.lucroFinal)} (${p.margemAplicada}%)`}</td>
                 <td>
                   <div style="display:flex;gap:4px">
                     ${canSellTbl
@@ -2095,7 +2149,7 @@
 
     const ids = [9006, 9005];
     container.innerHTML = ids.map(id => {
-      const conf = TABELA_DOSES_OFICIAIS[id];
+      const conf = computeDoseVialConfig(id);
       if (!conf) return '';
       const doseState = (state.frascosDoses && state.frascosDoses[id]) || { mgRestante: 120, totalAplicadasMg: 0 };
       const mgRest = Math.max(0, Number(doseState.mgRestante || 0));
@@ -3273,7 +3327,7 @@
         `;
       }
 
-      const confDose = TABELA_DOSES_OFICIAIS[p.id];
+      const confDose = computeDoseVialConfig(p.id);
       const doseBox = document.getElementById('vrDoseBox');
       const doseButtons = document.getElementById('vrDoseButtons');
       const doseSaldoInfo = document.getElementById('vrDoseSaldoInfo');
@@ -3887,7 +3941,7 @@
     },
 
     ajustarSaldoFrascoDose(productId) {
-      const conf = TABELA_DOSES_OFICIAIS[productId];
+      const conf = computeDoseVialConfig(productId);
       if (!conf) return;
       if (!state.frascosDoses) state.frascosDoses = {};
       if (!state.frascosDoses[productId]) state.frascosDoses[productId] = { mgRestante: 120, totalAplicadasMg: 0, perdaMg: 0 };
@@ -3919,16 +3973,16 @@
     },
 
     openDoseImageModal(productId) {
-      const conf = TABELA_DOSES_OFICIAIS[productId];
+      const conf = computeDoseVialConfig(productId);
       if (!conf) return;
       const modal = document.getElementById('doseImageModal');
-      document.getElementById('doseImageModalTitle').textContent = `Tabela Oficial: ${conf.nome}`;
+      document.getElementById('doseImageModalTitle').textContent = `Tabela Dinâmica: ${conf.nome}`;
       document.getElementById('doseImageModalImg').src = conf.fotoTabela;
       modal.classList.add('open');
     },
 
     abrirNovoFrascoDose(productId, fromVr = false) {
-      const conf = TABELA_DOSES_OFICIAIS[productId];
+      const conf = computeDoseVialConfig(productId);
       if (!conf) return;
       const doseState = (state.frascosDoses && state.frascosDoses[productId]) || { mgRestante: 120 };
       const estoqueFechados = Number((state.meuEstoque || {})[productId] || 0);
@@ -4486,8 +4540,12 @@
       const textarea = document.getElementById('waCatalogText');
       const sBox = document.getElementById('cartShippingBox');
       if (sBox) sBox.style.display = 'none';
+      const byId = id => {
+        const raw = rawCatalog.find(x => Number(x.id) === Number(id));
+        return raw ? computeProduct(raw) : null;
+      };
       if (mode === 'meu_estoque') {
-        const inStock = rawCatalog.map(computeProduct).filter(p => ((state.meuEstoque || {})[p.id] || 0) > 0);
+        const inStock = rawCatalog.map(computeProduct).filter(p => ((state.meuEstoque || {})[p.id] || 0) > 0 && !p.hasPriceIssue);
         if (!inStock.length) {
           textarea.value = `📦 *PRONTA ENTREGA EM BELO HORIZONTE — SHAPE TOTAL*\n\n(Nenhum produto cadastrado no seu estoque físico ainda. No CRM, use o botão "+" no campo "Meu Estoque BH" do produto para adicionar suas caixas.)`;
         } else {
@@ -4509,63 +4567,60 @@
           textarea.value = lines.join('\n');
         }
       } else if (mode === 'tabela_doses_avulsas') {
-        textarea.value = `💉 *TABELA OFICIAL DE DOSES INDIVIDUAIS — SHAPE TOTAL*
+        const tirz = computeDoseVialConfig(9006);
+        const reta = computeDoseVialConfig(9005);
+        const fmtDoseList = conf => (conf ? conf.doses.map(d => `• *${d.label}:* ${formatBRLInt(d.preco)} (Dose Individual)`).join('\n') : '');
+        textarea.value = `💉 *TABELA DINÂMICA DE DOSES INDIVIDUAIS — SHAPE TOTAL*
 _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🇺🇸 *TIRZEPATIDE INJECTION 120MG / 4ML*
 *USA Peptides — Qualidade Internacional*
-• *2,5 mg:* R$ 65,00 (Dose Individual)
-• *5,0 mg:* R$ 130,00 (Dose Individual)
-• *7,5 mg:* R$ 185,00 (Dose Individual)
+${fmtDoseList(tirz)}
 ✨ _Auxilia no controle de peso, suporte metabólico e qualidade de vida._
-📌 _Doses calculadas para o melhor aproveitamento do lote de 120 mg._
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🧬 *RETATRUTIDE 120 MG (GLP-1, GIP, GLUCAGON)*
 *GEN-HEALTH — Ciência Para Uma Vida Melhor*
-• *2,5 mg:* R$ 80,00 (Dose Individual)
-• *5,0 mg:* R$ 150,00 (Dose Individual)
-✨ _Revolução no emagrecimento com triplo agonista (aplicação 1x por semana)._
-📌 _Solução injetável em vial de altíssima pureza._
+${fmtDoseList(reta)}
+✨ _Triplo agonista de alta performance (aplicação 1x por semana)._
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🚚 *Atendimento Express em Belo Horizonte e Região*
-🔒 *Garantia:* Produtos originais em vials lacrados, diluição correta e total segurança.
+🔒 *Garantia:* Produtos originais lacrados, diluição estéril correta e total segurança.
 📲 _Dúvidas ou agendamento de aplicação? Chame aqui!_`;
       } else if (mode === 'tabela_especial') {
-        textarea.value = `📋 TABELA DE PREÇOS
-
-📦 Linha 60 mg — duração de até 6 meses
-•  TG 60 mg
-•  Tirzec (4 vias)
-•  Lipoless (4 vias)
-•  Lipoland (4 vias)
-•  Lipoless MD (multidose)
-•  Tirzec MD (multidose)
-•  T36 MD (multidose)
-•  Gluconex (4 vias)
-💠 Pix: R$ 900,00
-💳 Cartão: R$ 1.000,00 em até 12x sem juros
-
-🧬 Retatrutida 60 mg
-💠 Pix: R$ 1.000,00
-💳 Cartão: R$ 1.100,00 em até 12x sem juros
-
-💉 Ampolas avulsas de 15 mg
-•  Tirzepatida • Lipoless • TG • Tirzec • Lipoland
-💠 Pix: R$ 250,00 cada
-💳 Cartão: R$ 300,00 cada em até 12x sem juros`;
+        const formatLine = p => p && !p.hasPriceIssue
+          ? `• *${p.nombre}*${p.marca ? ` (${p.marca})` : ''}\n  💠 PIX: *${formatBRLInt(p.precoFinal)}* | 💳 Cartão (12x): *${formatBRLInt(p.precoCartao)}*`
+          : null;
+        const grupo60Tirz = [2848, 3207, 2889, 2988, 2997, 2996, 3136, 3308, 3039, 3014, 3149].map(byId).map(formatLine).filter(Boolean);
+        const grupoReta = [2830, 3340, 3156, 3391, 2942, 2965, 3147, 3370].map(byId).map(formatLine).filter(Boolean);
+        const grupo15 = [9001, 9002, 9003, 9004, 9007, 2763, 3206].map(byId).map(formatLine).filter(Boolean);
+        textarea.value = [
+          `📋 *TABELA ATUALIZADA — TIRZEPATIDAS & RETATRUTIDA*`,
+          `_Valores calculados pelo padrão oficial Shape Total (Dólar R$ ${Number(state.cotacao).toFixed(2)})_`,
+          ``,
+          `📦 *LINHA TIRZEPATIDA 60 MG (4 vias x 15 mg ou Multidose)*`,
+          ...grupo60Tirz,
+          ``,
+          `🧬 *LINHA RETATRUTIDA 60 MG & KITS (Triplo Agonista)*`,
+          ...grupoReta,
+          ``,
+          `💉 *AMPOLAS AVULSAS DE 15 MG*`,
+          ...grupo15,
+          ``,
+          `🚀 _Entrega expressa em BH ou envio rastreado para todo o Brasil._`
+        ].join('\n');
       } else if (mode === 'grok') {
         textarea.value = generateGrokGuideWhatsApp();
       } else {
-        const filtered = getFilteredProducts();
+        const filtered = getFilteredProducts().filter(p => !p.hasPriceIssue && p.precoFinal > 0);
         const lines = [
           `*CATÁLOGO ATUALIZADO — ${state.mainGroup.toUpperCase()} (${filtered.length} produtos)*`,
-          `_Valores à vista no PIX | Cartão em até 6x_`,
+          `_Valores à vista no PIX | Cartão em até 6x (GLP-1 até 12x)_`,
           ``
         ];
-        // Organiza por Marca mantendo 100% dos produtos filtrados
+        // Organiza por Marca mantendo 100% dos produtos com preço válido
         const byBrand = {};
         filtered.forEach(p => {
           const b = (p.marca || 'OUTRAS MARCAS').toUpperCase().trim();
@@ -4663,7 +4718,8 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
       const freteNum = Number(frete) || 0;
       const totalPixComFrete = totalPix + freteNum;
-      const totalCartaoComFrete = totalPix + state.taxaCartaoFixa + freteNum;
+      const cardPct = Number(state.taxaCartaoPct ?? 12);
+      const totalCartaoComFrete = totalPixComFrete > 0 ? roundRetailBRL(totalPixComFrete * (1 + cardPct / 100)) : 0;
 
       lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━`);
       lines.push(`📦 *Subtotal Medicamentos:* ${formatBRL(totalPix)}`);
@@ -7048,6 +7104,25 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (mPedForn) mPedForn.classList.remove('open');
 
       alert(`🚚 Pedido ${loteId} salvo como Carga em Trânsito com sucesso! (${itensTransito.reduce((a, b) => a + b.qtd, 0)} caixas).\n\nAgora você pode acompanhar a chegada pelo botão "🚚 A Chegar".`);
+    },
+
+    computeProduct(raw) {
+      return computeProduct(raw);
+    },
+
+    computeDoseVialConfig(productId) {
+      return computeDoseVialConfig(productId);
+    },
+
+    getPricingSnapshot() {
+      return {
+        pricingPolicyVersion: state.pricingPolicyVersion || PRICING_POLICY_VERSION,
+        cotacao: state.cotacao,
+        fretePct: state.fretePct,
+        taxaCartaoPct: state.taxaCartaoPct,
+        activeTier: state.activeTier,
+        groupMargins: JSON.parse(JSON.stringify(state.groupMargins))
+      };
     }
   };
 
@@ -7129,8 +7204,9 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
     const cartaoInput = document.getElementById('inputTaxaCartao');
 
     cotInput.value = state.cotacao;
-    freteInput.value = state.fretePct;
-    cartaoInput.value = state.taxaCartaoFixa;
+    freteInput.value = FIXED_FRETE_PCT;
+    freteInput.readOnly = true;
+    cartaoInput.value = state.taxaCartaoPct;
 
     cotInput.addEventListener('input', e => {
       state.cotacao = Number(e.target.value) || 0;
@@ -7138,13 +7214,12 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       saveState();
       renderAll();
     });
-    freteInput.addEventListener('input', e => {
-      state.fretePct = Number(e.target.value) || 0;
-      saveState();
-      renderAll();
+    freteInput.addEventListener('input', () => {
+      freteInput.value = FIXED_FRETE_PCT;
+      state.fretePct = FIXED_FRETE_PCT;
     });
     cartaoInput.addEventListener('input', e => {
-      state.taxaCartaoFixa = Number(e.target.value) || 0;
+      state.taxaCartaoPct = Math.max(0, Number(e.target.value) || 0);
       saveState();
       renderAll();
     });

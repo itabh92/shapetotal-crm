@@ -6,19 +6,20 @@ Gera meu_estoque_dados.json, atualiza catalogo_dados.json e dados_catalogo.js,
 reempacota shapetotal_mobile.html e gera o catálogo em PDF de Pronta Entrega BH.
 """
 
-import os
 import json
-import math
+import os
 import shutil
 from datetime import datetime
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
-)
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from PIL import Image as PILImage
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import (
+    Image as RLImage, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+)
+
+from pricing_engine import compute_product_pricing, load_pricing_config, write_pricing_config_js
 
 BASE_DIR = '/Users/italosouza/Medicamentos/ShapeTotalCRM'
 FOTOS_DIR = os.path.join(BASE_DIR, 'fotos')
@@ -27,19 +28,14 @@ DADOS_JS_PATH = os.path.join(BASE_DIR, 'dados_catalogo.js')
 DOWNLOADS_DIR = '/Users/italosouza/Downloads'
 DESKTOP_DIR = '/Users/italosouza/Desktop'
 
-# ITENS FÍSICOS CONFIRMADOS POR ITALO EM 09/11/2026
+# ITENS FÍSICOS EM MÃOS — preços calculados automaticamente pelo motor pricing_engine.py (Dólar + 30% frete + % grupo)
 ESTOQUE_LOCAL = [
-    # -------------------------------------------------------------
-    # 1. CAIXAS FECHADAS DE TIRZEPATIDA (LINHA 60 MG)
-    # -------------------------------------------------------------
     {
         'id_catalogo': 2848,
         'nome': 'TG 60 mg — Indufar (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
         'qtd': 1,
-        'preco_pix': 900.0,
-        'preco_cartao': 1000.0,
         'obs': 'Caixa lacrada original Indufar'
     },
     {
@@ -48,9 +44,7 @@ ESTOQUE_LOCAL = [
         'tipo': 'caixa_fechada',
         'apresentacao': 'Frasco ampola única multi-dosis de 2 mL (60 mg total / 15 mg por 0,5 mL)',
         'qtd': 2,
-        'preco_pix': 900.0,
-        'preco_cartao': 1000.0,
-        'obs': 'Ampola única multi-dosis lacrada original Quimfa (recebidas hoje 10/11)'
+        'obs': 'Ampola única multi-dosis lacrada original Quimfa'
     },
     {
         'id_catalogo': 3207,
@@ -58,8 +52,6 @@ ESTOQUE_LOCAL = [
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
         'qtd': 2,
-        'preco_pix': 900.0,
-        'preco_cartao': 1000.0,
         'obs': 'Caixa lacrada original Quimfa'
     },
     {
@@ -68,8 +60,6 @@ ESTOQUE_LOCAL = [
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
         'qtd': 3,
-        'preco_pix': 900.0,
-        'preco_cartao': 1000.0,
         'obs': 'Caixa lacrada original Eticos Labs'
     },
     {
@@ -78,22 +68,14 @@ ESTOQUE_LOCAL = [
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
         'qtd': 0,
-        'preco_pix': 900.0,
-        'preco_cartao': 1000.0,
         'obs': 'Caixa aberta para venda em ampolas avulsas'
     },
-
-    # -------------------------------------------------------------
-    # 2. RETATRUTIDA GEN-HEALTH (TRIPLO AGONISTA GLP-1/GIP/GLUCAGON)
-    # -------------------------------------------------------------
     {
         'id_catalogo': 3370,
         'nome': 'Retatrutida Gen-Health 240 mg (Kit 4x60 mg)',
         'tipo': 'kit_fechado',
         'apresentacao': 'Kit fechado com 4 frascos de 60 mg + 1 Água Bacteriostática',
         'qtd': 1,
-        'preco_pix': 3800.0, # ou 4x R$ 1.000 se vendido avulso
-        'preco_cartao': 4200.0,
         'obs': 'Kit fechado de fábrica completo com diluente estéril'
     },
     {
@@ -102,22 +84,14 @@ ESTOQUE_LOCAL = [
         'tipo': 'ampola_fechada',
         'apresentacao': 'Ampola liofilizada de 60 mg + Água Bacteriostática',
         'qtd': 3,
-        'preco_pix': 1000.0,
-        'preco_cartao': 1100.0,
         'obs': '3 ampolas fechadas de 60 mg com diluente estéril incluso'
     },
-
-    # -------------------------------------------------------------
-    # 3. AMPOLAS AVULSAS DE 15 MG
-    # -------------------------------------------------------------
     {
         'id_catalogo': 9001,
         'nome': 'Lipoland 15 mg (Ampola Avulsa)',
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Landerlan)',
         'qtd': 3,
-        'preco_pix': 250.0,
-        'preco_cartao': 300.0,
         'obs': 'Ampola avulsa oficial Landerlan'
     },
     {
@@ -126,8 +100,6 @@ ESTOQUE_LOCAL = [
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Quimfa)',
         'qtd': 3,
-        'preco_pix': 250.0,
-        'preco_cartao': 300.0,
         'obs': 'Ampola avulsa oficial Quimfa'
     },
     {
@@ -136,8 +108,6 @@ ESTOQUE_LOCAL = [
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Indufar)',
         'qtd': 3,
-        'preco_pix': 250.0,
-        'preco_cartao': 300.0,
         'obs': 'Ampola avulsa oficial Indufar'
     },
     {
@@ -146,8 +116,6 @@ ESTOQUE_LOCAL = [
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Eticos)',
         'qtd': 2,
-        'preco_pix': 250.0,
-        'preco_cartao': 300.0,
         'obs': 'Ampola avulsa oficial Eticos Labs'
     },
     {
@@ -156,22 +124,14 @@ ESTOQUE_LOCAL = [
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Catedral)',
         'qtd': 3,
-        'preco_pix': 250.0,
-        'preco_cartao': 300.0,
         'obs': 'Ampola avulsa oficial Catedral'
     },
-
-    # -------------------------------------------------------------
-    # 4. FRASCOS ABERTOS PARA FRACIONAMENTO DE DOSES
-    # -------------------------------------------------------------
     {
         'id_catalogo': 9005,
         'nome': 'Retatrutida Gen-Health 120 mg (Frasco para Doses)',
         'tipo': 'frasco_doses',
         'apresentacao': 'Frasco de 120 mg aberto reservado para aplicação fracionada',
         'qtd': 1,
-        'preco_pix': 2000.0, # Estimativa conservadora de venda fracionada
-        'preco_cartao': 2200.0,
         'obs': 'Frasco aberto exclusivo para doses locais'
     },
     {
@@ -180,37 +140,51 @@ ESTOQUE_LOCAL = [
         'tipo': 'frasco_doses',
         'apresentacao': 'Frasco de 120 mg aberto reservado para aplicação fracionada',
         'qtd': 1,
-        'preco_pix': 1800.0, # Estimativa conservadora de venda fracionada
-        'preco_cartao': 2000.0,
         'obs': 'Frasco aberto exclusivo para doses locais'
     }
 ]
 
 def main():
     print("Iniciando registro do Estoque Próprio em BH...")
-    
-    total_caixas_60 = sum(item['qtd'] for item in ESTOQUE_LOCAL if item['tipo'] == 'caixa_fechada')
-    total_ampolas_60 = sum(item['qtd'] for item in ESTOQUE_LOCAL if item['tipo'] in ['ampola_fechada', 'kit_fechado'])
-    total_ampolas_15 = sum(item['qtd'] for item in ESTOQUE_LOCAL if item['tipo'] == 'ampola_avulsa')
-    total_frascos_120 = sum(item['qtd'] for item in ESTOQUE_LOCAL if item['tipo'] == 'frasco_doses')
-    
-    total_faturamento_pix = sum(item['qtd'] * item['preco_pix'] for item in ESTOQUE_LOCAL)
-    total_faturamento_cartao = sum(item['qtd'] * item['preco_cartao'] for item in ESTOQUE_LOCAL)
-    
+    pricing_cfg = load_pricing_config()
+    write_pricing_config_js(pricing_cfg)
+
+    with open(JSON_PATH, 'r', encoding='utf-8') as f:
+        cat_data = json.load(f)
+    cat_by_id = {int(p['id']): p for p in cat_data.get('productos', []) if p.get('id') is not None}
+
+    itens_calculados = []
+    for item in ESTOQUE_LOCAL:
+        prod = cat_by_id.get(int(item['id_catalogo']), {'id': item['id_catalogo'], 'precio': 0, 'categoria': 'emagrecedores'})
+        pr = compute_product_pricing(prod, tier='rec', cfg=pricing_cfg)
+        enriched = dict(item)
+        enriched['custo_brl'] = pr['custo']
+        enriched['preco_pix'] = float(pr['preco_pix'])
+        enriched['preco_cartao'] = float(pr['preco_cartao'])
+        itens_calculados.append(enriched)
+
+    total_caixas_60 = sum(item['qtd'] for item in itens_calculados if item['tipo'] == 'caixa_fechada')
+    total_ampolas_60 = sum(item['qtd'] for item in itens_calculados if item['tipo'] in ['ampola_fechada', 'kit_fechado'])
+    total_ampolas_15 = sum(item['qtd'] for item in itens_calculados if item['tipo'] == 'ampola_avulsa')
+    total_frascos_120 = sum(item['qtd'] for item in itens_calculados if item['tipo'] == 'frasco_doses')
+
+    total_faturamento_pix = sum(item['qtd'] * item['preco_pix'] for item in itens_calculados)
+    total_faturamento_cartao = sum(item['qtd'] * item['preco_cartao'] for item in itens_calculados)
+
     dados_estoque = {
         'atualizado_em': datetime.now().strftime('%d/%m/%Y às %H:%M'),
         'responsavel': 'Italo Souza',
         'local': 'Belo Horizonte / MG (Pronta Entrega)',
         'resumo': {
             'caixas_fechadas_60mg': total_caixas_60,
-            'ampolas_retatrutida_60mg': total_ampolas_60 + (3), # 1 kit de 4 + 3 avulsas = 7 ampolas
+            'ampolas_retatrutida_60mg': total_ampolas_60 + 3,
             'ampolas_avulsas_15mg': total_ampolas_15,
             'frascos_doses_120mg': total_frascos_120,
-            'total_itens_contabilizados': len(ESTOQUE_LOCAL),
+            'total_itens_contabilizados': len(itens_calculados),
             'faturamento_potencial_pix': total_faturamento_pix,
             'faturamento_potencial_cartao': total_faturamento_cartao
         },
-        'itens': ESTOQUE_LOCAL
+        'itens': itens_calculados
     }
     
     # 1. Salva meu_estoque_dados.json no CRM
@@ -340,7 +314,9 @@ def main():
     story.append(Spacer(1, 12))
 
     # Itens de pronta entrega
-    for item in ESTOQUE_LOCAL:
+    for item in itens_calculados:
+        if int(item.get('qtd', 0) or 0) <= 0:
+            continue
         pid = item['id_catalogo']
         nome = item['nome']
         apres = item['apresentacao']

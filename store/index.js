@@ -61,8 +61,8 @@ export async function iniciarMigracaoSeguraBrowser() {
       getCustoUnitBrlFn: (prod, st) => {
         const pid = Number(prod.id);
         if (st.custosReais && Number(st.custosReais[pid]) > 0) return Number(st.custosReais[pid]);
-        const cot = Number(st.cotacao) || 5.6;
-        const frete = Number(st.fretePct) ?? 30;
+        const cot = Number(st.cotacao) || 5.8;
+        const frete = st.fretePct !== undefined ? Number(st.fretePct) : 30;
         return Math.round(Number(prod.precio || 0) * cot * (1 + frete / 100) * 100) / 100;
       },
       // Nunca dispara download automático em primeiro acesso; cópia recuperável fica salva no IndexedDB

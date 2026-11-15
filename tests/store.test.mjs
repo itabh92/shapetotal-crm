@@ -128,13 +128,13 @@ const catalog = catalogoRaw.productos || [];
 function getCustoUnitBrl(prod, st) {
   const pid = Number(prod.id);
   if (st.custosReais && Number(st.custosReais[pid]) > 0) return Number(st.custosReais[pid]);
-  const cot = Number(st.cotacao) || 5.6;
-  const frete = Number(st.fretePct ?? 30);
+  const cot = Number(st.cotacao) || 5.8;
+  const frete = st.fretePct !== undefined ? Number(st.fretePct) : 30;
   return Math.round(Number(prod.precio || 0) * cot * (1 + frete / 100) * 100) / 100;
 }
 
 const sampleState = {
-  cotacao: 5.6,
+  cotacao: 5.8,
   fretePct: 30,
   meuEstoque: catalogoRaw.meu_estoque_qtds || { 2848: 4, 2889: 4, 3207: 1, 2830: 3 },
   custosReais: { 2830: 550 },

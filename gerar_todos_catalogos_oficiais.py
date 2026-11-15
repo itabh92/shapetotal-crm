@@ -2,24 +2,26 @@
 # -*- coding: utf-8 -*-
 """
 MASTER GENERATOR: 5 Catálogos Oficiais da Shape Total 2026.
-Classificação Canônica e Exclusiva dos 884 SKUs (sem sobreposições).
-Garante valores fixos oficiais das Tirzepatidas e Retatrutidas enviadas por Italo,
-margem máxima para o restante, exclui versões antigas e mantém apenas as mais novas.
+Classificação Canônica e Exclusiva de todo o catálogo (sem sobreposições).
+Aplica 100% a política centralizada de pricing_config.json / pricing_engine.py
+(USD site * Dólar 5,80 * 1,30 frete + faixa recomendada calibrada de mercado e cartão +12%),
+exclui versões antigas e mantém apenas os PDFs atualizados.
 """
 
-import os
-import json
-import math
-import shutil
 import glob
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
-)
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+import json
+import os
+import shutil
 from PIL import Image as PILImage
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import (
+    Image as RLImage, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+)
+
+from pricing_engine import compute_product_pricing, load_pricing_config
 
 BASE_DIR = '/Users/italosouza/Medicamentos/ShapeTotalCRM'
 FOTOS_DIR = os.path.join(BASE_DIR, 'fotos')
@@ -27,50 +29,7 @@ JSON_PATH = os.path.join(BASE_DIR, 'catalogo_dados.json')
 DADOS_JS_PATH = os.path.join(BASE_DIR, 'dados_catalogo.js')
 DOWNLOADS_DIR = '/Users/italosouza/Downloads'
 DESKTOP_DIR = '/Users/italosouza/Desktop'
-
-# TABELA OFICIAL DE PREÇOS FIXOS DEFINIDA POR ITALO
-# (Mantém rigorosamente estes valores; para os demais aplica margem máxima)
-SPECIAL_FIXED = {
-    # Linha Tirzepatida 60 mg (4 frascos x 15 mg ou Multi-Dose 15 mg) -> Pix: R$ 900,00 | Cartão: R$ 1.000,00
-    2848: (900, 1000),  # TG 15mg x 4 (60mg)
-    3207: (900, 1000),  # Tirzec 15mg x 4 (60mg)
-    2889: (900, 1000),  # Lipoless 15mg x 4 (60mg)
-    2988: (900, 1000),  # Lipoland 15mg x 4 (60mg)
-    3072: (900, 1000),  # Lipoland MD 15mg
-    2997: (900, 1000),  # Lipoless MD 15mg
-    2996: (900, 1000),  # Tirzec MD 15mg
-    3308: (900, 1000),  # T36 MD 15mg
-    3381: (900, 1000),  # T36 15mg x 4 (60mg)
-    3039: (900, 1000),  # Gluconex 15mg x 4 (60mg)
-    3136: (900, 1000),  # Tirzedral 15mg x 4 (60mg)
-    3203: (900, 1000),  # Tirzedral MD 15mg
-    446:  (900, 1000),  # Lipoless 15mg x 4 Jer
-    3389: (900, 1000),  # Slimex 15mg x 4 (60mg)
-    3014: (900, 1000),  # Synedica Tirzepatida 60mg
-    3392: (900, 1000),  # Oxygen Tirzegen 60mg x 4
-    3271: (900, 1000),  # Oxygen Tirzegen 60mg Polvo
-    2877: (900, 1000),  # Sin Marca Tirzepatida 60mg
-    2765: (900, 1000),  # Gen-Tirz 60mg
-    3186: (900, 1000),  # Veltrane Tirzepatide 60mg
-
-    # Spectrum Mounjaos 60mg (Importado alto custo USD 130 -> Pix R$ 1.467,00 | Cartão R$ 1.567,00)
-    3149: (1467, 1567),
-
-    # Retatrutida 60 mg -> Pix: R$ 1.000,00 | Cartão: R$ 1.100,00
-    3340: (1000, 1100),  # Oxygen Retatrutide 60mg
-    2830: (1000, 1100),  # Gen Retatrutide 60mg
-    2942: (1000, 1100),  # Gen-Health Caneta 60mg
-    3156: (1000, 1100),  # Veltrane Retatrutide 60mg
-    3391: (1000, 1100),  # Synedica Retatrutide 60mg
-    3147: (1000, 1100),  # ZPHC Caneta Retatrutide 60mg
-    2965: (1000, 1100),  # ZPHC Retatrutide 60mg (5x12mg)
-
-    # Ampolas e Frascos avulsos 15 mg
-    3206: (735, 835),   # Pharmacom Jaros 15mg importado
-    2763: (450, 550),   # Gen-Tirz 15mg
-    2875: (250, 300),   # Sin Marca Tirzepatida 15mg
-    3008: (250, 300)    # ZPHC Tirzepatide 15mg
-}
+PRICING_CFG = load_pricing_config()
 
 COLECOES_CONFIG = {
     '1_emagrecedores': {
@@ -184,39 +143,8 @@ def classify_product(p):
     return '2_anabolizantes'
 
 def get_product_prices(p, col_id):
-    pid = p.get('id')
-    
-    # 1. Verifica se possui preço fixo acordado oficialmente
-    if pid in SPECIAL_FIXED:
-        pix, cartao = SPECIAL_FIXED[pid]
-        return pix, cartao, True
-        
-    # 2. Caso contrário, aplica a margem máxima da respectiva coleção
-    usd = float(p.get('precio', 0) or 0)
-    mult_custo = 5.60 * 1.30 # Dólar 5.60 + 30% frete = R$ 7.28
-    custo = usd * mult_custo
-    cat = (p.get('categoria') or '').lower().strip()
-    
-    if col_id == '1_emagrecedores':
-        max_pct = 55
-    elif col_id == '2_anabolizantes':
-        if cat in ['sarms', 'post ciclo', 'hcg']:
-            max_pct = 60
-        else:
-            max_pct = 58
-    elif col_id == '3_hgh_peptideos':
-        max_pct = 65
-    elif col_id == '4_estetica':
-        max_pct = 75
-    else: # 5_saude_mental_suporte
-        if cat in ['saude mental'] or any(k in (p.get('nombre') or '').lower() for k in ['semax', 'selank', 'dsip', 'zicartil', 'lispax', 'modafinil']):
-            max_pct = 65
-        else:
-            max_pct = 70
-            
-    preco_pix = math.ceil(custo * (1 + max_pct / 100))
-    preco_cartao = preco_pix + 100
-    return preco_pix, preco_cartao, False
+    res = compute_product_pricing(p, tier='rec', cfg=PRICING_CFG)
+    return res['preco_pix'], res['preco_cartao'], res['has_price_issue']
 
 def get_product_image(pid, max_w=95, max_h=95):
     img_path = os.path.join(FOTOS_DIR, f"producto-{pid}.jpg")
@@ -494,10 +422,10 @@ def generate_pdf_for_collection(col_id, prods, cfg):
             brand_flow = [b_bar, Spacer(1, 4)]
             
             for p in b_prods:
-                pix, cartao, is_fixed = get_product_prices(p, col_id)
-                is_12x = ('tirzepatid' in p.get('nombre', '').lower() or 'retatrutid' in p.get('nombre', '').lower() or p.get('id') in SPECIAL_FIXED)
+                pix, cartao, has_price_issue = get_product_prices(p, col_id)
+                is_12x = ('tirzepatid' in (p.get('nombre') or '').lower() or 'retatrutid' in (p.get('nombre') or '').lower() or int(p.get('id') or 0) in range(9001, 9008))
                 num_parc = 12 if is_12x else 6
-                parc = round(cartao / num_parc, 2)
+                parc = round(cartao / num_parc, 2) if cartao > 0 else 0
                 
                 nome = p.get('nombre') or 'Produto sem nome'
                 comp = (p.get('composicion') or '').strip()
@@ -514,23 +442,27 @@ def generate_pdf_for_collection(col_id, prods, cfg):
                 
                 stock_cde = int(p.get('stock_cde', 0) or 0)
                 stock_badge = f"<font color='{cfg['price_pix_color']}'><b>● DISPONÍVEL</b></font>" if stock_cde > 0 else "<font color='#64748b'>● SOB ENCOMENDA</font>"
-                fixed_tag = " &nbsp;|&nbsp; <font color='#047857'><b>VALOR FIXO OFICIAL</b></font>" if is_fixed else ""
                 
                 details_cell = [
                     Paragraph(f"<b>{nome}</b>", prod_name_style),
                     Spacer(1, 3),
                     Paragraph(sub_text, prod_sub_style),
                     Spacer(1, 2),
-                    Paragraph(f"{stock_badge}{fixed_tag} &nbsp;|&nbsp; <font color='#0f172a'>Cód #{p.get('id')}</font>", prod_sub_style)
+                    Paragraph(f"{stock_badge} &nbsp;|&nbsp; <font color='#0f172a'>Cód #{p.get('id')}</font>", prod_sub_style)
                 ]
                 
-                parcelas_texto = f"em até {num_parc}x de R$ {parc:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.') + (" s/ juros" if num_parc == 12 else "")
-                price_cell = [
-                    Paragraph(f"<font size='7' color='{cfg['price_pix_color']}'>À VISTA NO PIX</font><br/><b>R$ {pix:,d}</b>".replace(',', '.'), price_pix_style),
-                    Spacer(1, 2),
-                    Paragraph(f"<font size='6.5' color='#4338ca'>NO CARTÃO</font><br/><b>R$ {cartao:,d}</b>".replace(',', '.'), price_cartao_style),
-                    Paragraph(parcelas_texto, price_parc_style)
-                ]
+                if has_price_issue or pix <= 0:
+                    price_cell = [
+                        Paragraph(f"<font size='7' color='#b45309'>COTAÇÃO</font><br/><b>SOB CONSULTA</b>", price_pix_style)
+                    ]
+                else:
+                    parcelas_texto = f"em até {num_parc}x de R$ {parc:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.') + (" s/ juros" if num_parc == 12 else "")
+                    price_cell = [
+                        Paragraph(f"<font size='7' color='{cfg['price_pix_color']}'>À VISTA NO PIX</font><br/><b>R$ {pix:,d}</b>".replace(',', '.'), price_pix_style),
+                        Spacer(1, 2),
+                        Paragraph(f"<font size='6.5' color='#4338ca'>NO CARTÃO</font><br/><b>R$ {cartao:,d}</b>".replace(',', '.'), price_cartao_style),
+                        Paragraph(parcelas_texto, price_parc_style)
+                    ]
                 
                 img_element = get_product_image(p.get('id'), max_w=85, max_h=85)
                 if not img_element:
@@ -615,13 +547,14 @@ def main():
     except Exception as e:
         print(f"Aviso ao gerar mobile bundle: {e}")
 
-    # Limpeza preventiva de PDFs antigos
+    # Limpeza preventiva de PDFs antigos (inclusive versões 01..05_)
     for d in [BASE_DIR, DOWNLOADS_DIR, DESKTOP_DIR]:
-        for old_f in glob.glob(os.path.join(d, "Catalogo_*.pdf")):
-            try:
-                os.remove(old_f)
-            except Exception:
-                pass
+        for pat in ("Catalogo_*.pdf", "*_Catalogo_*.pdf"):
+            for old_f in glob.glob(os.path.join(d, pat)):
+                try:
+                    os.remove(old_f)
+                except Exception:
+                    pass
 
     # Gera os 5 novos PDFs
     pdf_paths = []

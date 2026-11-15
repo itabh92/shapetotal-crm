@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="icon" type="image/png" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=20261114_2125" />
+  <link rel="stylesheet" href="styles.css?v=20261114_2200" />
 </head>
 <body>
   <!-- Local Device PIN Overlay (somente quando o usuário configurar PIN local) -->
@@ -56,15 +56,15 @@
         <div class="global-controls internal-only">
           <div class="ctrl-group">
             <label for="inputCotacao">💵 Dólar (R$):</label>
-            <input id="inputCotacao" class="ctrl-input" type="number" step="0.01" value="5.60" />
+            <input id="inputCotacao" class="ctrl-input" type="number" step="0.01" value="5.80" />
           </div>
           <div class="ctrl-group">
-            <label for="inputFrete">🚚 Frete (%):</label>
-            <input id="inputFrete" class="ctrl-input" type="number" step="1" value="30" />
+            <label for="inputFrete">🚚 Frete Fixo (%):</label>
+            <input id="inputFrete" class="ctrl-input" type="number" step="1" value="30" readonly title="Frete fixo de 30% sobre o preço do site em USD (varia apenas Dólar ou USD do site)" style="opacity:0.85; cursor:not-allowed;" />
           </div>
           <div class="ctrl-group">
-            <label for="inputTaxaCartao">💳 Cartão (+R$):</label>
-            <input id="inputTaxaCartao" class="ctrl-input" type="number" step="5" value="100" />
+            <label for="inputTaxaCartao">💳 Cartão (+%):</label>
+            <input id="inputTaxaCartao" class="ctrl-input" type="number" step="0.5" min="0" value="12" title="Acréscimo percentual padrão no cartão de crédito" />
           </div>
 
           <div class="tier-switch" title="Escolher qual faixa de lucro aplicar no preço principal">
@@ -82,7 +82,7 @@
             <span style="font-size:11px; font-weight:800; color:#34d399; margin-right:2px;">📲 WhatsApp:</span>
             <button class="btn btn-xs btn-green internal-only" style="background:#065f46; color:#ffffff; font-weight:700;" onclick="window.CRM.openWhatsAppCatalogModal('meu_estoque')" title="Lista do estoque pronta entrega em BH">📍 Pronta Entrega</button>
             <button class="btn btn-xs internal-only" style="background:#0891b2; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')" title="Tabela de doses fracionadas">💉 Doses Avulsas</button>
-            <button class="btn btn-xs btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_especial')" title="Tabela oficial Tirzepatida e Retatrutida">📋 Tirz &amp; Reta</button>
+            <button class="btn btn-xs btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_especial')" title="Tabela atualizada Tirzepatida e Retatrutida">📋 Tirz &amp; Reta</button>
             <button class="btn btn-xs btn-primary" onclick="window.CRM.openWhatsAppCatalogModal('grok')" title="Guia explicativo de peptídeos e blends">🧬 Guia Peptídeos</button>
             <button class="btn btn-xs btn-blue" onclick="window.CRM.openWhatsAppCatalogModal('filtro')" title="Lista com os produtos do filtro atual">📲 Lista Filtro Atual</button>
           </div>
@@ -112,8 +112,8 @@
     <section id="marginDrawer" class="config-panel internal-only">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <h3 style="font-size:15px; font-weight:800;">⚙️ Configurar Faixas de Lucro por Categoria (Mínimo / Recomendado / Máximo)</h3>
-          <p style="font-size:12px; color:var(--text-muted);">Altere qualquer porcentagem abaixo e todos os produtos daquele grupo recalculam na hora.</p>
+          <h3 style="font-size:15px; font-weight:800;">⚙️ Margens de Mercado por Categoria (Mínimo / Recomendado / Máximo)</h3>
+          <p style="font-size:12px; color:var(--text-muted);">Custo base fixo = Preço USD do site × Dólar × 1,30 (30% frete). Altere qualquer faixa e o catálogo recalcula na hora.</p>
         </div>
       </div>
       <div id="marginConfigGrid" class="config-grid"></div>
@@ -156,8 +156,8 @@
         </div>
         <div class="kpi-inline-item">
           <span id="kpiLabel2" class="kpi-label">Mult.</span>
-          <span id="kpiMult" class="kpi-value" style="color:#38bdf8;">R$ 7,28</span>
-          <span id="kpiMultSub" class="kpi-sub">Dólar R$ 5,60 + 30% frete</span>
+          <span id="kpiMult" class="kpi-value" style="color:#38bdf8;">R$ 7,54</span>
+          <span id="kpiMultSub" class="kpi-sub">Dólar R$ 5,80 + 30% frete fixo</span>
         </div>
         <div class="kpi-inline-item">
           <span id="kpiLabel3" class="kpi-label">Ticket</span>
@@ -1107,12 +1107,12 @@
   <div id="doseImageModal" class="modal-backdrop">
     <div class="modal-box" style="max-width:640px; text-align:center;">
       <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:10px; margin-bottom:12px;">
-        <h3 id="doseImageModalTitle" style="font-size:16px; font-weight:800; color:#38bdf8;">Tabela Oficial de Doses</h3>
+        <h3 id="doseImageModalTitle" style="font-size:16px; font-weight:800; color:#38bdf8;">Tabela Dinâmica de Doses</h3>
         <button class="btn" onclick="document.getElementById('doseImageModal').classList.remove('open')">✖ Fechar</button>
       </div>
       <img id="doseImageModalImg" src="" style="max-width:100%; max-height:75vh; border-radius:8px; border:1px solid #334155; object-fit:contain;" />
       <div style="margin-top:12px; display:flex; justify-content:center; align-items:center;">
-        <span style="font-size:11px; color:#94a3b8;">Tabela Oficial com Valores Pronta Entrega BH (envio no menu Ferramentas → 💉 Doses Avulsas)</span>
+        <span style="font-size:11px; color:#94a3b8;">Os valores em R$ nos botões seguem a cotação e margem ativas no painel (menu Ferramentas → 💉 Doses Avulsas)</span>
       </div>
     </div>
   </div>
@@ -1423,10 +1423,11 @@
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script type="module" src="dominio/index.js?v=20261114_2125"></script>
-  <script src="dados_catalogo.js?v=20261114_2125"></script>
-  <script src="app.js?v=20261114_2125"></script>
-  <script type="module" src="store/index.js?v=20261114_2125"></script>
+  <script type="module" src="dominio/index.js?v=20261114_2200"></script>
+  <script src="pricing_config.js?v=20261114_2200"></script>
+  <script src="dados_catalogo.js?v=20261114_2200"></script>
+  <script src="app.js?v=20261114_2200"></script>
+  <script type="module" src="store/index.js?v=20261114_2200"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

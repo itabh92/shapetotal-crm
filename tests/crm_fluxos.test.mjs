@@ -7,6 +7,8 @@ import vm from 'node:vm';
 const ROOT = path.resolve(import.meta.dirname, '..');
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const js = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
+const pricingJson = JSON.parse(fs.readFileSync(path.join(ROOT, 'pricing_config.json'), 'utf8'));
+const pricingJs = fs.readFileSync(path.join(ROOT, 'pricing_config.js'), 'utf8');
 const cat = fs.readFileSync(path.join(ROOT, 'dados_catalogo.js'), 'utf8');
 
 function createHarness({ confirmAnswer = true, promptAnswer = '0', initialState = null } = {}) {
@@ -83,6 +85,7 @@ function createHarness({ confirmAnswer = true, promptAnswer = '0', initialState 
   };
   sandbox.globalThis = sandbox;
   vm.createContext(sandbox);
+  vm.runInContext(pricingJs, sandbox);
   vm.runInContext(cat, sandbox);
   vm.runInContext(js, sandbox);
   sandbox.document._onReady();
@@ -366,7 +369,8 @@ test('seguranca e limpeza UI: sem credenciais/estoque hardcoded/modais mortos e 
   assert.equal(/VALID_PASS_HASHES|ESTOQUE_CANONICO_BH|PEDIDOS_TRANSITO_CANONICOS|shape2026|italo2026/.test(js), false);
   assert.equal(/ESTOQUE_BH_CANONICO|PEDIDOS_TRANSITO_INICIAIS|meu_estoque_qtds|meu_estoque_resumo/.test(cat), false);
   const catJson = fs.readFileSync(path.join(ROOT, 'catalogo_dados.json'), 'utf8');
-  assert.equal(/meu_estoque_qtds|meu_estoque_resumo|"meu_estoque_qtd"/.test(catJson), false);
+  assert.equal(/meu_estoque_qtds|meu_estoque_resumo|"meu_estoque_qtd"|"preco_pix_fixo"|"preco_cartao_fixo"/.test(catJson), false);
+  assert.equal(/SPECIAL_FIXED_REC/.test(js), false);
   assert.equal(/saleModal|saleReceiptModal|confirmSale|showSaleReceipt/.test(html + js), false);
   assert.equal((html.match(/avisarClientesChegada\(\)/g) || []).length, 1);
   assert.equal((html.match(/openWhatsAppCatalogModal\('tabela_doses_avulsas'\)/g) || []).length, 1);
@@ -376,4 +380,102 @@ test('seguranca e limpeza UI: sem credenciais/estoque hardcoded/modais mortos e 
 
   const storeIdx = fs.readFileSync(path.join(ROOT, 'store', 'index.js'), 'utf8');
   assert.match(storeIdx, /downloader:\s*null/);
+});
+
+test('precificacao padronizada: dolar 5.80 + 30% frete (7.54), cartao +12%, sem precos fixos e 100% alinhado com pricing_config.json', () => {
+  const { CRM, doc } = createHarness();
+  const snap = CRM.getPricingSnapshot();
+
+  assert.equal(snap.pricingPolicyVersion, pricingJson.version);
+  assert.equal(snap.cotacao, 5.8);
+  assert.equal(snap.fretePct, 30);
+  assert.equal(snap.taxaCartaoPct, 12);
+  assert.deepEqual(JSON.parse(JSON.stringify(snap.groupMargins)), pricingJson.groupMargins);
+
+  const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'catalogo_dados.json'), 'utf8')).productos;
+  const byId = id => catalog.find(x => Number(x.id) === Number(id));
+
+  // Tirzepatida TG 60mg (USD 85 * 7.54 = R$ 640,90): 35%/48%/65%
+  const tg60 = CRM.computeProduct(byId(2848));
+  assert.equal(Math.round(tg60.custo * 100) / 100, 640.9);
+  assert.equal(tg60.groupKey, 'emagrecedores');
+  assert.equal(tg60.precoMin, 870);
+  assert.equal(tg60.precoRec, 950);
+  assert.equal(tg60.precoMax, 1060);
+  assert.equal(tg60.precoCartao, 1070);
+
+  // ZPHC Retatrutida 60mg (USD 190 * 7.54 = R$ 1.432,60) nunca mais da prejuizo (era R$ 1.000 fixo)
+  const zphcReta = CRM.computeProduct(byId(2965));
+  assert.equal(Math.round(zphcReta.custo * 100) / 100, 1432.6);
+  assert.ok(zphcReta.precoRec > zphcReta.custo);
+  assert.equal(zphcReta.precoRec, 2130);
+  assert.equal(zphcReta.precoCartao, 2390);
+
+  // Somatropina rotulada como anabolizante na API (ID 3214) cai no grupo hgh (35% Rec)
+  const bratvaGh = CRM.computeProduct(byId(3214));
+  assert.equal(bratvaGh.groupKey, 'hgh');
+  assert.equal(bratvaGh.recPct, 35);
+  assert.equal(bratvaGh.precoRec, 2040);
+
+  // Diluente micro-ticket (ID 1522 USD 1.50 -> R$ 11,31) tem margem de suporte (75% Rec) e cartao proporcional (+12%)
+  const dil = CRM.computeProduct(byId(1522));
+  assert.equal(dil.groupKey, 'potencia_suporte');
+  assert.equal(dil.precoRec, 20);
+  assert.equal(dil.precoCartao, 23);
+
+  // Produto com USD <= 0.05 nao gera venda a R$ 0,00
+  const zeroUsd = CRM.computeProduct(byId(3433));
+  assert.equal(zeroUsd.hasPriceIssue, true);
+  assert.equal(zeroUsd.precoFinal, 0);
+  assert.equal(zeroUsd.precoCartao, 0);
+
+  // Doses de 120mg acompanham a cotacao do frasco dinamicamente
+  const doseTirz = CRM.computeDoseVialConfig(9006);
+  assert.deepEqual(Array.from(doseTirz.doses.map(d => d.preco)), [65, 125, 175]);
+  const doseReta = CRM.computeDoseVialConfig(9005);
+  assert.deepEqual(Array.from(doseReta.doses.map(d => d.preco)), [80, 150, 210]);
+
+  // WhatsApp dinamico Tirz & Reta usa os precos calculados (sem R$ 900/1.000 fixo legado)
+  CRM.openWhatsAppCatalogModal('tabela_especial');
+  const waText = doc.getElementById('waCatalogText').value;
+  assert.match(waText, /950,00/);
+  assert.match(waText, /2\.130,00/);
+  assert.doesNotMatch(waText, /R\$ 900,00/);
+});
+
+test('migracao automatica de estado legado (5.60 e customPrice) preserva historico e adota regra 5.80 + 30%', () => {
+  const { CRM, getState } = createHarness({
+    initialState: {
+      cotacao: 5.6,
+      fretePct: 20,
+      taxaCartaoFixa: 100,
+      activeTier: 'min',
+      groupMargins: { emagrecedores: { label: 'Antigo', min: 10, rec: 15, max: 20 } },
+      overrides: {
+        2848: { customPrice: 900, customMargin: 40, tier: 'max', desc: 'Nota cliente VIP' }
+      },
+      meuEstoque: { 2848: 3 },
+      vendas: [
+        { id: 'v_legacy', data: '2026-11-10T10:00:00Z', produtoId: 2848, qtd: 1, valorUnitario: 900, valorTotal: 900, custoTotal: 600, lucro: 300, statusPagamento: 'pago', estornada: false }
+      ]
+    }
+  });
+
+  const snap = CRM.getPricingSnapshot();
+  assert.equal(snap.pricingPolicyVersion, pricingJson.version);
+  assert.equal(snap.cotacao, 5.8);
+  assert.equal(snap.fretePct, 30);
+  assert.equal(snap.taxaCartaoPct, 12);
+  assert.equal(snap.activeTier, 'rec');
+  assert.equal(snap.groupMargins.emagrecedores.rec, 48);
+
+  const saved = getState();
+  assert.equal(saved.meuEstoque[2848], 3);
+  assert.equal(saved.vendas.length, 1);
+  assert.equal(saved.overrides[2848].desc, 'Nota cliente VIP');
+  assert.equal(saved.overrides[2848].customPrice, undefined);
+  assert.equal(saved.overrides[2848].customMargin, undefined);
+
+  const tg60 = CRM.computeProduct({ id: 2848, precio: 85, categoria: 'emagrecedores' });
+  assert.equal(tg60.precoFinal, 950);
 });
