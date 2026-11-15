@@ -11,19 +11,19 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="icon" type="image/png" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=20261114_0030" />
+  <link rel="stylesheet" href="styles.css?v=20261114_2125" />
 </head>
 <body>
-  <!-- Password Lock Screen -->
+  <!-- Local Device PIN Overlay (somente quando o usuário configurar PIN local) -->
   <div id="authOverlay" class="auth-overlay">
     <div class="auth-box">
       <div class="auth-icon">🔒</div>
-      <div class="auth-title">Catálogo Restrito</div>
-      <div class="auth-sub">Digite a senha de acesso para liberar o catálogo:</div>
+      <div class="auth-title">Bloqueio Local do Aparelho</div>
+      <div class="auth-sub">Digite o PIN local configurado neste navegador (sem servidor; dados ficam apenas no seu aparelho):</div>
       <form id="authForm" onsubmit="event.preventDefault(); window.CRM.checkPassword();">
-        <input id="authInput" class="auth-input" type="password" placeholder="Digite a senha..." autocomplete="current-password" autofocus />
-        <button type="submit" class="auth-btn">Acessar Catálogo</button>
-        <div id="authError" class="auth-err">Senha incorreta. Tente novamente.</div>
+        <input id="authInput" class="auth-input" type="password" placeholder="Digite seu PIN local..." autocomplete="current-password" autofocus />
+        <button type="submit" class="auth-btn">Desbloquear Aparelho</button>
+        <div id="authError" class="auth-err">PIN incorreto. Tente novamente.</div>
       </form>
     </div>
   </div>
@@ -36,40 +36,23 @@
         <div class="brand">
           <div class="brand-logo">ST</div>
           <div>
-            <div class="brand-title">SHAPE TOTAL · CRM & ESTOQUE BH</div>
-            <div class="brand-sub">938 SKUs Oficiais · Gestão de Pronta Entrega BH, Compras em Trânsito & Baixa de Vendas</div>
+            <div class="brand-title">SHAPE TOTAL · CRM</div>
+            <div class="brand-sub">938 SKUs · Estoque BH, Encomendas & Vendas</div>
           </div>
         </div>
 
         <div class="topbar-quick-actions" role="navigation" aria-label="Ações principais do CRM">
-          <!-- Grupo 1: Venda -->
-          <div class="topbar-group internal-only" data-group-label="Venda">
-            <button class="btn btn-green" style="background:#059669; color:#ffffff; font-weight:800; border:1px solid #34d399;" onclick="window.CRM.openVendaRapidaModal()" title="Venda rápida em 3 cliques com baixa imediata e recibo WhatsApp (Ctrl+N)">⚡ Venda Rápida</button>
-            <button class="btn btn-blue" style="font-weight:700;" onclick="window.CRM.openSalesHistoryModal()" title="Histórico de vendas, lucro e contas a receber">💰 Vendas (<span id="countVendasBadge">0</span>)</button>
-          </div>
-
-          <!-- Grupo 2: Encomendas & Dia -->
-          <div class="topbar-group internal-only" data-group-label="Encomendas">
-            <button class="btn" style="background:#4f46e5; color:#ffffff; font-weight:800; border:1px solid #818cf8;" onclick="window.CRM.openEncomendasModal()" title="Gerenciar Encomendas de Clientes & Concentrar Pedido p/ Fornecedor">📝 Encomendas (<span id="countEncomendasBadge">0</span>)</button>
-            <button class="btn" style="background:#0c4a6e; border:1px solid #0284c7; color:#bae6fd; font-weight:800;" onclick="window.CRM.openListaDoDiaModal()" title="Ações vencidas, para hoje, reservas e avisos de chegada">📋 Lista do Dia (<span id="countListaDiaBadge">0</span>)</button>
-            <button class="btn" style="background:#0f766e; color:#ffffff; font-weight:800; border:1px solid #14b8a6;" onclick="window.CRM.openClientesModal()" title="CRM de Clientes, Histórico & WhatsApp">👥 Clientes (<span id="countClientesBadge">0</span>)</button>
-          </div>
-
-          <!-- Grupo 3: Estoque/Compras -->
-          <div class="topbar-group internal-only" data-group-label="Estoque/Compras">
-            <button class="btn" style="background:#047857; color:#ffffff; font-weight:800; border:1px solid #10b981;" onclick="window.CRM.gerarPedidoFornecedorDasEncomendas()" title="Gerar pedido consolidado ao fornecedor a partir das encomendas pendentes">🇵🇾 Gerar Pedido Fornecedor</button>
-            <button class="btn btn-amber" style="font-weight:800; border:1px solid #fbbf24; background:#b45309; color:#fff;" onclick="window.CRM.openTransitoModal()" title="Cargas em trânsito e entrada com custo real">🚚 A Chegar (<span id="countTransitoBadge">27</span>)</button>
-          </div>
-
-          <!-- Grupo 4: Ferramentas -->
-          <div class="topbar-group" data-group-label="Ferramentas">
-            <button id="btnClientMode" class="btn" title="Ocultar custos, margens e botões administrativos para mostrar a tela ao cliente">👁️ Modo Cliente</button>
-            <button id="btnToggleTopbarTools" class="btn internal-only" style="background:#1e293b; border-color:#475569; color:#38bdf8; font-weight:800;" onclick="window.CRM.toggleTopbarTools()">🛠️ Ferramentas <span id="badgeAlertasTools" class="badge-alertas" style="display:none;">0</span> ▾</button>
-          </div>
+          <button class="btn btn-green internal-only" style="background:#059669; color:#ffffff; font-weight:800; border:1px solid #34d399;" onclick="window.CRM.openVendaRapidaModal()" title="Registrar venda ou dose em 3 cliques com recibo WhatsApp (Ctrl+N)">⚡ Vender</button>
+          <button class="btn internal-only" style="background:#4f46e5; color:#ffffff; font-weight:800; border:1px solid #818cf8;" onclick="window.CRM.openEncomendasModal()" title="Gerenciar Encomendas & Pedido ao Fornecedor">📝 Encomendas (<span id="countEncomendasBadge">0</span>)</button>
+          <button class="btn btn-amber internal-only" style="font-weight:800; border:1px solid #fbbf24; background:#b45309; color:#fff;" onclick="window.CRM.openTransitoModal()" title="Cargas em trânsito e entrada com custo real">🚚 Trânsito (<span id="countTransitoBadge">0</span>)</button>
+          <button class="btn btn-blue internal-only" style="font-weight:700;" onclick="window.CRM.openSalesHistoryModal()" title="Histórico de vendas, lucro e a receber">💰 Vendas (<span id="countVendasBadge">0</span>)</button>
+          <button class="btn internal-only" style="background:#0f766e; color:#ffffff; font-weight:800; border:1px solid #14b8a6;" onclick="window.CRM.openClientesModal()" title="CRM de Clientes & WhatsApp">👥 Clientes (<span id="countClientesBadge">0</span>)</button>
+          <button id="btnClientMode" class="btn" title="Ocultar custos, margens e botões administrativos para mostrar a tela ao cliente">👁️ Modo Cliente</button>
+          <button id="btnToggleTopbarTools" class="btn internal-only" style="background:#1e293b; border-color:#475569; color:#38bdf8; font-weight:800;" onclick="window.CRM.toggleTopbarTools()">⚙️ Ferramentas <span id="badgeAlertasTools" class="badge-alertas" style="display:none;">0</span> ▸</button>
         </div>
       </div>
 
-      <div id="topbarToolsDrawer" class="topbar-tools-drawer">
+      <div id="topbarToolsDrawer" class="topbar-tools-drawer collapsed">
         <div class="global-controls internal-only">
           <div class="ctrl-group">
             <label for="inputCotacao">💵 Dólar (R$):</label>
@@ -96,7 +79,7 @@
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between;">
           <!-- Barra Consolidada de Mensagens WhatsApp -->
           <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center; background:#0b1120; padding:4px 8px; border-radius:8px; border:1px solid #1e293b;">
-            <span style="font-size:11px; font-weight:800; color:#34d399; margin-right:2px;">📲 Gerar Mensagem WhatsApp:</span>
+            <span style="font-size:11px; font-weight:800; color:#34d399; margin-right:2px;">📲 WhatsApp:</span>
             <button class="btn btn-xs btn-green internal-only" style="background:#065f46; color:#ffffff; font-weight:700;" onclick="window.CRM.openWhatsAppCatalogModal('meu_estoque')" title="Lista do estoque pronta entrega em BH">📍 Pronta Entrega</button>
             <button class="btn btn-xs internal-only" style="background:#0891b2; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')" title="Tabela de doses fracionadas">💉 Doses Avulsas</button>
             <button class="btn btn-xs btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_especial')" title="Tabela oficial Tirzepatida e Retatrutida">📋 Tirz &amp; Reta</button>
@@ -104,17 +87,19 @@
             <button class="btn btn-xs btn-blue" onclick="window.CRM.openWhatsAppCatalogModal('filtro')" title="Lista com os produtos do filtro atual">📲 Lista Filtro Atual</button>
           </div>
 
-          <!-- Ações Administrativas e Sistema -->
+          <!-- Ações Operacionais & Sistema -->
           <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-            <button class="btn btn-xs internal-only" style="background:#1e1b4b; border:1px solid #6366f1; color:#c7d2fe; font-weight:800;" onclick="window.CRM.openPaineisComerciaisModal()" title="Top 10 mais vendidos, produtos parados e estoque crítico">📊 Painéis Comerciais</button>
-            <button class="btn btn-xs internal-only" style="background:#7c3aed; color:#ffffff; font-weight:800;" onclick="window.CRM.openNewProductModal()" title="Cadastrar um produto novo no catálogo local">➕ Novo Produto</button>
+            <button class="btn btn-xs internal-only" style="background:#0c4a6e; border:1px solid #0284c7; color:#bae6fd; font-weight:800;" onclick="window.CRM.openListaDoDiaModal()" title="Ações vencidas, para hoje, reservas e avisos">📋 Lista do Dia (<span id="countListaDiaBadge">0</span>)</button>
+            <button class="btn btn-xs internal-only" style="background:#047857; color:#ffffff; font-weight:800; border:1px solid #10b981;" onclick="window.CRM.gerarPedidoFornecedorDasEncomendas()" title="Gerar pedido consolidado ao fornecedor a partir das encomendas pendentes">🇵🇾 Pedido Fornecedor</button>
+            <button class="btn btn-xs internal-only" style="background:#1e1b4b; border:1px solid #6366f1; color:#c7d2fe; font-weight:800;" onclick="window.CRM.openPaineisComerciaisModal()" title="Top 10 mais vendidos, produtos parados e estoque crítico">📊 Painéis</button>
+            <button class="btn btn-xs internal-only" style="background:#7c3aed; color:#ffffff; font-weight:800;" onclick="window.CRM.openNewProductModal()" title="Cadastrar produto local">➕ Produto</button>
             <button class="btn btn-xs internal-only" style="background:#0284c7; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openSyncModal()" title="Sincronizar ou exportar backup entre celular e computador">☁️ Sincronizar</button>
-            <button id="btnViewMode" class="btn btn-xs">📊 Ver Planilha</button>
+            <button id="btnViewMode" class="btn btn-xs">📊 Planilha</button>
             <button class="btn btn-xs internal-only" onclick="window.CRM.exportCSV()" title="Exportar planilha CSV">📥 CSV</button>
             <button class="btn btn-xs internal-only" onclick="window.CRM.verLogAuditoria()" title="Ver log das últimas ações críticas">📜 Auditoria</button>
-            <button class="btn btn-xs internal-only" style="background:#1e293b; color:#94a3b8;" title="Restaura os 32 itens físicos canônicos de BH" onclick="window.CRM.resetEstoqueBase()">🔄 Reset 32 un</button>
-            <button class="btn btn-xs internal-only" onclick="window.CRM.alterarSenhaAcesso()" title="Alterar senha personalizada de acesso">🔑 Senha</button>
-            <button class="btn btn-xs" onclick="window.CRM.lockApp()" title="Bloquear tela">🔒 Sair</button>
+            <button class="btn btn-xs internal-only" style="background:#1e293b; color:#38bdf8;" title="Exportar cópia de backup pré-migração IndexedDB" onclick="window.CRM.exportarBackupMigracaoSeguro()">💾 Backup IDB</button>
+            <button class="btn btn-xs internal-only" onclick="window.CRM.alterarSenhaAcesso()" title="Configurar ou remover PIN de bloqueio local neste aparelho">🔑 PIN Local</button>
+            <button class="btn btn-xs" onclick="window.CRM.lockApp()" title="Bloquear tela (se PIN local estiver ativo)">🔒 Bloquear</button>
           </div>
         </div>
       </div>
@@ -134,56 +119,57 @@
       <div id="marginConfigGrid" class="config-grid"></div>
     </section>
 
-    <!-- KPI Strip -->
-    <section class="kpi-strip internal-only">
-      <div class="kpi-card">
-        <div id="kpiLabel1" class="kpi-label">Produtos Filtrados</div>
-        <div id="kpiCount" class="kpi-value">938 SKUs</div>
-        <div id="kpiCountSub" class="kpi-sub">Carregando...</div>
+    <!-- Painel Compacto Unificado: Disponibilidade + Métricas + Alertas -->
+    <section class="kpi-compact-strip internal-only">
+      <div id="dispStatusStrip" class="disp-status-strip">
+        <button class="disp-stat-btn disp-green" onclick="window.CRM.filterByDisponibilidade('disponivel_agora')" title="Filtrar produtos livres para venda imediata em BH">
+          🟢 Livre BH: <span id="statDispPronta">0</span>
+        </button>
+        <button class="disp-stat-btn disp-amber" onclick="window.CRM.filterByDisponibilidade('reservado_clientes')" title="Filtrar produtos reservados em encomendas de clientes">
+          🟡 Reservado: <span id="statDispReservado">0</span>
+        </button>
+        <button class="disp-stat-btn disp-blue" onclick="window.CRM.openTransitoModal()" title="Abrir cargas em trânsito chegando em BH">
+          🔵 Chegando: <span id="statDispChegando">0</span>
+        </button>
+        <span class="disp-stat-btn disp-static" style="background:rgba(16,185,129,0.14);color:#34d399;border:1px solid rgba(16,185,129,0.45);" title="Unidades de encomendas pendentes sem lote associado">
+          🇵🇾 A pedir: <span id="statDispPedir">0</span> un
+        </span>
+        <button class="disp-stat-btn" style="background:rgba(14,165,233,0.16);color:#38bdf8;border:1px solid rgba(56,189,248,0.5);" onclick="window.CRM.avisarClientesChegada()" title="Avisar no WhatsApp clientes cujas encomendas já chegaram em BH">
+          📲 Avisar Chegada (<span id="countAvisarChegadaBadge">0</span>)
+        </button>
+        <button id="decisionStrip" class="disp-stat-btn" style="background:#064e3b; border:1px solid #10b981; color:#a7f3d0;" onclick="window.CRM.openSalesHistoryModal()" title="Lucro confirmado no mês atual">
+          💰 Lucro Mês: <span id="decLucroMes">R$ 0,00</span>
+        </button>
+        <button class="disp-stat-btn" style="background:#422006; border:1px solid #f59e0b; color:#fde68a;" onclick="window.CRM.openSalesHistoryModal()" title="Vendas pendentes de pagamento">
+          ⏳ A Receber: <span id="decAReceber">R$ 0,00</span>
+        </button>
+        <span id="decEstoqueBaixo" style="display:none;">0</span>
+        <span id="decFrascoBaixo" style="display:none;">0</span>
+        <span id="decMargemBaixa" style="display:none;">0</span>
       </div>
-      <div class="kpi-card">
-        <div id="kpiLabel2" class="kpi-label">Multiplicador de Custo</div>
-        <div id="kpiMult" class="kpi-value" style="color:#38bdf8;">R$ 7,28</div>
-        <div id="kpiMultSub" class="kpi-sub">Dólar R$ 5,60 + 30% frete</div>
-      </div>
-      <div class="kpi-card">
-        <div id="kpiLabel3" class="kpi-label">Ticket Médio de Venda</div>
-        <div id="kpiAvgPrice" class="kpi-value" style="color:var(--accent);">R$ 0,00</div>
-        <div id="kpiAvgCost" class="kpi-sub">Custo médio: R$ 0,00</div>
-      </div>
-      <div class="kpi-card">
-        <div id="kpiLabel4" class="kpi-label">Lucro Líquido Médio / Un</div>
-        <div id="kpiAvgProfit" class="kpi-value" style="color:#34d399;">R$ 0,00</div>
-        <div id="kpiAvgProfitSub" class="kpi-sub">Faixa ativa: Recomendado</div>
-      </div>
-    </section>
 
-    <!-- Disponibilidade Real & Decisão Operacional Unificada (sem duplicidades) -->
-    <section id="dispStatusStrip" class="disp-status-strip internal-only">
-      <button class="disp-stat-btn disp-green" onclick="window.CRM.filterByDisponibilidade('disponivel_agora')" title="Filtrar produtos livres para venda imediata em BH">
-        🟢 Livre BH: <span id="statDispPronta">0</span>
-      </button>
-      <button class="disp-stat-btn disp-amber" onclick="window.CRM.filterByDisponibilidade('reservado_clientes')" title="Filtrar produtos reservados em encomendas de clientes">
-        🟡 Reservado: <span id="statDispReservado">0</span>
-      </button>
-      <button class="disp-stat-btn disp-blue" onclick="window.CRM.openTransitoModal()" title="Abrir cargas em trânsito chegando em BH">
-        🔵 Chegando: <span id="statDispChegando">0</span>
-      </button>
-      <button class="disp-stat-btn" style="background:rgba(16,185,129,0.14);color:#34d399;border:1px solid rgba(16,185,129,0.45);" onclick="window.CRM.gerarPedidoFornecedorDasEncomendas()" title="Consolidar encomendas pendentes e abrir Pedido ao Fornecedor">
-        🇵🇾 A pedir fornecedor: <span id="statDispPedir">0</span>
-      </button>
-      <button class="disp-stat-btn" style="background:rgba(14,165,233,0.16);color:#38bdf8;border:1px solid rgba(56,189,248,0.5);" onclick="window.CRM.avisarClientesChegada()" title="Avisar no WhatsApp clientes cujas encomendas já chegaram em BH">
-        📲 Avisar Clientes que Chegaram (<span id="countAvisarChegadaBadge">0</span>)
-      </button>
-      <button id="decisionStrip" class="disp-stat-btn" style="background:#064e3b; border:1px solid #10b981; color:#a7f3d0;" onclick="window.CRM.openSalesHistoryModal()" title="Lucro confirmado no mês atual">
-        💰 Lucro Mês: <span id="decLucroMes">R$ 0,00</span>
-      </button>
-      <button class="disp-stat-btn" style="background:#422006; border:1px solid #f59e0b; color:#fde68a;" onclick="window.CRM.openSalesHistoryModal()" title="Vendas pendentes de pagamento">
-        ⏳ A Receber: <span id="decAReceber">R$ 0,00</span>
-      </button>
-      <span id="decEstoqueBaixo" style="display:none;">0</span>
-      <span id="decFrascoBaixo" style="display:none;">0</span>
-      <span id="decMargemBaixa" style="display:none;">0</span>
+      <div class="kpi-inline-row">
+        <div class="kpi-inline-item">
+          <span id="kpiLabel1" class="kpi-label">Filtro</span>
+          <span id="kpiCount" class="kpi-value">938 SKUs</span>
+          <span id="kpiCountSub" class="kpi-sub">Carregando...</span>
+        </div>
+        <div class="kpi-inline-item">
+          <span id="kpiLabel2" class="kpi-label">Mult.</span>
+          <span id="kpiMult" class="kpi-value" style="color:#38bdf8;">R$ 7,28</span>
+          <span id="kpiMultSub" class="kpi-sub">Dólar R$ 5,60 + 30% frete</span>
+        </div>
+        <div class="kpi-inline-item">
+          <span id="kpiLabel3" class="kpi-label">Ticket</span>
+          <span id="kpiAvgPrice" class="kpi-value" style="color:var(--accent);">R$ 0,00</span>
+          <span id="kpiAvgCost" class="kpi-sub">Custo: R$ 0,00</span>
+        </div>
+        <div class="kpi-inline-item">
+          <span id="kpiLabel4" class="kpi-label">Lucro/un</span>
+          <span id="kpiAvgProfit" class="kpi-value" style="color:#34d399;">R$ 0,00</span>
+          <span id="kpiAvgProfitSub" class="kpi-sub">Faixa: Recomendado</span>
+        </div>
+      </div>
     </section>
 
     <!-- Painel Proativo de Alertas (Desktop & Mobile) -->
@@ -191,7 +177,7 @@
       <button type="button" class="alertas-header" onclick="window.CRM.toggleAlertasPanel()">
         <div class="alertas-header-left">
           <span class="alertas-title">🔔 Alertas</span>
-          <span id="alertasCounterBadge" class="alertas-counter ok">✅ Nenhum alerta no momento</span>
+          <span id="alertasCounterBadge" class="alertas-counter ok">✅ Tudo em dia</span>
           <span id="alertasLastCheck" style="font-size:11px; color:var(--text-muted);"></span>
         </div>
         <span id="alertasChevron" style="font-size:12px; color:#94a3b8; font-weight:800;">▾</span>
@@ -199,15 +185,15 @@
       <div id="alertasList" class="alertas-list" style="display:none;"></div>
     </section>
 
-    <!-- Main Category Tabs requested by User -->
+    <!-- Main Category Tabs -->
     <nav class="group-tabs">
-      <button class="group-tab active" data-group="todas">🌐 Todas <span class="tab-count">891</span></button>
+      <button class="group-tab active" data-group="todas">🌐 Todas <span class="tab-count">938</span></button>
       <button class="group-tab" data-group="anabolizantes">💪 Anabolizantes <span class="tab-count">456</span></button>
       <button class="group-tab" data-group="emagrecedores">🔥 Emagrecedores <span class="tab-count">173</span></button>
-      <button class="group-tab" data-group="peptideos">🧬 Peptídeos & HGH <span class="tab-count">176</span></button>
-      <button class="group-tab" data-group="estetico_outros">✨ Estética & Beleza <span class="tab-count">36</span></button>
-      <button class="group-tab" data-group="saude_mental">🧠 Saúde Mental & Suporte <span class="tab-count">50</span></button>
-      <button class="group-tab tab-meu-estoque" data-group="meu_estoque" style="background:#064e3b; color:#34d399; font-weight:800; border:1px solid #10b981;">📍 Meu Estoque BH <span class="tab-count" id="countMeuEstoque">32</span></button>
+      <button class="group-tab" data-group="peptideos">🧬 Peptídeos <span class="tab-count">176</span></button>
+      <button class="group-tab" data-group="estetico_outros">✨ Estética <span class="tab-count">36</span></button>
+      <button class="group-tab" data-group="saude_mental">🧠 Saúde <span class="tab-count">50</span></button>
+      <button class="group-tab tab-meu-estoque" data-group="meu_estoque" style="background:#064e3b; color:#34d399; font-weight:800; border:1px solid #10b981;">📍 Estoque BH <span class="tab-count" id="countMeuEstoque">0</span></button>
       <button class="group-tab internal-only" data-group="operacao_dia" style="background:#0c4a6e; color:#38bdf8; font-weight:800; border:1px solid #0284c7;">⚡ Operação do Dia <span class="tab-count" id="countOperacaoDia">0</span></button>
     </nav>
 
@@ -223,23 +209,21 @@
           </p>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button class="btn btn-green" style="background:#10b981; color:#052e16; font-weight:800;" onclick="window.CRM.openSaleModal()">💰 Dar Baixa / Registrar Venda</button>
+          <button class="btn btn-green" style="background:#0f172a; color:#34d399; border:1px solid #10b981; font-weight:800;" onclick="window.CRM.openVendaRapidaModal()" title="Registrar venda de frascos, caixas ou doses fracionadas (mg)">⚡ Nova Venda / Doses</button>
           <button class="btn" style="background:#0f172a; color:#38bdf8; border:1px solid #38bdf8; font-weight:700;" onclick="window.CRM.openAddStockModal()">➕ Incluir Produto no Estoque BH</button>
-          <button class="btn" style="background:#0f172a; color:#fbbf24; border:1px solid #fbbf24; font-weight:700;" onclick="window.CRM.openTransitoModal()">🚚 Pedidos a Chegar</button>
-          <button class="btn" style="background:#0f172a; color:#e2e8f0; border:1px solid #475569; font-weight:700;" onclick="window.CRM.openSalesHistoryModal()">📋 Histórico de Vendas</button>
         </div>
       </div>
 
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:12px;">
         <div style="background:rgba(15,23,42,0.85); padding:12px 14px; border-radius:8px; border:1px solid #1e293b;">
           <div style="font-size:11px; color:#94a3b8; font-weight:700; text-transform:uppercase;">📦 Em Mãos Hoje (Pronta Entrega)</div>
-          <div id="bhPanelEmMaosValor" style="font-size:19px; font-weight:800; color:#34d399; margin-top:4px;">R$ 26.850,00 (PIX)</div>
-          <div id="bhPanelEmMaosSub" style="font-size:11px; color:#cbd5e1; margin-top:2px;">32 un · Cartão: R$ 30.000,00</div>
+          <div id="bhPanelEmMaosValor" style="font-size:19px; font-weight:800; color:#34d399; margin-top:4px;">R$ 0,00 (PIX)</div>
+          <div id="bhPanelEmMaosSub" style="font-size:11px; color:#cbd5e1; margin-top:2px;">0 un · Cartão: R$ 0,00</div>
         </div>
         <div style="background:rgba(15,23,42,0.85); padding:12px 14px; border-radius:8px; border:1px solid #1e293b;">
           <div style="font-size:11px; color:#94a3b8; font-weight:700; text-transform:uppercase;">🚚 Em Trânsito (Pago / A Chegar)</div>
-          <div id="bhPanelTransitoValor" style="font-size:19px; font-weight:800; color:#fbbf24; margin-top:4px;">R$ 18.630,00 (PIX)</div>
-          <div id="bhPanelTransitoSub" style="font-size:11px; color:#cbd5e1; margin-top:2px;">21 un · Investido: R$ 10.476,96</div>
+          <div id="bhPanelTransitoValor" style="font-size:19px; font-weight:800; color:#fbbf24; margin-top:4px;">R$ 0,00 (PIX)</div>
+          <div id="bhPanelTransitoSub" style="font-size:11px; color:#cbd5e1; margin-top:2px;">0 un · Investido: R$ 0,00</div>
         </div>
         <div style="background:rgba(15,23,42,0.85); padding:12px 14px; border-radius:8px; border:1px solid #1e293b;">
           <div style="font-size:11px; color:#94a3b8; font-weight:700; text-transform:uppercase;">💵 Vendas Realizadas (Caixa)</div>
@@ -248,8 +232,8 @@
         </div>
         <div style="background:rgba(15,23,42,0.85); padding:12px 14px; border-radius:8px; border:1px solid #10b981;">
           <div style="font-size:11px; color:#34d399; font-weight:800; text-transform:uppercase;">🏆 Potencial Total (Mãos + Trânsito)</div>
-          <div id="bhPanelTotalPotencial" style="font-size:19px; font-weight:800; color:#ffffff; margin-top:4px;">R$ 45.480,00</div>
-          <div id="bhPanelTotalLucro" style="font-size:11px; color:#34d399; font-weight:700; margin-top:2px;">53 unidades · Lucro Previsto: +R$ 18.331,23</div>
+          <div id="bhPanelTotalPotencial" style="font-size:19px; font-weight:800; color:#ffffff; margin-top:4px;">R$ 0,00</div>
+          <div id="bhPanelTotalLucro" style="font-size:11px; color:#34d399; font-weight:700; margin-top:2px;">0 unidades · Lucro Previsto: R$ 0,00</div>
         </div>
       </div>
 
@@ -264,10 +248,9 @@
               Dê baixa direta por miligrama aplicado (2,5mg, 5,0mg, 7,5mg) conforme as tabelas oficiais com recibo WhatsApp.
             </p>
           </div>
-          <button class="btn btn-amber" style="font-size:11px; font-weight:700;" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')">📲 Enviar Tabela de Doses WhatsApp</button>
         </div>
 
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:12px;" id="dosesFrascosContainer">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap:12px;" id="dosesFrascosContainer">
           <!-- Renderizado dinamicamente pelo app.js com barras de progresso e botões de dose -->
         </div>
       </div>
@@ -453,9 +436,6 @@
             📦 Lista somada de todos os clientes para enviar ao fornecedor:
           </span>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="btn btn-green" style="background:#047857; color:#fff; font-weight:800; font-size:12px; border:1px solid #10b981;" onclick="window.CRM.gerarPedidoFornecedorDasEncomendas()" title="Puxa automaticamente todas as encomendas pendentes e abre o Pedido ao Fornecedor">
-              🇵🇾 Gerar Pedido Fornecedor
-            </button>
             <button class="btn btn-blue" style="background:#2563eb; color:#fff; font-weight:800; font-size:12px; border-color:#60a5fa;" onclick="window.CRM.openOrdemCompraVisualModal()" title="Visualizar cartões de compra com fotos grandes dos produtos para o fornecedor">
               🖼️ Ordem de Compra c/ Fotos
             </button>
@@ -503,9 +483,6 @@
             <button class="btn btn-xs enc-filter-btn" style="font-size:11px; padding:3px 8px; color:#94a3b8;" onclick="window.CRM.filterEncomendas('entregue', this)">✅ Entregues (<span id="countFiltroEntregue">0</span>)</button>
           </div>
           <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-            <button class="btn btn-xs" style="background:#0284c7; color:#fff; font-size:11.5px; font-weight:800;" onclick="window.CRM.avisarClientesChegada()" title="Filtrar e avisar no WhatsApp todos os clientes cujos produtos já chegaram em BH">
-              🎉 Avisar Clientes que Chegaram
-            </button>
             <button class="btn btn-green" style="font-size:12px; font-weight:800; background:#059669; color:#fff;" onclick="window.CRM.switchEncomendasTab('nova')">
               ➕ Nova Encomenda
             </button>
@@ -967,23 +944,23 @@
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px; margin-bottom:16px;">
         <div style="background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #1e293b;">
           <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:700;">Capital Investido Pago</div>
-          <div id="kpiTransitoInvestido" style="font-size:18px; font-weight:800; color:#f87171;">R$ 10.476,96</div>
-          <div style="font-size:10px; color:#94a3b8;">3 pedidos a chegar (1 entregue)</div>
+          <div id="kpiTransitoInvestido" style="font-size:18px; font-weight:800; color:#f87171;">R$ 0,00</div>
+          <div id="kpiTransitoResumoPedidos" style="font-size:10px; color:#94a3b8;">0 pedidos a chegar (0 entregues)</div>
         </div>
         <div style="background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #1e293b;">
           <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:700;">Faturamento Previsto (PIX)</div>
-          <div id="kpiTransitoFaturamento" style="font-size:18px; font-weight:800; color:#34d399;">R$ 18.630,00</div>
-          <div style="font-size:10px; color:#34d399;">No Cartão: R$ 20.730,00</div>
+          <div id="kpiTransitoFaturamento" style="font-size:18px; font-weight:800; color:#34d399;">R$ 0,00</div>
+          <div id="kpiTransitoCartao" style="font-size:10px; color:#34d399;">No Cartão: R$ 0,00</div>
         </div>
         <div style="background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #1e293b;">
           <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:700;">Lucro Líquido Previsto</div>
-          <div id="kpiTransitoLucro" style="font-size:18px; font-weight:800; color:#38bdf8;">+R$ 8.153,04</div>
-          <div style="font-size:10px; color:#38bdf8;">ROI projetado: +77,8%</div>
+          <div id="kpiTransitoLucro" style="font-size:18px; font-weight:800; color:#38bdf8;">+R$ 0,00</div>
+          <div id="kpiTransitoRoi" style="font-size:10px; color:#38bdf8;">ROI projetado: 0%</div>
         </div>
         <div style="background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #1e293b;">
           <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:700;">Total Peças a Chegar</div>
-          <div id="kpiTransitoQtd" style="font-size:18px; font-weight:800; color:#fbbf24;">21 unidades</div>
-          <div style="font-size:10px; color:#94a3b8;">Linha 60mg + Peptídeo</div>
+          <div id="kpiTransitoQtd" style="font-size:18px; font-weight:800; color:#fbbf24;">0 unidades</div>
+          <div id="kpiTransitoSubQtd" style="font-size:10px; color:#94a3b8;">Em lotes ativos</div>
         </div>
       </div>
 
@@ -1025,10 +1002,7 @@
 
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top:1px solid #1e293b; padding-top:12px; flex-wrap:wrap; gap:8px;">
         <button class="btn btn-amber" style="font-weight:800;" onclick="window.CRM.toggleNewPurchaseForm()">➕ Lançar Nova Compra Paga</button>
-        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-          <button class="btn" style="background:#1e293b; color:#fbbf24; font-size:11px; font-weight:700;" onclick="window.CRM.resetPedidosTransito()">🔄 Recarregar Pedidos (21 un a chegar)</button>
-          <button class="btn" onclick="document.getElementById('transitoModal').classList.remove('open')">Fechar</button>
-        </div>
+        <button class="btn" onclick="document.getElementById('transitoModal').classList.remove('open')">Fechar</button>
       </div>
     </div>
   </div>
@@ -1060,166 +1034,6 @@
       <div style="display:flex; justify-content:space-between;">
         <button class="btn" onclick="document.getElementById('addStockModal').classList.remove('open')">Cancelar</button>
         <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; padding:10px 20px;" onclick="window.CRM.confirmAddStock()">✅ Adicionar ao Estoque BH</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal: Registrar Venda e Dar Baixa -->
-  <div id="saleModal" class="modal-backdrop">
-    <div class="modal-box" style="max-width:540px;">
-      <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:12px; margin-bottom:16px;">
-        <div>
-          <h3 style="font-size:17px; font-weight:800; color:#34d399; display:flex; align-items:center; gap:8px;">
-            💰 Registrar Venda & Dar Baixa
-          </h3>
-          <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">
-            Abate automaticamente do seu estoque físico em BH e registra no histórico de vendas.
-          </p>
-        </div>
-        <button class="btn" onclick="document.getElementById('saleModal').classList.remove('open')">✖ Fechar</button>
-      </div>
-
-      <div id="saleClientHistoryBanner" style="display:none; background:#0b1329; border:1px solid #14b8a6; border-radius:8px; padding:8px 12px; margin-bottom:12px; font-size:12px; color:#99f6e4;"></div>
-
-      <div id="saleProdCard" style="display:flex; gap:12px; align-items:center; background:#0f172a; padding:12px; border-radius:8px; border:1px solid #334155; margin-bottom:16px;">
-        <img id="saleProdImg" src="" style="width:54px; height:54px; border-radius:6px; object-fit:cover; border:1px solid #475569;" />
-        <div style="flex:1;">
-          <div id="saleProdTitle" style="font-size:14px; font-weight:800; color:#fff;">Nome do Medicamento</div>
-          <div id="saleProdSub" style="font-size:11px; color:#94a3b8;">Apresentação / Marca</div>
-          <div id="saleProdStockBadge" style="font-size:11px; font-weight:700; color:#34d399; margin-top:3px;">
-            📦 Em estoque agora: 4 unidades
-          </div>
-        </div>
-      </div>
-
-      <!-- Box especial de doses fracionadas caso seja Tirzepatida ou Retatrutida 120mg -->
-      <div id="saleDoseSelectorBox" style="display:none; background:#0b1329; border:1px solid #38bdf8; border-radius:8px; padding:12px; margin-bottom:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <b style="font-size:12px; color:#38bdf8; display:flex; align-items:center; gap:6px;">💉 Venda de Dose Fracionada / Avulsa</b>
-          <span id="saleDoseFrascoSaldoBadge" style="font-size:11px; font-weight:700; color:#34d399;">Frasco: 120 mg disponíveis</span>
-        </div>
-        <div id="saleDoseButtons" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
-          <!-- Botões rápidos de doses gerados dinamicamente -->
-        </div>
-        <div id="saleDoseCustomContainer" style="display:none; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; border-top:1px dashed #334155; padding-top:8px;">
-          <div class="m-field">
-            <label style="font-size:10px; color:#94a3b8; font-weight:700;">Dose em mg</label>
-            <input id="saleCustomDoseMg" type="number" step="0.5" placeholder="Ex: 10" style="text-align:center; font-size:13px;" oninput="window.CRM.onCustomDoseChange()" />
-          </div>
-          <div class="m-field">
-            <label style="font-size:10px; color:#94a3b8; font-weight:700;">Preço Cobrado (R$)</label>
-            <input id="saleCustomDosePrice" type="number" step="1" placeholder="Ex: 240" style="text-align:right; font-size:13px; font-weight:800; color:#34d399;" oninput="window.CRM.onCustomDosePriceChange()" />
-          </div>
-        </div>
-        <input type="hidden" id="saleIsDose" value="0" />
-        <input type="hidden" id="saleDoseMg" value="0" />
-      </div>
-      <div class="m-field" id="saleProdSelectContainer" style="display:none; margin-bottom:14px; background:#0f172a; padding:12px; border-radius:8px; border:1px solid #1e293b;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <label style="color:#38bdf8; font-weight:800; font-size:12px; margin:0;">🔍 Pesquisar Medicamento do Estoque</label>
-          <span id="saleSearchCountBadge" class="badge" style="background:#1e293b; color:#38bdf8; font-size:10px; border:1px solid #334155;">opções</span>
-        </div>
-
-        <!-- Input de Busca Instantânea no Estoque -->
-        <div class="m-field" style="margin-bottom:8px;">
-          <input id="saleProdBuscaInput" type="text" placeholder="🔍 Digite para filtrar: ex: TG, Tirzec, Retatrutida, Lipoless..." style="text-align:left; font-size:14px; background:#020617; border:1px solid #38bdf8; color:#fff; border-radius:6px; padding:8px 12px; width:100%; box-sizing:border-box;" oninput="window.CRM.filterSaleProdutosSelect(this.value)" />
-        </div>
-
-        <!-- Atalhos rápidos com 1 toque -->
-        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
-          <span style="font-size:10px; color:#94a3b8; align-self:center;">Atalhos:</span>
-          <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 8px; background:#064e3b; color:#a7f3d0; border:1px solid #059669; font-weight:700;" onclick="window.CRM.quickSearchSaleProduto('estoque')">✅ Em Estoque</button>
-          <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchSaleProduto('retatrutide')">Retatrutida</button>
-          <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchSaleProduto('tg')">TG 15mg</button>
-          <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchSaleProduto('tirzec')">Tirzec</button>
-          <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchSaleProduto('lipoless')">Lipoless</button>
-          <button type="button" class="btn btn-xs" style="font-size:10px; padding:2px 6px; background:#1e293b; color:#38bdf8; border:1px solid #334155;" onclick="window.CRM.quickSearchSaleProduto('tirzedral')">Tirzedral</button>
-        </div>
-
-        <select id="saleProdSelect" class="filter-select" style="width:100%; font-size:13px;" onchange="window.CRM.onSaleProductSelect(this.value)"></select>
-      </div>
-
-      <input type="hidden" id="saleProdId" />
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
-        <div class="m-field">
-          <label>Quantidade Vendida</label>
-          <input id="saleQty" type="number" min="1" value="1" style="font-size:15px; font-weight:700; text-align:center;" oninput="window.CRM.onSaleQtyChange()" />
-        </div>
-        <div class="m-field">
-          <label>Forma de Pagamento</label>
-          <select id="salePayment" class="filter-select" style="width:100%; font-size:13px;" onchange="window.CRM.onSalePaymentChange()">
-            <option value="pix">💠 À vista no PIX</option>
-            <option value="cartao_parcelado">💳 Cartão de Crédito (até 12x s/ juros)</option>
-            <option value="cartao_debito">💳 Cartão Débito</option>
-            <option value="dinheiro">💵 Dinheiro em Espécie</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px;">
-        <div class="m-field">
-          <label>💵 Valor Unitário (R$ / un)</label>
-          <input id="saleUnitPrice" type="number" step="1" style="font-size:16px; font-weight:800; color:#38bdf8; text-align:right;" oninput="window.CRM.onSaleUnitPriceChange()" />
-        </div>
-        <div class="m-field">
-          <label>📦 Subtotal Produtos (R$)</label>
-          <input id="saleTotalValue" type="number" step="1" style="font-size:16px; font-weight:800; color:#38bdf8; text-align:right;" oninput="window.CRM.onSaleTotalValueChange()" />
-        </div>
-      </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1.2fr; gap:12px; margin-bottom:6px; background:#0b1329; padding:10px 12px; border-radius:8px; border:1px solid #334155;">
-        <div class="m-field">
-          <label style="color:#fbbf24; font-weight:700;">🚚 Frete / Envio (R$)</label>
-          <input id="saleShipping" type="number" step="1" min="0" placeholder="0" value="0" style="font-size:16px; font-weight:800; color:#fbbf24; text-align:right; border-color:#d97706;" oninput="window.CRM.onSaleShippingChange()" />
-        </div>
-        <div class="m-field">
-          <label style="color:#34d399; font-weight:800;">💰 Total a Pagar (C/ Frete)</label>
-          <input id="saleGrandTotal" type="number" step="1" readonly style="font-size:18px; font-weight:900; color:#34d399; text-align:right; background:#064e3b; border-color:#10b981;" />
-        </div>
-      </div>
-      <div style="font-size:11px; color:#94a3b8; margin-bottom:14px; text-align:right;" id="salePriceHint">Sugestão de tabela: R$ 900,00 cada un</div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
-        <div class="m-field">
-          <label>Data & Hora da Venda</label>
-          <input id="saleDate" type="datetime-local" style="font-size:12px;" />
-        </div>
-        <div class="m-field">
-          <label>Status do Pagamento</label>
-          <select id="salePaymentStatus" class="filter-select" style="width:100%; font-size:13px;">
-            <option value="pago">✅ Pago na hora</option>
-            <option value="pendente">⏳ Pendente (A Receber)</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
-        <div class="m-field">
-          <label>Nome do Cliente / Identificação</label>
-          <input id="saleClientName" list="encClientesDatalist" type="text" placeholder="Ex: Carlos (Academia) / Dr. Marcos" style="text-align:left;" oninput="window.CRM.onSaleClienteSelect(this.value)" />
-        </div>
-        <div class="m-field">
-          <label>WhatsApp do Cliente (opcional)</label>
-          <input id="saleClientPhone" type="text" placeholder="(31) 9...." style="text-align:left;" />
-        </div>
-      </div>
-
-      <div class="m-field" style="margin-bottom:14px;">
-        <label style="color:#cbd5e1; font-weight:700;">📍 Endereço de Entrega (Rua, Número, Bairro, Cidade)</label>
-        <input id="saleClientAddress" type="text" placeholder="Ex: Rua Itapoá, 176 - Bairro Itapoá, Ribeirão das Neves" style="text-align:left;" />
-      </div>
-
-      <div class="m-field" style="margin-bottom:18px;">
-        <label>Observação / Forma de Entrega</label>
-        <input id="saleNotes" type="text" placeholder="Ex: Entregue via Uber Flash / Retirada no local" style="text-align:left;" />
-      </div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
-        <button class="btn" onclick="document.getElementById('saleModal').classList.remove('open')">Cancelar</button>
-        <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; padding:12px 22px; font-size:14px; border:1px solid #34d399;" onclick="window.CRM.confirmSale()">
-          ✅ Confirmar Venda, Dar Baixa & Gerar WhatsApp
-        </button>
       </div>
     </div>
   </div>
@@ -1283,27 +1097,8 @@
         <button class="btn" style="color:#f87171;" onclick="window.CRM.clearSalesHistory()">🗑️ Limpar Histórico</button>
         <div style="display:flex; gap:8px;">
           <button class="btn btn-blue" onclick="window.CRM.exportSalesCSV()">📥 Exportar Vendas (Excel/CSV)</button>
-          <button class="btn btn-green" onclick="window.CRM.openSaleModal()">➕ Nova Venda</button>
+          <button class="btn btn-green" onclick="document.getElementById('salesHistoryModal').classList.remove('open'); window.CRM.openVendaRapidaModal();">⚡ Nova Venda / Doses</button>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal: Comprovante de Venda / WhatsApp -->
-  <div id="saleReceiptModal" class="modal-backdrop">
-    <div class="modal-box" style="max-width:540px;">
-      <div class="modal-header">
-        <h3 style="font-size:16px;font-weight:800; color:#34d399;">📲 Comprovante da Venda Gerado</h3>
-        <button class="btn" onclick="document.getElementById('saleReceiptModal').classList.remove('open')">✖ Fechar</button>
-      </div>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
-        Envie este comprovante para o cliente no WhatsApp com todos os detalhes da entrega:
-      </p>
-      <textarea id="saleReceiptText" class="wa-textarea" style="height:190px;"></textarea>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center;">
-        <button id="btnOpenReceiptWa" class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; font-size:13px; padding:10px 16px; border:1px solid #34d399;" onclick="window.CRM.openReceiptWhatsApp(false)">📲 Escolher Contato no WhatsApp</button>
-        <button class="btn" style="background:#1e293b; color:#38bdf8; font-weight:700; font-size:12px; border:1px solid #334155;" onclick="window.CRM.shareReceiptNative()">📤 Compartilhar</button>
-        <button id="btnCopyReceipt" class="btn btn-primary" style="font-size:12px; font-weight:700;" onclick="window.CRM.copyReceiptText()">📋 Copiar Recibo</button>
       </div>
     </div>
   </div>
@@ -1316,9 +1111,8 @@
         <button class="btn" onclick="document.getElementById('doseImageModal').classList.remove('open')">✖ Fechar</button>
       </div>
       <img id="doseImageModalImg" src="" style="max-width:100%; max-height:75vh; border-radius:8px; border:1px solid #334155; object-fit:contain;" />
-      <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:11px; color:#94a3b8;">Tabela Oficial com Valores Pronta Entrega BH</span>
-        <button class="btn btn-amber" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')">📲 Enviar Tabela no WhatsApp</button>
+      <div style="margin-top:12px; display:flex; justify-content:center; align-items:center;">
+        <span style="font-size:11px; color:#94a3b8;">Tabela Oficial com Valores Pronta Entrega BH (envio no menu Ferramentas → 💉 Doses Avulsas)</span>
       </div>
     </div>
   </div>
@@ -1340,7 +1134,7 @@
 
       <div style="background:#0f172a; border:1px solid #1e293b; border-radius:8px; padding:12px; margin-bottom:16px;">
         <span id="syncSummaryBadge" style="font-size:12px; font-weight:700; color:#34d399;">
-          32 unidades no estoque · 0 vendas · Doses sincronizadas
+          0 unidades no estoque · 0 vendas
         </span>
       </div>
 
@@ -1488,13 +1282,13 @@
     </div>
   </div>
 
-  <!-- Modal: Venda Rápida em 3 Passos (Item 4) -->
+  <!-- Modal: Nova Venda Unificada (3 Passos) -->
   <div id="vendaRapidaModal" class="modal-backdrop">
-    <div class="modal-box" style="max-width:520px; width:95%;">
+    <div class="modal-box" style="max-width:540px; width:95%;">
       <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:10px; margin-bottom:12px;">
         <div>
-          <h3 style="font-size:17px; font-weight:800; color:#34d399;">⚡ Venda Rápida (3 Passos)</h3>
-          <p id="vrStepSubtitle" style="font-size:12px; color:var(--text-muted); margin-top:2px;">Passo 1 de 3: Escolha o produto disponível</p>
+          <h3 style="font-size:17px; font-weight:800; color:#34d399;">⚡ Nova Venda</h3>
+          <p id="vrStepSubtitle" style="font-size:12px; color:var(--text-muted); margin-top:2px;">Passo 1 de 3: Escolha o produto</p>
         </div>
         <button class="btn" onclick="document.getElementById('vendaRapidaModal').classList.remove('open')">✖ Fechar</button>
       </div>
@@ -1508,16 +1302,19 @@
       <!-- Passo 2: Quantidade / Dose & Preço -->
       <div id="vrStep2" style="display:none;">
         <div id="vrSelectedProdBadge" style="background:#0f172a; border:1px solid #334155; border-radius:8px; padding:10px; margin-bottom:10px;"></div>
-        <div id="vrDoseBox" style="display:none; margin-bottom:10px;">
-          <label style="font-size:11px; color:#38bdf8; font-weight:700;">💉 Dose rápida (mg):</label>
-          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
-            <button type="button" class="btn" style="font-size:11px;" onclick="window.CRM.setVendaRapidaDose(2.5, 65)">2,5 mg (R$ 65)</button>
-            <button type="button" class="btn" style="font-size:11px;" onclick="window.CRM.setVendaRapidaDose(5, 130)">5,0 mg (R$ 130)</button>
-            <button type="button" class="btn" style="font-size:11px;" onclick="window.CRM.setVendaRapidaDose(7.5, 185)">7,5 mg (R$ 185)</button>
-            <button type="button" class="btn" style="font-size:11px;" onclick="window.CRM.setVendaRapidaDose(0, 0)">Frasco fechado</button>
+        <div id="vrDoseBox" style="display:none; background:#0b1329; border:1px solid #0284c7; border-radius:8px; padding:10px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
+            <label style="font-size:11px; color:#38bdf8; font-weight:800;">💉 Aplicação / Dose Avulsa (120 mg)</label>
+            <span id="vrDoseSaldoInfo" style="font-size:11px; color:#34d399; font-weight:700;">Frasco: 120 mg</span>
+          </div>
+          <div id="vrDoseButtons" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+          <div id="vrCustomDoseWrap" style="display:none; margin-top:8px; align-items:center; gap:8px;">
+            <label style="font-size:11px; color:#94a3b8; font-weight:700;">Dose (mg):</label>
+            <input id="vrCustomDoseMg" type="number" min="0.5" step="0.5" value="10" style="width:85px; background:#0f172a; border:1px solid #38bdf8; color:#fff; border-radius:6px; padding:4px 8px; text-align:center; font-weight:800;" oninput="window.CRM.onVrCustomDoseInput(this.value)" />
+            <span style="font-size:11px; color:#64748b;">Defina o valor no campo abaixo</span>
           </div>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
           <div class="m-field">
             <label>Quantidade</label>
             <input id="vrQty" type="number" min="1" value="1" oninput="window.CRM.updateVendaRapidaTotal()" />
@@ -1527,8 +1324,11 @@
             <input id="vrUnitPrice" type="number" min="0" step="1" oninput="window.CRM.updateVendaRapidaTotal()" />
           </div>
         </div>
-        <div style="background:#064e3b; border:1px solid #10b981; border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <span style="font-size:12px; color:#a7f3d0; font-weight:700;">Total da Venda:</span>
+        <div style="background:#064e3b; border:1px solid #10b981; border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+          <div>
+            <span style="font-size:12px; color:#a7f3d0; font-weight:700;">Total:</span>
+            <div id="vrLucroPreview" style="font-size:11px; color:#6ee7b7; font-weight:700; margin-top:2px;">Lucro: R$ 0,00</div>
+          </div>
           <b id="vrTotalPreview" style="font-size:18px; color:#34d399;">R$ 0,00</b>
         </div>
         <div style="display:flex; justify-content:space-between; gap:8px;">
@@ -1549,12 +1349,13 @@
             <input id="vrTelefone" type="text" placeholder="(31) 9..." />
           </div>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
           <div class="m-field">
             <label>Pagamento</label>
-            <select id="vrPagamento" class="filter-select" style="width:100%;">
+            <select id="vrPagamento" class="filter-select" style="width:100%;" onchange="window.CRM.onVrPagamentoChange()">
               <option value="pix">💠 PIX</option>
-              <option value="cartao_parcelado">💳 Cartão</option>
+              <option value="cartao_parcelado">💳 Cartão Crédito</option>
+              <option value="cartao_debito">💳 Cartão Débito</option>
               <option value="dinheiro">💵 Dinheiro</option>
             </select>
           </div>
@@ -1562,10 +1363,27 @@
             <label>Status</label>
             <select id="vrPayStatus" class="filter-select" style="width:100%;">
               <option value="pago">✅ Pago</option>
-              <option value="pendente">⏳ Pendente</option>
+              <option value="pendente">⏳ Pendente (A Receber)</option>
             </select>
           </div>
         </div>
+        <details id="vrExtraDetails" class="vr-details">
+          <summary>➕ Frete, Endereço e Observações (opcional)</summary>
+          <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; margin-bottom:8px;">
+            <div class="m-field">
+              <label>Frete (R$)</label>
+              <input id="vrFrete" type="number" min="0" step="1" value="0" oninput="window.CRM.updateVendaRapidaTotal()" />
+            </div>
+            <div class="m-field">
+              <label>Endereço de Entrega</label>
+              <input id="vrEndereco" type="text" placeholder="Rua, número, bairro, cidade" style="text-align:left;" />
+            </div>
+          </div>
+          <div class="m-field">
+            <label>Observação</label>
+            <input id="vrObs" type="text" placeholder="Ex: Uber Flash, retirada em mãos..." style="text-align:left;" />
+          </div>
+        </details>
         <div style="display:flex; justify-content:space-between; gap:8px;">
           <button type="button" class="btn" onclick="window.CRM.setVendaRapidaStep(2)">← Voltar</button>
           <button type="button" class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; flex:1;" onclick="window.CRM.confirmVendaRapida()">✅ Concluir + Recibo WhatsApp</button>
@@ -1573,9 +1391,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Botão Flutuante Venda Rápida -->
-  <button id="fabVendaRapida" class="fab-venda-rapida internal-only" onclick="window.CRM.openVendaRapidaModal()" title="Fluxo rápido em 3 passos">⚡ Venda Rápida</button>
 
   <!-- Modal: Extrato do Produto (Movimentações) -->
   <div id="extratoModal" class="modal-backdrop">
@@ -1608,10 +1423,10 @@
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script type="module" src="dominio/index.js?v=20261114_0030"></script>
-  <script src="dados_catalogo.js?v=20261114_0030"></script>
-  <script src="app.js?v=20261114_0030"></script>
-  <script type="module" src="store/index.js?v=20261114_0030"></script>
+  <script type="module" src="dominio/index.js?v=20261114_2125"></script>
+  <script src="dados_catalogo.js?v=20261114_2125"></script>
+  <script src="app.js?v=20261114_2125"></script>
+  <script type="module" src="store/index.js?v=20261114_2125"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

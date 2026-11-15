@@ -1,3 +1,6 @@
 sync*.log
 .DS_Store
 *.pdf
+compras_transito_dados.json
+meu_estoque_dados.json
+backup_local_crm*.json

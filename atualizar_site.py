@@ -18,22 +18,6 @@ API_URL = 'https://shapetotal.com/api/catalogo'
 LOG_FILE = os.path.join(BASE_DIR, 'sync.log')
 JSON_PATH = os.path.join(BASE_DIR, 'catalogo_dados.json')
 DADOS_JS_PATH = os.path.join(BASE_DIR, 'dados_catalogo.js')
-COMPRAS_PATH = os.path.join(BASE_DIR, 'compras_transito_dados.json')
-
-ESTOQUE_BH_CANONICO = {
-    "2848": 4,
-    "2889": 4,
-    "3207": 1,
-    "3136": 1,
-    "3370": 1,
-    "2830": 3,
-    "9001": 3,
-    "9002": 3,
-    "9003": 3,
-    "9004": 2,
-    "9005": 1,
-    "9006": 1
-}
 
 def log(msg):
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -103,41 +87,30 @@ def main():
             p['colecao_id'] = cid
             p['colecao_nome'] = cnome
 
-        for k in ('desc_comercial', 'preco_pix_fixo', 'preco_cartao_fixo', 'meu_estoque_qtd'):
+        for k in ('desc_comercial', 'preco_pix_fixo', 'preco_cartao_fixo'):
             if k in old:
                 p[k] = old[k]
+        p.pop('meu_estoque_qtd', None)
 
         merged_prods.append(p)
 
-    # Re-adiciona SKUs exclusivos locais (id >= 9000)
+    # Re-adiciona SKUs exclusivos locais (id >= 9000) sem dados operacionais
     for custom_p in local_custom_skus:
         if custom_p.get('id') not in api_ids:
-            merged_prods.append(custom_p)
+            clean_custom = dict(custom_p)
+            clean_custom.pop('meu_estoque_qtd', None)
+            merged_prods.append(clean_custom)
 
     raw_data['productos'] = merged_prods
-    raw_data['meu_estoque_qtds'] = local_data.get('meu_estoque_qtds', ESTOQUE_BH_CANONICO)
-    if 'meu_estoque_resumo' in local_data:
-        raw_data['meu_estoque_resumo'] = local_data['meu_estoque_resumo']
+    raw_data.pop('meu_estoque_qtds', None)
+    raw_data.pop('meu_estoque_resumo', None)
 
-    # Salva catalogo_dados.json enriquecido
+    # Salva catalogo_dados.json público (sem estoque privado ou trânsito)
     with open(JSON_PATH, 'w', encoding='utf-8') as f:
         json.dump(raw_data, f, ensure_ascii=False, indent=2)
 
-    # Carrega pedidos em trânsito
-    pedidos_transito = []
-    if os.path.exists(COMPRAS_PATH):
-        try:
-            with open(COMPRAS_PATH, 'r', encoding='utf-8') as f:
-                pedidos_transito = json.load(f).get('pedidos', [])
-        except Exception:
-            pass
-
-    # Gera dados_catalogo.js completo
-    js_content = (
-        "window.SHAPETOTAL_RAW = " + json.dumps(raw_data, ensure_ascii=False) + ";\n"
-        "window.ESTOQUE_BH_CANONICO = " + json.dumps(raw_data['meu_estoque_qtds'], ensure_ascii=False) + ";\n"
-        "window.PEDIDOS_TRANSITO_INICIAIS = " + json.dumps(pedidos_transito, ensure_ascii=False) + ";\n"
-    )
+    # Gera dados_catalogo.js apenas com catálogo público (dados operacionais ficam no IndexedDB/localStorage)
+    js_content = "window.SHAPETOTAL_RAW = " + json.dumps(raw_data, ensure_ascii=False) + ";\n"
     with open(DADOS_JS_PATH, 'w', encoding='utf-8') as f:
         f.write(js_content)
 

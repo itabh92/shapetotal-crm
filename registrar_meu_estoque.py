@@ -219,27 +219,29 @@ def main():
         json.dump(dados_estoque, f, ensure_ascii=False, indent=2)
     print(f"meu_estoque_dados.json salvo em: {meu_estoque_path}")
 
-    # 2. Atualiza catalogo_dados.json com o estoque físico
+    # 2. Limpa quaisquer chaves operacionais antigas do catálogo público
     with open(JSON_PATH, 'r', encoding='utf-8') as f:
         cat_data = json.load(f)
 
-    # Mapeia quantidades por id_catalogo
     qtd_map = {}
     for item in ESTOQUE_LOCAL:
         cid = item['id_catalogo']
         qtd_map[cid] = qtd_map.get(cid, 0) + item['qtd']
 
-    cat_data['meu_estoque_resumo'] = dados_estoque['resumo']
-    cat_data['meu_estoque_qtds'] = qtd_map
-
+    cat_data.pop('meu_estoque_resumo', None)
+    cat_data.pop('meu_estoque_qtds', None)
     for p in cat_data.get('productos', []):
-        pid = p.get('id')
-        p['meu_estoque_qtd'] = qtd_map.get(pid, 0)
+        p.pop('meu_estoque_qtd', None)
 
     with open(JSON_PATH, 'w', encoding='utf-8') as f:
         json.dump(cat_data, f, ensure_ascii=False, indent=2)
 
-    # 3. Atualiza dados_catalogo.js preservando ESTOQUE_BH_CANONICO e PEDIDOS_TRANSITO_INICIAIS
+    # 3. Gera dados_catalogo.js público sem expor estoque físico nem compras em trânsito
+    js_content = "window.SHAPETOTAL_RAW = " + json.dumps(cat_data, ensure_ascii=False) + ";\n"
+    with open(DADOS_JS_PATH, 'w', encoding='utf-8') as f:
+        f.write(js_content)
+
+    # 3b. Gera semente local não-versionada para importação manual no CRM quando desejado
     compras_path = os.path.join(BASE_DIR, 'compras_transito_dados.json')
     pedidos_transito = []
     if os.path.exists(compras_path):
@@ -248,14 +250,12 @@ def main():
                 pedidos_transito = json.load(fc).get('pedidos', [])
         except Exception:
             pass
-
-    js_content = (
-        "window.SHAPETOTAL_RAW = " + json.dumps(cat_data, ensure_ascii=False) + ";\n"
-        "window.ESTOQUE_BH_CANONICO = " + json.dumps(qtd_map, ensure_ascii=False) + ";\n"
-        "window.PEDIDOS_TRANSITO_INICIAIS = " + json.dumps(pedidos_transito, ensure_ascii=False) + ";\n"
-    )
-    with open(DADOS_JS_PATH, 'w', encoding='utf-8') as f:
-        f.write(js_content)
+    seed_path = os.path.join(BASE_DIR, 'backup_local_crm_seed.json')
+    with open(seed_path, 'w', encoding='utf-8') as fs_seed:
+        json.dump({
+            'meuEstoque': qtd_map,
+            'pedidosTransito': pedidos_transito
+        }, fs_seed, ensure_ascii=False, indent=2)
 
     # 4. Mantém shapetotal_mobile.html como redirecionador seguro para index.html
     try:

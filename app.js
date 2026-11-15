@@ -49,23 +49,7 @@
     9006: { rec: 1800, cartao: 2000, label: 'Tirzepatida Gen-Tirz 120mg (Doses)' }
   };
 
-  const ESTOQUE_CANONICO_BH = {
-    2848: 1, // TG 60mg (Caixa 4x15mg) — conferido 11/11
-    2889: 3, // Lipoless 60mg (Caixa 4x15mg) — conferido 11/11
-    3207: 2, // Tirzec 60mg (Caixa 4x15mg) — conferido 11/11
-    2996: 2, // Quimfa Tirzec Multi Dosis 60mg (Ampola Única)
-    3136: 0, // Tirzedral 60mg (Caixa 4x15mg) — aberta para ampolas avulsas
-    3370: 1, // Kit Retatrutida 4x60mg + Água
-    2830: 3, // Retatrutida 60mg ampolas fechadas
-    9001: 3, // Ampola avulsa Lipoland 15mg
-    9002: 3, // Ampola avulsa Tirzec 15mg
-    9003: 3, // Ampola avulsa TG 15mg
-    9004: 2, // Ampola avulsa Lipoless 15mg
-    9007: 3, // Ampola avulsa Catedral Tirzedral 15mg — conferido 11/11 (3 un)
-    9005: 1, // Retatrutida 120mg frasco doses
-    9006: 1  // Tirzepatida 120mg frasco doses
-  };
-
+  // Dados operacionais (estoque, pedidos em trânsito e clientes) ficam exclusivamente no armazenamento local do aparelho (localStorage/IndexedDB), nunca no bundle JS público.
   const TABELA_DOSES_OFICIAIS = {
     9006: {
       id: 9006,
@@ -91,71 +75,6 @@
       ]
     }
   };
-
-  const PEDIDOS_TRANSITO_CANONICOS = [
-    {
-      id: "PED-20261111-01",
-      data_compra: "11/11/2026",
-      fornecedor: "Jose do Carmo Alves Dantas (Pagseguro)",
-      status: "em_transito",
-      custo_total_reais: 3740.00,
-      comprovante: "E00416968202611111343Vo74dD1GsCc",
-      itens: [
-        { id_catalogo: 2848, nome: "INDUFAR T.G. TIRZEPATIDA X 15 MG. X 4 AMP. (60 MG)", qtd: 4, preco_venda_pix: 900, preco_venda_cartao: 1000 },
-        { id_catalogo: 3207, nome: "TIRZEC X 15 MG. X 4 AMPOLLAS (60 MG)", qtd: 2, preco_venda_pix: 900, preco_venda_cartao: 1000 }
-      ]
-    },
-    {
-      id: "PED-20261110-01",
-      data_compra: "10/11/2026",
-      fornecedor: "Mega Servicos Digitais LTDA",
-      status: "em_transito",
-      custo_total_reais: 1729.35,
-      comprovante: "E00416968202611101746bdLuXF7tnqj",
-      itens: [
-        { id_catalogo: 3207, nome: "TIRZEC X 15 MG. X 4 AMPOLLAS (60 MG)", qtd: 2, preco_venda_pix: 900, preco_venda_cartao: 1000 },
-        { id_catalogo: 2848, nome: "INDUFAR T.G. TIRZEPATIDA X 15 MG. X 4 AMP. (60 MG)", qtd: 2, preco_venda_pix: 900, preco_venda_cartao: 1000 }
-      ]
-    },
-    {
-      id: "PED-20261109-02",
-      data_compra: "09/11/2026",
-      fornecedor: "Outro Fornecedor",
-      status: "entregue",
-      data_entrega: "10/11/2026 às 16:00",
-      custo_total_reais: 3125.00,
-      itens: [
-        { id_catalogo: 2996, nome: "QUIMFA TIRZEC MULTI DOSIS 60 MG (AMPOLA ÚNICA)", qtd: 2, preco_venda_pix: 900, preco_venda_cartao: 1000 },
-        { id_catalogo: 2848, nome: "INDUFAR T.G. TIRZEPATIDA X 15 MG. X 4 AMP. (60 MG)", qtd: 2, preco_venda_pix: 900, preco_venda_cartao: 1000 },
-        { id_catalogo: 3207, nome: "TIRZEC X 15 MG. X 4 AMPOLLAS (60 MG)", qtd: 1, preco_venda_pix: 900, preco_venda_cartao: 1000 }
-      ]
-    },
-    {
-      id: "PED-20261109-01",
-      data_compra: "09/11/2026",
-      fornecedor: "Shape Total / Importação",
-      status: "em_transito",
-      custo_total_reais: 2644.20,
-      itens: [
-        { id_catalogo: 3207, nome: "TIRZEC X 15 MG. X 4 AMPOLLAS (60 MG)", qtd: 3, preco_venda_pix: 900, preco_venda_cartao: 1000 },
-        { id_catalogo: 2848, nome: "INDUFAR T.G. TIRZEPATIDA X 15 MG. X 4 AMP. (60 MG)", qtd: 3, preco_venda_pix: 900, preco_venda_cartao: 1000 }
-      ]
-    },
-    {
-      id: "PED-20261106-01",
-      data_compra: "06/11/2026",
-      fornecedor: "Shape Total / Importação",
-      status: "em_transito",
-      custo_total_reais: 6103.41,
-      itens: [
-        { id_catalogo: 3072, nome: "LIPOLAND MULTIDOSIS X 15 MG", qtd: 1, preco_venda_pix: 900, preco_venda_cartao: 1000 },
-        { id_catalogo: 2848, nome: "INDUFAR T.G. TIRZEPATIDA X 15 MG. X 4 AMP. (60 MG)", qtd: 3, preco_venda_pix: 900, preco_venda_cartao: 1000 },
-        { id_catalogo: 2889, nome: "LIPOLESS X 15 MG. X 4 AMPOLLAS (60 MG)", qtd: 1, preco_venda_pix: 900, preco_venda_cartao: 1000 },
-        { id_catalogo: 3207, nome: "TIRZEC X 15 MG. X 4 AMPOLLAS (60 MG)", qtd: 5, preco_venda_pix: 900, preco_venda_cartao: 1000 },
-        { id_catalogo: 3230, nome: "OXYGEN CJC 1295 + IPAMORELIN X 10 MG.", qtd: 1, preco_venda_pix: 630, preco_venda_cartao: 730 }
-      ]
-    }
-  ];
 
 (function () {
   const STORAGE_KEY = 'SHAPETOTAL_CRM_STATE_V1';
@@ -209,12 +128,8 @@
   };
 
   const AUDIT_LOG_KEY = 'ST_AUDIT_LOG_v1';
-  const PASS_SALT = '|SHAPE_TOTAL_SALT_2026_v1|';
-  const VALID_PASS_HASHES = [
-    'e928dd10685d338a37bbb64597b818214569621b93d1607114734d32d552f6ad', // shape2026
-    'e4f85da8d5d37890ab3044efe4ef562b45e4e87b5f5e103f930d51098ba90490', // 1020
-    '03c037f6c96e56857dafe85e0510427246baf2f174319116a1f90664e30b5af2'  // italo2026
-  ];
+  const LOCAL_PIN_SALT_KEY = 'ST_LOCAL_PIN_SALT_v1';
+  const LOCAL_PIN_HASH_KEY = 'ST_CUSTOM_HASH';
 
   function sha256Pure(ascii) {
     const rightRotate = (v, a) => (v >>> a) | (v << (32 - a));
@@ -262,8 +177,18 @@
     return result;
   }
 
-  async function hashPass(pass) {
-    const text = String(pass || '') + PASS_SALT;
+  function getLocalPinSalt() {
+    let salt = localStorage.getItem(LOCAL_PIN_SALT_KEY);
+    if (!salt) {
+      salt = 'ST_LOCAL_' + Math.random().toString(36).slice(2, 10) + '_' + Date.now();
+      try { localStorage.setItem(LOCAL_PIN_SALT_KEY, salt); } catch (_) {}
+    }
+    return salt;
+  }
+
+  async function hashPass(pass, customSalt = null) {
+    const salt = customSalt || getLocalPinSalt();
+    const text = String(pass || '') + '|' + salt;
     if (window.crypto && window.crypto.subtle) {
       const enc = new TextEncoder();
       const buf = await window.crypto.subtle.digest('SHA-256', enc.encode(text));
@@ -291,8 +216,20 @@
   let currentEncomendaFilter = 'todas';
   let currentReceiptEncId = null;
   let currentReceiptPhone = '';
+  let pendingAvisoEncId = null;
   let currentPedidoOperacao = 'pronta_entrega'; // 'pronta_entrega' | 'encomenda'
   let novaEncomendaItens = [];
+
+  function markPendingAvisoChegadaSent() {
+    if (!pendingAvisoEncId) return;
+    const enc = (state.encomendas || []).find(e => String(e.id) === String(pendingAvisoEncId));
+    if (enc) {
+      enc.avisoChegadaEm = new Date().toISOString();
+      saveState();
+      if (typeof renderAll === 'function') renderAll();
+    }
+    pendingAvisoEncId = null;
+  }
 
   function getEncomendaItens(enc) {
     if (!enc) return [];
@@ -345,6 +282,8 @@
         state.custosReais = (parsed.custosReais && typeof parsed.custosReais === 'object') ? parsed.custosReais : {};
         state.estoqueAtualizadoEm = parsed.estoqueAtualizadoEm || '';
         state.ultimaVerificacaoAlertas = parsed.ultimaVerificacaoAlertas || null;
+        state.pedidoFornecedorItens = Array.isArray(parsed.pedidoFornecedorItens) ? parsed.pedidoFornecedorItens : [];
+        state.telefoneFornecedor = parsed.telefoneFornecedor || '';
         // Migração suave de encomendas antigas para o funil com etapa/próxima ação
         state.encomendas.forEach(e => {
           if (!e.etapa) {
@@ -377,45 +316,11 @@
     if (!state.frascosDoses[9006]) state.frascosDoses[9006] = { mgRestante: 120, totalAplicadasMg: 0 };
     if (!state.frascosDoses[9005]) state.frascosDoses[9005] = { mgRestante: 120, totalAplicadasMg: 0 };
 
-    // Auto-merge: cada pedido canônico entra uma única vez por aparelho.
-    // Depois de visto, não volta mesmo que o usuário o exclua.
     if (!Array.isArray(state.pedidosTransito)) state.pedidosTransito = [];
     if (!Array.isArray(state.canonVistos)) state.canonVistos = [];
-    let changed = false;
-    PEDIDOS_TRANSITO_CANONICOS.forEach(canon => {
-      const cid = String(canon.id);
-      if (state.canonVistos.includes(cid)) return;
-      if (!state.pedidosTransito.some(p => String(p.id) === cid)) {
-        state.pedidosTransito.unshift(JSON.parse(JSON.stringify(canon)));
-      }
-      state.canonVistos.push(cid);
-      changed = true;
-    });
-
-    // Se algum pedido canônico foi marcado como 'entregue', sincroniza o status no aparelho e credita o estoque local
-    PEDIDOS_TRANSITO_CANONICOS.forEach(canon => {
-      if (canon.status === 'entregue') {
-        const pedLocal = state.pedidosTransito.find(p => String(p.id) === String(canon.id));
-        if (pedLocal && pedLocal.status !== 'entregue') {
-          pedLocal.status = 'entregue';
-          pedLocal.data_entrega = canon.data_entrega || new Date().toISOString();
-          if (!state.meuEstoque) state.meuEstoque = {};
-          (pedLocal.itens || []).forEach(it => {
-            const pid = it.id_catalogo;
-            state.meuEstoque[pid] = (Number(state.meuEstoque[pid]) || 0) + Number(it.qtd || 0);
-          });
-          changed = true;
-        }
-      }
-    });
-
-    // Semeia o estoque físico de BH apenas na primeira carga do aparelho (quando não há estoque salvo)
-    if (!temEstoqueSalvo || !state.meuEstoque || typeof state.meuEstoque !== 'object') {
-      state.meuEstoque = JSON.parse(JSON.stringify(ESTOQUE_CANONICO_BH));
-      state._bhStockSyncKey = 'SYNC_BH_ESTOQUE_20261111_INVENTARIO_CONFIRMADO_V5';
-      changed = true;
+    if (!state.meuEstoque || typeof state.meuEstoque !== 'object') {
+      state.meuEstoque = {};
     }
-    if (changed) saveState();
     backfillClientesFromHistory();
     rebuildSearchIndex();
   }
@@ -729,33 +634,41 @@
     return true;
   }
 
+  let _idbSnapshotTimer = null;
   function saveState() {
+    const snapshot = {
+      cotacao: state.cotacao,
+      cotacaoAtualizadaEm: state.cotacaoAtualizadaEm || '',
+      _bhStockSyncKey: state._bhStockSyncKey || '',
+      fretePct: state.fretePct,
+      taxaCartaoFixa: state.taxaCartaoFixa,
+      activeTier: state.activeTier,
+      groupMargins: state.groupMargins,
+      overrides: state.overrides,
+      meuEstoque: state.meuEstoque,
+      vendas: state.vendas || [],
+      encomendas: state.encomendas || [],
+      pedidosTransito: state.pedidosTransito || [],
+      frascosDoses: state.frascosDoses || {},
+      customProducts: state.customProducts || [],
+      clientes: state.clientes || [],
+      savedFilters: state.savedFilters || [],
+      canonVistos: state.canonVistos || [],
+      movimentacoes: state.movimentacoes || [],
+      custosReais: state.custosReais || {},
+      pedidoFornecedorItens: state.pedidoFornecedorItens || [],
+      telefoneFornecedor: state.telefoneFornecedor || '',
+      estoqueAtualizadoEm: state.estoqueAtualizadoEm || new Date().toISOString(),
+      ultimaVerificacaoAlertas: state.ultimaVerificacaoAlertas || null
+    };
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        cotacao: state.cotacao,
-        cotacaoAtualizadaEm: state.cotacaoAtualizadaEm || '',
-        _bhStockSyncKey: state._bhStockSyncKey || '',
-        fretePct: state.fretePct,
-        taxaCartaoFixa: state.taxaCartaoFixa,
-        activeTier: state.activeTier,
-        groupMargins: state.groupMargins,
-        overrides: state.overrides,
-        meuEstoque: state.meuEstoque,
-        vendas: state.vendas || [],
-        encomendas: state.encomendas || [],
-        pedidosTransito: state.pedidosTransito || [],
-        frascosDoses: state.frascosDoses || {},
-        customProducts: state.customProducts || [],
-        clientes: state.clientes || [],
-        savedFilters: state.savedFilters || [],
-        canonVistos: state.canonVistos || [],
-        movimentacoes: state.movimentacoes || [],
-        custosReais: state.custosReais || {},
-        pedidoFornecedorItens: state.pedidoFornecedorItens || [],
-        telefoneFornecedor: state.telefoneFornecedor || '',
-        estoqueAtualizadoEm: state.estoqueAtualizadoEm || new Date().toISOString(),
-        ultimaVerificacaoAlertas: state.ultimaVerificacaoAlertas || null
-      }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+      if (typeof window !== 'undefined' && window.CRM_STORE && typeof window.CRM_STORE.salvarSnapshotEstado === 'function') {
+        clearTimeout(_idbSnapshotTimer);
+        _idbSnapshotTimer = setTimeout(() => {
+          window.CRM_STORE.salvarSnapshotEstado(snapshot).catch(() => {});
+        }, 300);
+      }
     } catch (e) {
       console.error('Erro ao salvar estado:', e);
       alert('⚠️ Não foi possível salvar os dados neste aparelho. Exporte um backup agora.');
@@ -873,6 +786,39 @@
    * - transito_atrasado: status 'em_transito' há > 15 dias ou dataPrevista vencida
    * - negocio_sem_acao / etapa_parada (>3d) / reserva_24h_sem_pgto
    */
+  /**
+   * Parser determinístico de datas (ISO, dd/MM/yyyy [HH:mm], timestamp ou Date).
+   * Evita que '06/11/2026' seja interpretado como mês 06 (junho) pelo motor JS.
+   */
+  function parseDateTs(val) {
+    if (val === null || val === undefined || val === '') return null;
+    if (typeof val === 'number') return isFinite(val) ? val : null;
+    if (val instanceof Date) return isNaN(val.getTime()) ? null : val.getTime();
+    const s = String(val).trim();
+    if (!s) return null;
+    const brMatch = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[\s,T]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+    if (brMatch) {
+      const day = Number(brMatch[1]);
+      const month = Number(brMatch[2]);
+      const year = Number(brMatch[3]);
+      const hh = Number(brMatch[4] || 0);
+      const mm = Number(brMatch[5] || 0);
+      const ss = Number(brMatch[6] || 0);
+      const d = new Date(year, month - 1, day, hh, mm, ss);
+      if (d.getFullYear() === year && d.getMonth() === month - 1 && d.getDate() === day) {
+        return d.getTime();
+      }
+      return null;
+    }
+    const isoDateOnly = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (isoDateOnly) {
+      const d = new Date(Number(isoDateOnly[1]), Number(isoDateOnly[2]) - 1, Number(isoDateOnly[3]));
+      return isNaN(d.getTime()) ? null : d.getTime();
+    }
+    const parsed = Date.parse(s);
+    return isNaN(parsed) ? null : parsed;
+  }
+
   function calcularAlertas(force = false) {
     const sig = JSON.stringify({
       e: state.meuEstoque || {},
@@ -934,10 +880,10 @@
       const etapa = enc.etapa || 'negociacao';
       if (!isAtiva || etapa === 'perdido' || etapa === 'pos_venda') return;
 
-      const dtCriacao = enc.data ? new Date(enc.data).getTime() : now;
-      const diasCriacao = Math.floor((now - dtCriacao) / msDia);
-      const dtEtapa = enc.etapaDesde ? new Date(enc.etapaDesde).getTime() : dtCriacao;
-      const diasEtapa = Math.floor((now - dtEtapa) / msDia);
+      const dtCriacao = parseDateTs(enc.data) ?? now;
+      const diasCriacao = Math.max(0, Math.floor((now - dtCriacao) / msDia));
+      const dtEtapa = parseDateTs(enc.etapaDesde) ?? dtCriacao;
+      const diasEtapa = Math.max(0, Math.floor((now - dtEtapa) / msDia));
 
       if ((st === 'pendente' || st === 'pedido_ao_fornecedor') && diasCriacao > 7) {
         alertas.push({
@@ -987,10 +933,10 @@
     // 4. Trânsito atrasado (> 15 dias em trânsito ou dataPrevista vencida)
     (state.pedidosTransito || []).forEach(ped => {
       if (!ped || ped.status !== 'em_transito') return;
-      const dtCompra = ped.data_compra ? new Date(ped.data_compra).getTime() : now;
-      const dias = Math.floor((now - dtCompra) / msDia);
-      const prevTs = ped.dataPrevista ? new Date(ped.dataPrevista).getTime() : null;
-      const vencida = prevTs !== null && !isNaN(prevTs) && prevTs < now;
+      const dtCompra = parseDateTs(ped.data_compra) ?? now;
+      const dias = Math.max(0, Math.floor((now - dtCompra) / msDia));
+      const prevTs = parseDateTs(ped.dataPrevista);
+      const vencida = prevTs !== null && prevTs < now;
       if (dias > 15 || vencida) {
         alertas.push({
           tipo: 'transito_atrasado',
@@ -1408,10 +1354,105 @@
     el.innerHTML = `👤 <b>${escapeHtml(cli.nome)}</b>${tagsHtml} · <b>${cli.qtdPedidos || 0}</b> pedido(s) · Total: <b>${formatBRL(cli.totalGasto || 0)}</b> · Última: ${ult}${cli.anotacoes ? `<div style="margin-top:3px;color:#cbd5e1;font-size:11px;">📝 ${escapeHtml(cli.anotacoes)}</div>` : ''}`;
   }
 
+  let _dispCache = null;
+
+  /**
+   * Única rotina de domínio para variar estoque físico em BH.
+   * Impede saldo negativo por padrão, atualiza timestamp e registra movimentação.
+   */
+  function aplicarVariacaoEstoque(produtoId, delta, opts = {}) {
+    const pid = Number(produtoId);
+    const d = Math.trunc(Number(delta) || 0);
+    if (!Number.isFinite(pid) || pid <= 0 || d === 0) {
+      return { ok: true, prev: Number((state.meuEstoque || {})[pid] || 0), next: Number((state.meuEstoque || {})[pid] || 0) };
+    }
+    if (!state.meuEstoque || typeof state.meuEstoque !== 'object') state.meuEstoque = {};
+    const prev = Math.max(0, Number(state.meuEstoque[pid] || 0));
+    const nextRaw = prev + d;
+    if (!opts.allowNegative && nextRaw < 0) {
+      return { ok: false, prev, next: prev, erro: `Estoque físico insuficiente para SKU ${pid} (atual: ${prev}, solicitado: ${Math.abs(d)})` };
+    }
+    const next = Math.max(0, nextRaw);
+    if (next <= 0) delete state.meuEstoque[pid];
+    else state.meuEstoque[pid] = next;
+    state.estoqueAtualizadoEm = new Date().toISOString();
+    _dispCache = null;
+    if (opts.tipo) {
+      registrarMovimento(opts.tipo, pid, d, opts.referenciaId || null, opts.motivo || '', opts.custoUnitReal || null);
+    }
+    return { ok: true, prev, next };
+  }
+
+  /**
+   * Atualiza estado salvo, disponibilidade, alertas, catálogo e modais abertos sem refresh manual.
+   */
+  function syncDomainUI({ refreshCatalog = true } = {}) {
+    _dispCache = null;
+    saveState();
+    if (refreshCatalog && typeof renderAll === 'function') {
+      renderAll();
+    } else {
+      if (typeof renderDispStatusStrip === 'function') renderDispStatusStrip();
+      if (typeof renderAlertasPanel === 'function') renderAlertasPanel();
+    }
+    const encModal = document.getElementById('encomendasModal');
+    if (encModal && encModal.classList && encModal.classList.contains('open') && typeof renderEncomendasClientes === 'function') {
+      renderEncomendasClientes();
+    }
+    const diaModal = document.getElementById('listaDoDiaModal');
+    if (diaModal && diaModal.classList && diaModal.classList.contains('open') && window.CRM && typeof window.CRM.openListaDoDiaModal === 'function') {
+      window.CRM.openListaDoDiaModal();
+    }
+  }
+
+  function buildDisponibilidadeSnapshot() {
+    const reservadoMap = new Map();
+    const transitoMap = new Map();
+
+    (state.encomendas || []).forEach(enc => {
+      if (enc.status !== 'pendente' && enc.status !== 'pedido_ao_fornecedor' && enc.status !== 'chegou_bh') return;
+      getEncomendaItens(enc).forEach(it => {
+        const pid = Number(it.produtoId);
+        const q = Math.max(0, Number(it.qtd) || 0);
+        if (!pid || q <= 0) return;
+        let entry = reservadoMap.get(pid);
+        if (!entry) { entry = { total: 0, detalhes: [] }; reservadoMap.set(pid, entry); }
+        entry.total += q;
+        entry.detalhes.push({
+          encId: enc.id,
+          cliente: enc.cliente || 'Cliente',
+          telefone: enc.telefone || '',
+          qtd: q,
+          status: enc.status,
+          data: enc.data || ''
+        });
+      });
+    });
+
+    (state.pedidosTransito || []).forEach(ped => {
+      if (ped.status !== 'em_transito') return;
+      (ped.itens || []).forEach(it => {
+        const pid = Number(it.id_catalogo);
+        const q = Math.max(0, Number(it.qtd) || 0);
+        if (!pid || q <= 0) return;
+        let entry = transitoMap.get(pid);
+        if (!entry) { entry = { total: 0, detalhes: [] }; transitoMap.set(pid, entry); }
+        entry.total += q;
+        entry.detalhes.push({
+          pedidoId: ped.id,
+          data: ped.data_compra || '',
+          qtd: q
+        });
+      });
+    });
+
+    return { reservadoMap, transitoMap };
+  }
+
   /**
    * Calcula a disponibilidade real de um produto em BH cruzando:
    * - estoqueBH (físico atual)
-   * - reservado (encomendas com status pendente ou pedido_ao_fornecedor)
+   * - reservado (encomendas com status pendente, pedido_ao_fornecedor ou chegou_bh)
    * - chegando (pedidos em trânsito)
    */
   function getDisponibilidade(produtoId) {
@@ -1419,45 +1460,53 @@
     const estoqueBH = Math.max(0, Number((state.meuEstoque || {})[pid] || 0));
 
     let reservado = 0;
-    const reservasDetalhes = [];
-    (state.encomendas || []).forEach(enc => {
-      if (enc.status !== 'pendente' && enc.status !== 'pedido_ao_fornecedor' && enc.status !== 'chegou_bh') return;
-      getEncomendaItens(enc).forEach(it => {
-        if (Number(it.produtoId) === pid) {
-          const q = Math.max(0, Number(it.qtd) || 0);
-          if (q > 0) {
-            reservado += q;
-            reservasDetalhes.push({
-              encId: enc.id,
-              cliente: enc.cliente || 'Cliente',
-              telefone: enc.telefone || '',
-              qtd: q,
-              status: enc.status,
-              data: enc.data || ''
-            });
-          }
-        }
-      });
-    });
-
+    let reservasDetalhes = [];
     let chegando = 0;
-    const transitoDetalhes = [];
-    (state.pedidosTransito || []).forEach(ped => {
-      if (ped.status !== 'em_transito') return;
-      (ped.itens || []).forEach(it => {
-        if (Number(it.id_catalogo) === pid) {
-          const q = Math.max(0, Number(it.qtd) || 0);
-          if (q > 0) {
-            chegando += q;
-            transitoDetalhes.push({
-              pedidoId: ped.id,
-              data: ped.data_compra || '',
-              qtd: q
-            });
+    let transitoDetalhes = [];
+
+    if (_dispCache) {
+      const r = _dispCache.reservadoMap.get(pid);
+      if (r) { reservado = r.total; reservasDetalhes = r.detalhes; }
+      const t = _dispCache.transitoMap.get(pid);
+      if (t) { chegando = t.total; transitoDetalhes = t.detalhes; }
+    } else {
+      (state.encomendas || []).forEach(enc => {
+        if (enc.status !== 'pendente' && enc.status !== 'pedido_ao_fornecedor' && enc.status !== 'chegou_bh') return;
+        getEncomendaItens(enc).forEach(it => {
+          if (Number(it.produtoId) === pid) {
+            const q = Math.max(0, Number(it.qtd) || 0);
+            if (q > 0) {
+              reservado += q;
+              reservasDetalhes.push({
+                encId: enc.id,
+                cliente: enc.cliente || 'Cliente',
+                telefone: enc.telefone || '',
+                qtd: q,
+                status: enc.status,
+                data: enc.data || ''
+              });
+            }
           }
-        }
+        });
       });
-    });
+
+      (state.pedidosTransito || []).forEach(ped => {
+        if (ped.status !== 'em_transito') return;
+        (ped.itens || []).forEach(it => {
+          if (Number(it.id_catalogo) === pid) {
+            const q = Math.max(0, Number(it.qtd) || 0);
+            if (q > 0) {
+              chegando += q;
+              transitoDetalhes.push({
+                pedidoId: ped.id,
+                data: ped.data_compra || '',
+                qtd: q
+              });
+            }
+          }
+        });
+      });
+    }
 
     const disponivel = Math.max(0, estoqueBH - reservado);
     let status = 'encomenda';
@@ -1480,7 +1529,7 @@
       if (e.status === 'pendente' || e.status === 'pedido_ao_fornecedor' || e.status === 'chegou_bh') {
         getEncomendaItens(e).forEach(it => {
           idsComMovimento.add(Number(it.produtoId));
-          if (e.status === 'pendente') pedirFornecedor += Number(it.qtd) || 0;
+          if (e.status === 'pendente' && !e.loteId) pedirFornecedor += Number(it.qtd) || 0;
         });
       }
     });
@@ -1675,7 +1724,9 @@
       pedidosTransito.forEach(ped => {
         transitoInvestido += Number(ped.custo_total_reais || 0);
         (ped.itens || []).forEach(it => {
-          transitoVendaPix += Number(it.preco_venda_pix || 900) * Number(it.qtd || 0);
+          const fallbackRaw = rawCatalog.find(x => Number(x.id) === Number(it.id_catalogo));
+          const pixEst = Number(it.preco_venda_pix) || (fallbackRaw ? computeProduct(fallbackRaw).precoFinal : 0);
+          transitoVendaPix += pixEst * Number(it.qtd || 0);
         });
       });
       const transitoLucro = transitoVendaPix - transitoInvestido;
@@ -1734,8 +1785,10 @@
       if (diffDias >= 3) cotacaoAlerta = ` · ⚠️ Cotação há ${diffDias}d`;
     }
 
+    const skusComBhLivre = filtered.filter(p => getDisponibilidade(p.id).disponivel > 0).length;
+    const totalLivreBh = filtered.reduce((s, p) => s + getDisponibilidade(p.id).disponivel, 0);
     document.getElementById('kpiCount').textContent = `${filtered.length} SKUs`;
-    document.getElementById('kpiCountSub').textContent = `${withStock.length} com estoque imediato`;
+    document.getElementById('kpiCountSub').textContent = `${withStock.length} SKUs PY · ${skusComBhLivre} SKUs livres BH (${totalLivreBh} un)`;
     document.getElementById('kpiMult').textContent = `R$ ${mult}`;
     document.getElementById('kpiMultSub').textContent = `Dólar R$ ${state.cotacao.toFixed(2)} + ${state.fretePct}% frete${cotacaoAlerta}`;
     document.getElementById('kpiAvgPrice').textContent = formatBRL(avgPrice);
@@ -1764,22 +1817,52 @@
       container.innerHTML = visible.map(p => {
         const meuQtd = Number((state.meuEstoque || {})[p.id] || 0);
         const hasAnyStock = p.stockTotal > 0 || meuQtd > 0;
+        const canSellDirect = meuQtd > 0 || p.id === 9005 || p.id === 9006;
+        const safeNombre = escapeHtml(p.nombre);
+        const safeMarca = escapeHtml(p.marca || 'S/ MARCA');
+        const safeCat = escapeHtml(p.categoria || 'geral');
+        const safeComp = escapeHtml(p.composicion || '');
+        const safeDesc = escapeHtml(p.desc || '');
+        const safePres = escapeHtml(p.presentacion || '');
+        const safeLocalFoto = escapeHtml(p.localFoto || '');
+        const safeRemoteFoto = escapeHtml(p.remoteFoto || '');
         const stockBadgeLabel = (meuQtd > 0 && p.stockTotal > 0)
-          ? `EST: ${p.stockTotal} · BH: ${meuQtd}`
+          ? `PY: ${p.stockTotal} · BH: ${meuQtd}`
           : (meuQtd > 0)
             ? `📍 PRONTA ENTREGA BH: ${meuQtd}`
-            : (p.stockTotal > 0 ? `EST: ${p.stockTotal}` : 'SEM ESTOQUE');
+            : (p.stockTotal > 0 ? `PY: ${p.stockTotal}` : 'SEM ESTOQUE');
 
-        const imgHtml = p.localFoto
-          ? `<img src="${p.localFoto}" loading="lazy" alt="${p.nombre}" onerror="if(this.src!=='${p.remoteFoto}'){this.src='${p.remoteFoto}';}else{this.parentElement.innerHTML='<div class=\\'p-placeholder\\'>🧬<br><small>${p.marca || 'SHAPE'}</small></div>';}">`
-          : `<div class="p-placeholder"><span style="font-size:28px;">💊</span><small style="margin-top:6px;">${(p.marca || 'SHAPE TOTAL').toUpperCase()}</small></div>`;
+        const imgHtml = safeLocalFoto
+          ? `<img src="${safeLocalFoto}" loading="lazy" alt="${safeNombre}" data-fallback="${safeRemoteFoto}" onerror="if(this.dataset.fallback && this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}else{this.parentElement.innerHTML='<div class=\\'p-placeholder\\'>🧬<br><small>SHAPE</small></div>';}">`
+          : `<div class="p-placeholder"><span style="font-size:28px;">💊</span><small style="margin-top:6px;">${safeMarca.toUpperCase()}</small></div>`;
+
+        const disp = getDisponibilidade(p.id);
+        const dispHtml = (disp.disponivel === 0 && disp.reservado === 0 && disp.chegando === 0)
+          ? `<div class="p-disp-row internal-only"><span class="disp-pill disp-gray">⚪ Só encomenda</span></div>`
+          : `<div class="p-disp-row internal-only">
+               <span class="disp-pill ${disp.disponivel > 0 ? 'disp-green' : 'disp-gray'}" title="Estoque livre em BH para prometer agora">🟢 ${disp.disponivel} disponível</span>
+               ${disp.reservado > 0 ? `<button type="button" class="disp-pill disp-amber" onclick="event.stopPropagation(); window.CRM.openDispDetalhesModal(${p.id}, 'reservado')">🟡 ${disp.reservado} reservado</button>` : ''}
+               ${disp.chegando > 0 ? `<button type="button" class="disp-pill disp-blue" onclick="event.stopPropagation(); window.CRM.openDispDetalhesModal(${p.id}, 'chegando')">🔵 ${disp.chegando} chegando</button>` : ''}
+             </div>`;
+
+        const primaryButtonsHtml = canSellDirect
+          ? `<button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; border:1px solid #34d399;" title="Registrar venda com baixa automática e recibo WhatsApp" onclick="window.CRM.openVendaRapidaModal(${p.id})">⚡ Vender</button>
+             <button class="btn" style="background:#78350f; color:#fde68a; font-weight:700; border:1px solid #d97706;" title="Reservar unidade para cliente" onclick="window.CRM.reservarProdutoRapido(${p.id})">📌 Reservar</button>`
+          : `<button class="btn" style="background:#312e81; color:#c7d2fe; font-weight:800; border:1px solid #4f46e5;" title="Criar encomenda para cliente" onclick="window.CRM.openNovaEncomendaModal(${p.id}, 'encomenda')">📝 Encomendar</button>
+             <button class="btn" style="background:#064e3b; color:#a7f3d0; font-weight:700; border:1px solid #059669;" title="Adicionar à lista de Pedido ao Fornecedor PY" onclick="window.CRM.adicionarAoPedidoFornecedor(${p.id})">🇵🇾 Pedir PY</button>`;
+
+        const secondaryMoreHtml = canSellDirect
+          ? `<button class="btn" onclick="window.CRM.openNovaEncomendaModal(${p.id}, 'encomenda')">📝 Encomendar</button>
+             <button class="btn" onclick="window.CRM.adicionarAoPedidoFornecedor(${p.id})">🇵🇾 Pedir PY</button>`
+          : `<button class="btn" onclick="window.CRM.openVendaRapidaModal(${p.id})">⚡ Vender / Baixar</button>
+             <button class="btn" onclick="window.CRM.reservarProdutoRapido(${p.id})">📌 Reservar</button>`;
 
         return `
           <div class="p-card ${!hasAnyStock ? 'no-stock' : ''}" data-id="${p.id}">
             <div class="p-media" onclick="window.CRM.openEditModal(${p.id})">
               ${imgHtml}
               <div class="p-badges">
-                <span class="badge badge-cat">${p.categoria || 'geral'}</span>
+                <span class="badge badge-cat">${safeCat}</span>
                 <span class="badge ${hasAnyStock ? 'badge-stock-ok' : 'badge-stock-zero'}">
                   ${stockBadgeLabel}
                 </span>
@@ -1788,33 +1871,21 @@
             <div class="p-body">
               <div class="p-meta">
                 <span class="p-sku">SHAPE-${p.id}</span>
-                <span class="p-brand">${p.marca || 'S/ MARCA'}</span>
+                <span class="p-brand">${safeMarca}</span>
               </div>
-              <div class="p-title">${p.nombre}</div>
-              ${p.composicion ? `<div class="p-comp">🧪 ${p.composicion}</div>` : ''}
-              ${p.desc ? `<div class="p-desc">${p.desc}</div>` : ''}
+              <div class="p-title">${safeNombre}</div>
+              ${safeComp ? `<div class="p-comp">🧪 ${safeComp}</div>` : ''}
+              ${safeDesc ? `<div class="p-desc">${safeDesc}</div>` : ''}
               <div class="p-stock-branches">
-                <span class="branch-pill">CDE: <b>${p.cde}</b></span>
-                <span class="branch-pill">PJ: <b>${p.pj}</b></span>
-                <span class="branch-pill">SG: <b>${p.sg}</b></span>
-                ${p.presentacion ? `<span class="branch-pill">${p.presentacion}</span>` : ''}
+                <span class="branch-pill">CDE: <b>${p.cde}</b> · PJ: <b>${p.pj}</b> · SG: <b>${p.sg}</b></span>
+                ${safePres ? `<span class="branch-pill">${safePres}</span>` : ''}
               </div>
 
-              ${(() => {
-                const disp = getDisponibilidade(p.id);
-                if (disp.disponivel === 0 && disp.reservado === 0 && disp.chegando === 0) {
-                  return `<div class="p-disp-row internal-only"><span class="disp-pill disp-gray">⚪ Só encomenda</span></div>`;
-                }
-                return `<div class="p-disp-row internal-only">
-                  <span class="disp-pill ${disp.disponivel > 0 ? 'disp-green' : 'disp-gray'}" title="Estoque livre em BH para prometer agora">🟢 ${disp.disponivel} disponível</span>
-                  ${disp.reservado > 0 ? `<button type="button" class="disp-pill disp-amber" onclick="event.stopPropagation(); window.CRM.openDispDetalhesModal(${p.id}, 'reservado')">🟡 ${disp.reservado} reservado</button>` : ''}
-                  ${disp.chegando > 0 ? `<button type="button" class="disp-pill disp-blue" onclick="event.stopPropagation(); window.CRM.openDispDetalhesModal(${p.id}, 'chegando')">🔵 ${disp.chegando} chegando</button>` : ''}
-                </div>`;
-              })()}
+              ${dispHtml}
 
               <div class="p-cost-bar internal-only">
                 <span>Fonte: <b>USD ${p.usd.toFixed(2)}</b></span>
-                <span>Custo Total: <b style="color:#f8fafc">${formatBRL(p.custo)}</b></span>
+                <span>Custo: <b style="color:#f8fafc">${formatBRL(p.custo)}</b></span>
               </div>
 
               <div class="tiers-box internal-only">
@@ -1837,13 +1908,13 @@
 
               <div class="p-price-hero">
                 <div>
-                  <div class="final-label">Preço Final PIX ${p.hasCustom ? '✏️' : ''}</div>
-                  <div class="card-val">Cartão: ${formatBRLInt(p.precoCartao)} <span style="font-size:10px; color:#38bdf8; font-weight:700;">(${isGlpProduct(p) ? 'em até 12x s/ juros' : 'em até 6x'})</span></div>
+                  <div class="final-label">Preço PIX ${p.hasCustom ? '✏️' : ''}</div>
+                  <div class="card-val">Cartão: ${formatBRLInt(p.precoCartao)} <span style="font-size:10px; color:#38bdf8; font-weight:700;">(${isGlpProduct(p) ? 'até 12x s/j' : 'até 6x'})</span></div>
                 </div>
                 <div style="text-align:right">
                   <div class="final-val">${formatBRLInt(p.precoFinal)}</div>
                   <div class="t-profit internal-only" style="${p.margemAplicada < 0 ? 'color:#f87171;font-weight:800;' : (p.margemAplicada < 20 ? 'color:#fbbf24;font-weight:700;' : '')}">
-                    ${p.margemAplicada < 0 ? '🚨 PREJUÍZO' : (p.margemAplicada < 20 ? '⚠️ Margem Baixa:' : 'Lucro Líq:')} ${formatBRL(p.lucroFinal)} (${p.margemAplicada}%)
+                    ${p.margemAplicada < 0 ? '🚨 PREJUÍZO' : (p.margemAplicada < 20 ? '⚠️ Margem Baixa:' : 'Lucro:')} ${formatBRL(p.lucroFinal)} (${p.margemAplicada}%)
                   </div>
                   ${(state.frascosDoses && state.frascosDoses[p.id] && Number(state.frascosDoses[p.id].mgRestante) <= 24)
                     ? `<div class="internal-only" style="font-size:10px;color:#e879f9;font-weight:800;margin-top:2px;">💉 Frasco acabando: ${state.frascosDoses[p.id].mgRestante} mg (&lt;20%)</div>`
@@ -1851,27 +1922,30 @@
                 </div>
               </div>
 
-              <div class="meu-estoque-box internal-only" style="margin:8px 0; padding:6px 10px; background:#0f172a; border-radius:8px; border:1px solid ${((state.meuEstoque || {})[p.id] || 0) > 0 ? '#10b981' : '#334155'}; display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:11px; font-weight:700; color:${((state.meuEstoque || {})[p.id] || 0) > 0 ? '#34d399' : '#94a3b8'};">📦 Meu Estoque BH:</span>
+              <div class="meu-estoque-box internal-only" style="margin:6px 0; padding:5px 9px; background:#0f172a; border-radius:8px; border:1px solid ${meuQtd > 0 ? '#10b981' : '#334155'}; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; font-weight:700; color:${meuQtd > 0 ? '#34d399' : '#94a3b8'};">📦 Estoque BH:</span>
                 <div style="display:flex; align-items:center; gap:6px;">
                   <button class="btn" style="padding:2px 8px; font-size:12px; height:24px; min-width:24px;" onclick="window.CRM.changeMeuEstoque(${p.id}, -1)">-</button>
-                  <b style="font-size:13px; color:${((state.meuEstoque || {})[p.id] || 0) > 0 ? '#34d399' : '#ffffff'}; min-width:24px; text-align:center;">${((state.meuEstoque || {})[p.id] || 0)}</b>
+                  <b style="font-size:13px; color:${meuQtd > 0 ? '#34d399' : '#ffffff'}; min-width:24px; text-align:center;">${meuQtd}</b>
                   <button class="btn" style="padding:2px 8px; font-size:12px; height:24px; min-width:24px;" onclick="window.CRM.changeMeuEstoque(${p.id}, 1)">+</button>
                 </div>
               </div>
 
               <div class="p-actions-primary internal-only">
-                <button class="btn btn-green" style="background:#059669; color:#fff; font-weight:800; border:1px solid #34d399;" title="Venda Rápida com baixa automática e recibo WhatsApp" onclick="window.CRM.openVendaRapidaModal(${p.id})">⚡ Vender</button>
-                <button class="btn" style="background:#312e81; color:#c7d2fe; font-weight:700; border:1px solid #4338ca;" title="Criar encomenda sob demanda (entra no concentrador do fornecedor)" onclick="window.CRM.openNovaEncomendaModal(${p.id}, 'encomenda')">📝 Encomendar</button>
-                <button class="btn" style="background:#78350f; color:#fde68a; font-weight:700; border:1px solid #d97706;" title="Reservar unidade para cliente" onclick="window.CRM.reservarProdutoRapido(${p.id})">📌 Reservar</button>
-                <button class="btn" style="background:#064e3b; color:#a7f3d0; font-weight:700; border:1px solid #059669;" title="Adicionar à lista de Pedido ao Fornecedor PY" onclick="window.CRM.adicionarAoPedidoFornecedor(${p.id})">🇵🇾 Pedir Fornecedor</button>
+                ${primaryButtonsHtml}
               </div>
 
               <div class="p-actions">
-                <button class="btn btn-primary" onclick="window.CRM.addToCart(${p.id})">➕ Orçamento</button>
-                <button class="btn" onclick="window.CRM.copySingleWhatsApp(${p.id})">📲 WhatsApp</button>
-                <button class="btn internal-only" title="Extrato de movimentações e saldo" onclick="window.CRM.openExtratoModal(${p.id})">📜</button>
-                <button class="btn internal-only" title="Editar preço/descrição" onclick="window.CRM.openEditModal(${p.id})">✏️</button>
+                <button class="btn btn-primary" onclick="window.CRM.addToCart(${p.id})">➕ Orç.</button>
+                <button class="btn" onclick="window.CRM.copySingleWhatsApp(${p.id})">📲</button>
+                <details class="card-more-menu internal-only">
+                  <summary class="btn" title="Mais ações do produto">⋯ Mais</summary>
+                  <div class="card-more-dropdown">
+                    ${secondaryMoreHtml}
+                    <button class="btn" onclick="window.CRM.openExtratoModal(${p.id})">📜 Extrato</button>
+                    <button class="btn" onclick="window.CRM.openEditModal(${p.id})">✏️ Editar</button>
+                  </div>
+                </details>
               </div>
             </div>
           </div>
@@ -1900,20 +1974,23 @@
             </tr>
           </thead>
           <tbody>
-            ${visible.map(p => `
+            ${visible.map(p => {
+              const meuQtdTbl = Number((state.meuEstoque || {})[p.id] || 0);
+              const canSellTbl = meuQtdTbl > 0 || p.id === 9005 || p.id === 9006;
+              return `
               <tr>
                 <td>
-                  ${p.localFoto ? `<img class="tbl-thumb" src="${p.localFoto}" onerror="this.src='${p.remoteFoto}'" onclick="window.CRM.openEditModal(${p.id})">` : '💊'}
+                  ${p.localFoto ? `<img class="tbl-thumb" src="${escapeHtml(p.localFoto)}" data-fallback="${escapeHtml(p.remoteFoto || '')}" onerror="if(this.dataset.fallback && this.src!==this.dataset.fallback)this.src=this.dataset.fallback;" onclick="window.CRM.openEditModal(${p.id})">` : '💊'}
                 </td>
                 <td class="p-sku">SHAPE-${p.id}</td>
                 <td>
-                  <div style="font-weight:700;color:#fff">${p.nombre}</div>
-                  <div style="font-size:11px;color:#38bdf8">${p.composicion || ''}</div>
-                  ${p.desc ? `<div style="font-size:11px;color:var(--text-muted)">${p.desc}</div>` : ''}
+                  <div style="font-weight:700;color:#fff">${escapeHtml(p.nombre)}</div>
+                  <div style="font-size:11px;color:#38bdf8">${escapeHtml(p.composicion || '')}</div>
+                  ${p.desc ? `<div style="font-size:11px;color:var(--text-muted)">${escapeHtml(p.desc)}</div>` : ''}
                 </td>
                 <td>
-                  <div style="font-weight:700;text-transform:uppercase">${p.marca || '-'}</div>
-                  <div style="font-size:11px;color:var(--text-muted)">${p.categoria || '-'}</div>
+                  <div style="font-weight:700;text-transform:uppercase">${escapeHtml(p.marca || '-')}</div>
+                  <div style="font-size:11px;color:var(--text-muted)">${escapeHtml(p.categoria || '-')}</div>
                 </td>
                 <td>
                   <b style="color:${p.stockTotal > 0 ? '#34d399' : '#f87171'}">${p.stockTotal}</b>
@@ -1922,7 +1999,7 @@
                 <td class="internal-only" style="text-align:center;">
                   <div style="display:inline-flex; align-items:center; gap:4px;">
                     <button class="btn" style="padding:1px 6px; font-size:11px; height:22px;" onclick="window.CRM.changeMeuEstoque(${p.id}, -1)">-</button>
-                    <b style="color:${((state.meuEstoque || {})[p.id] || 0) > 0 ? '#34d399' : '#94a3b8'}; min-width:20px;">${((state.meuEstoque || {})[p.id] || 0)}</b>
+                    <b style="color:${meuQtdTbl > 0 ? '#34d399' : '#94a3b8'}; min-width:20px;">${meuQtdTbl}</b>
                     <button class="btn" style="padding:1px 6px; font-size:11px; height:22px;" onclick="window.CRM.changeMeuEstoque(${p.id}, 1)">+</button>
                   </div>
                 </td>
@@ -1944,17 +2021,27 @@
                 <td class="internal-only" style="color:#34d399;font-weight:700">${formatBRL(p.lucroFinal)} (${p.margemAplicada}%)</td>
                 <td>
                   <div style="display:flex;gap:4px">
-                    <button class="btn btn-green internal-only" style="background:#059669; color:#fff; font-weight:800;" title="Venda Rápida" onclick="window.CRM.openVendaRapidaModal(${p.id})">⚡</button>
-                    <button class="btn internal-only" style="background:#312e81; color:#c7d2fe; font-weight:700; border:1px solid #4338ca;" title="Encomendar p/ Cliente" onclick="window.CRM.openNovaEncomendaModal(${p.id}, 'encomenda')">📝</button>
-                    <button class="btn internal-only" style="background:#78350f; color:#fde68a; font-weight:700; border:1px solid #d97706;" title="Reservar p/ Cliente" onclick="window.CRM.reservarProdutoRapido(${p.id})">📌</button>
-                    <button class="btn internal-only" style="background:#064e3b; color:#a7f3d0; font-weight:700; border:1px solid #059669;" title="Pedir ao Fornecedor PY" onclick="window.CRM.adicionarAoPedidoFornecedor(${p.id})">🇵🇾</button>
+                    ${canSellTbl
+                      ? `<button class="btn btn-green internal-only" style="background:#059669; color:#fff; font-weight:800;" title="Vender" onclick="window.CRM.openVendaRapidaModal(${p.id})">⚡</button>`
+                      : `<button class="btn internal-only" style="background:#312e81; color:#c7d2fe; font-weight:700; border:1px solid #4338ca;" title="Encomendar" onclick="window.CRM.openNovaEncomendaModal(${p.id}, 'encomenda')">📝</button>`}
                     <button class="btn btn-primary" title="Adicionar ao Orçamento" onclick="window.CRM.addToCart(${p.id})">➕</button>
                     <button class="btn" title="Copiar Linha WhatsApp" onclick="window.CRM.copySingleWhatsApp(${p.id})">📲</button>
-                    <button class="btn internal-only" title="Editar" onclick="window.CRM.openEditModal(${p.id})">✏️</button>
+                    <details class="card-more-menu internal-only">
+                      <summary class="btn" title="Mais ações">⋯</summary>
+                      <div class="card-more-dropdown">
+                        <button class="btn" onclick="window.CRM.openVendaRapidaModal(${p.id})">⚡ Vender</button>
+                        <button class="btn" onclick="window.CRM.openNovaEncomendaModal(${p.id}, 'encomenda')">📝 Encomendar</button>
+                        <button class="btn" onclick="window.CRM.reservarProdutoRapido(${p.id})">📌 Reservar</button>
+                        <button class="btn" onclick="window.CRM.adicionarAoPedidoFornecedor(${p.id})">🇵🇾 Pedir PY</button>
+                        <button class="btn" onclick="window.CRM.openExtratoModal(${p.id})">📜 Extrato</button>
+                        <button class="btn" onclick="window.CRM.openEditModal(${p.id})">✏️ Editar</button>
+                      </div>
+                    </details>
                   </div>
                 </td>
               </tr>
-            `).join('')}
+            `;
+            }).join('')}
           </tbody>
         </table>
         ${loadMoreBtnHtml}
@@ -2077,9 +2164,6 @@
               </button>
               <button class="btn" style="font-size:10px; color:#fbbf24; background:#1e293b; padding:4px 8px;" title="Resetar ou abrir outro frasco de 120mg" onclick="window.CRM.abrirNovoFrascoDose(${id})">
                 🔄 Abrir Novo Frasco
-              </button>
-              <button class="btn btn-amber" style="font-size:10px; font-weight:700; padding:4px 8px;" onclick="window.CRM.openWhatsAppCatalogModal('tabela_doses_avulsas')">
-                📲 Tabela WhatsApp
               </button>
             </div>
           </div>
@@ -2262,7 +2346,7 @@
                   <div style="font-size:12px;font-weight:700;color:#fff;">${escapeHtml(p.nombre)}</div>
                   <div style="font-size:11px;color:#10b981;">🟢 ${disp.disponivel} livre${disp.reservado > 0 ? ` · <span style="color:#f59e0b;">🟡 ${disp.reservado} res.</span>` : ''} · PIX ${formatBRLInt(p.precoFinal)}</div>
                 </div>
-                <button class="btn btn-green" style="padding:5px 10px;font-size:11px;font-weight:800;" onclick="window.CRM.openSaleModal(${p.id})">⚡ Vender</button>
+                <button class="btn btn-green" style="padding:5px 10px;font-size:11px;font-weight:800;" onclick="window.CRM.openVendaRapidaModal(${p.id})">⚡ Vender</button>
               </div>
             `).join('') : '<div style="color:var(--text-muted);font-size:12px;">Nenhum item livre em BH no momento.</div>'}
           </div>
@@ -2324,32 +2408,49 @@
     `;
   }
 
-  function renderAll() {
-    updateTabCounts();
-    renderDecisionStrip();
-    renderDispStatusStrip();
-    renderSavedFilters();
-    renderAlertasPanel();
-    const cliBadge = document.getElementById('countClientesBadge');
-    if (cliBadge) cliBadge.textContent = String((state.clientes || []).length);
-    const listaDiaBadge = document.getElementById('countListaDiaBadge');
-    if (listaDiaBadge) listaDiaBadge.textContent = String(getListaDoDiaItems().length);
-
-    const opCont = document.getElementById('operacaoDiaContainer');
-    const prodCont = document.getElementById('productsContainer');
-    if (state.mainGroup === 'operacao_dia') {
-      if (opCont) opCont.style.display = 'block';
-      if (prodCont) prodCont.style.display = 'none';
-      renderOperacaoDia();
-      return;
+  function renderSearchResultsOnly() {
+    if (state.mainGroup === 'operacao_dia') return renderAll();
+    _dispCache = buildDisponibilidadeSnapshot();
+    try {
+      const filtered = getFilteredProducts();
+      renderKPIs(filtered);
+      renderProducts(filtered);
+    } finally {
+      _dispCache = null;
     }
-    if (opCont) opCont.style.display = 'none';
-    if (prodCont) prodCont.style.display = '';
+  }
 
-    const filtered = getFilteredProducts();
-    renderKPIs(filtered);
-    renderProducts(filtered);
-    renderCartBar();
+  function renderAll() {
+    _dispCache = buildDisponibilidadeSnapshot();
+    try {
+      updateTabCounts();
+      renderDecisionStrip();
+      renderDispStatusStrip();
+      renderSavedFilters();
+      renderAlertasPanel();
+      const cliBadge = document.getElementById('countClientesBadge');
+      if (cliBadge) cliBadge.textContent = String((state.clientes || []).length);
+      const listaDiaBadge = document.getElementById('countListaDiaBadge');
+      if (listaDiaBadge) listaDiaBadge.textContent = String(getListaDoDiaItems().length);
+
+      const opCont = document.getElementById('operacaoDiaContainer');
+      const prodCont = document.getElementById('productsContainer');
+      if (state.mainGroup === 'operacao_dia') {
+        if (opCont) opCont.style.display = 'block';
+        if (prodCont) prodCont.style.display = 'none';
+        renderOperacaoDia();
+        return;
+      }
+      if (opCont) opCont.style.display = 'none';
+      if (prodCont) prodCont.style.display = '';
+
+      const filtered = getFilteredProducts();
+      renderKPIs(filtered);
+      renderProducts(filtered);
+      renderCartBar();
+    } finally {
+      _dispCache = null;
+    }
   }
 
   // Public actions
@@ -2359,55 +2460,120 @@
       const input = document.getElementById('authInput');
       const err = document.getElementById('authError');
       const val = (input.value || '').trim();
-      if (!val) {
-        err.style.display = 'block';
-        input.select();
+      const customHash = localStorage.getItem(LOCAL_PIN_HASH_KEY);
+      const legacyCustom = localStorage.getItem('ST_CUSTOM_PASS');
+
+      // Se nenhum PIN local foi configurado neste aparelho, libera imediatamente
+      if (!customHash && !legacyCustom) {
+        localStorage.setItem('ST_AUTH', 'true');
+        sessionStorage.setItem('ST_AUTH', 'true');
+        const ov = document.getElementById('authOverlay');
+        if (ov) ov.style.display = 'none';
+        if (err) err.style.display = 'none';
         return;
       }
 
-      const validHashes = [...VALID_PASS_HASHES];
-      const legacyCustom = localStorage.getItem('ST_CUSTOM_PASS');
-      if (legacyCustom) {
-        const migratedHash = await hashPass(legacyCustom);
-        localStorage.setItem('ST_CUSTOM_HASH', migratedHash);
-        localStorage.removeItem('ST_CUSTOM_PASS');
+      if (!val) {
+        if (err) err.style.display = 'block';
+        if (input) input.select();
+        return;
       }
-      const customHash = localStorage.getItem('ST_CUSTOM_HASH');
-      if (customHash) validHashes.push(customHash);
 
-      const enteredHash = await hashPass(val);
-      if (validHashes.includes(enteredHash)) {
+      let matched = false;
+      if (legacyCustom && val === legacyCustom) {
+        const migratedHash = await hashPass(legacyCustom);
+        localStorage.setItem(LOCAL_PIN_HASH_KEY, migratedHash);
+        localStorage.removeItem('ST_CUSTOM_PASS');
+        matched = true;
+      } else if (customHash) {
+        const enteredHash = await hashPass(val);
+        if (enteredHash === customHash) matched = true;
+      }
+
+      if (matched) {
         localStorage.setItem('ST_AUTH', 'true');
         sessionStorage.setItem('ST_AUTH', 'true');
-        document.getElementById('authOverlay').style.display = 'none';
-        err.style.display = 'none';
+        const ov = document.getElementById('authOverlay');
+        if (ov) ov.style.display = 'none';
+        if (err) err.style.display = 'none';
         input.value = '';
-        logAuditoria('login', 'Acesso liberado');
-        showToast('Acesso liberado com sucesso!');
+        logAuditoria('login', 'Desbloqueio local do aparelho');
+        showToast('Aparelho desbloqueado!');
       } else {
-        err.style.display = 'block';
+        if (err) err.style.display = 'block';
         input.select();
       }
     },
 
-    async alterarSenhaAcesso() {
-      const nova = prompt('Digite a nova senha de acesso personalizada (mínimo 4 caracteres):');
-      if (nova === null) return;
-      const clean = nova.trim();
+    alterarSenhaAcesso() {
+      const temPin = !!(localStorage.getItem(LOCAL_PIN_HASH_KEY) || localStorage.getItem('ST_CUSTOM_PASS'));
+      const modal = document.getElementById('extratoModal');
+      const title = document.getElementById('extratoModalTitle');
+      const sub = document.getElementById('extratoModalSub');
+      const body = document.getElementById('extratoModalBody');
+      if (!modal || !body) return;
+      if (title) title.textContent = '🔑 PIN Local do Aparelho';
+      if (sub) sub.textContent = temPin
+        ? 'PIN local ativo neste navegador (bloqueio presencial; não protege hospedagem estática).'
+        : 'Configure um PIN local para bloquear a tela neste aparelho quando precisar sair da mesa.';
+      body.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="m-field">
+            <label>Novo PIN (mín. 4 caracteres)</label>
+            <input id="pinConfigNovo" type="password" placeholder="Digite o novo PIN..." style="text-align:left;" />
+          </div>
+          <div class="m-field">
+            <label>Confirmar Novo PIN</label>
+            <input id="pinConfigConfirma" type="password" placeholder="Repita o novo PIN..." style="text-align:left;" />
+          </div>
+          <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+            ${temPin ? `<button type="button" class="btn" style="color:#f87171;" onclick="window.CRM.removerPinLocal()">🗑️ Remover PIN</button>` : '<span></span>'}
+            <button type="button" class="btn btn-green" style="background:#059669; color:#fff; font-weight:800;" onclick="window.CRM.salvarPinLocal()">✅ Salvar PIN</button>
+          </div>
+        </div>
+      `;
+      modal.classList.add('open');
+      setTimeout(() => document.getElementById('pinConfigNovo')?.focus(), 50);
+    },
+
+    async salvarPinLocal() {
+      const clean = (document.getElementById('pinConfigNovo')?.value || '').trim();
+      const confirmacao = (document.getElementById('pinConfigConfirma')?.value || '').trim();
       if (clean.length < 4) {
-        showToast('Senha muito curta. Use pelo menos 4 caracteres.');
+        showToast('PIN muito curto. Use pelo menos 4 caracteres.');
         return;
       }
-      const confirmacao = prompt('Confirme a nova senha:');
-      if (confirmacao === null || confirmacao.trim() !== clean) {
-        showToast('As senhas não conferem. Alteração cancelada.');
+      if (confirmacao !== clean) {
+        showToast('Os PINs não conferem.');
         return;
       }
       const hash = await hashPass(clean);
-      localStorage.setItem('ST_CUSTOM_HASH', hash);
+      localStorage.setItem(LOCAL_PIN_HASH_KEY, hash);
       localStorage.removeItem('ST_CUSTOM_PASS');
-      logAuditoria('alterar_senha', 'Senha personalizada atualizada (SHA-256)');
-      showToast('Senha personalizada salva com segurança (SHA-256)!');
+      localStorage.setItem('ST_AUTH', 'true');
+      logAuditoria('alterar_pin_local', 'PIN local atualizado no navegador');
+      document.getElementById('extratoModal')?.classList.remove('open');
+      showToast('PIN local salvo neste navegador!');
+    },
+
+    removerPinLocal() {
+      localStorage.removeItem(LOCAL_PIN_HASH_KEY);
+      localStorage.removeItem('ST_CUSTOM_PASS');
+      localStorage.setItem('ST_AUTH', 'true');
+      logAuditoria('alterar_pin_local', 'PIN local removido');
+      document.getElementById('extratoModal')?.classList.remove('open');
+      showToast('PIN local removido.');
+    },
+
+    async exportarBackupMigracaoSeguro() {
+      if (window.CRM_STORE && typeof window.CRM_STORE.exportarBackupMigracao === 'function') {
+        const ok = await window.CRM_STORE.exportarBackupMigracao();
+        if (ok) {
+          showToast('Backup pré-migração exportado!');
+          return;
+        }
+      }
+      window.CRM.exportBackupFile();
     },
 
     verLogAuditoria() {
@@ -2415,19 +2581,35 @@
       try {
         logs = JSON.parse(localStorage.getItem(AUDIT_LOG_KEY) || '[]');
       } catch (e) { logs = []; }
-      if (!logs.length) {
-        alert('Nenhum registro no log de auditoria ainda.');
+      const modal = document.getElementById('extratoModal');
+      const title = document.getElementById('extratoModalTitle');
+      const sub = document.getElementById('extratoModalSub');
+      const body = document.getElementById('extratoModalBody');
+      if (!modal || !body) {
+        showToast(logs.length ? `${logs.length} registros de auditoria.` : 'Nenhum registro no log de auditoria ainda.');
         return;
       }
-      const texto = logs.slice(0, 30).map((l, idx) => {
-        const rawDate = l.data || l.ts;
-        const dt = rawDate ? new Date(rawDate).toLocaleString('pt-BR') : '-';
-        return `${idx + 1}. [${dt}] ${l.acao}: ${l.detalhe || ''}`;
-      }).join('\n');
-      alert(`📜 LOG DE AUDITORIA (Últimas ${Math.min(logs.length, 30)} ações)\n\n${texto}`);
+      if (title) title.textContent = '📜 Log de Auditoria Local';
+      if (sub) sub.textContent = logs.length ? `Últimas ${Math.min(logs.length, 40)} ações registradas neste aparelho` : 'Nenhum registro gravado ainda.';
+      body.innerHTML = logs.length
+        ? `<div style="display:flex; flex-direction:column; gap:6px;">` + logs.slice(0, 40).map(l => {
+            const rawDate = l.data || l.ts;
+            const dt = rawDate ? new Date(rawDate).toLocaleString('pt-BR') : '-';
+            return `<div style="background:#0b1120; border:1px solid #1e293b; border-radius:8px; padding:8px 10px; display:flex; justify-content:space-between; gap:10px; font-size:12px;">
+              <div><b style="color:#38bdf8;">${escapeHtml(l.acao || '-')}</b><div style="color:#cbd5e1; margin-top:2px;">${escapeHtml(l.detalhe || '')}</div></div>
+              <span style="color:#64748b; font-size:11px; white-space:nowrap;">${escapeHtml(dt)}</span>
+            </div>`;
+          }).join('') + `</div>`
+        : `<div style="text-align:center; padding:24px; color:var(--text-muted); font-size:13px;">Nenhum registro no log de auditoria ainda.</div>`;
+      modal.classList.add('open');
     },
 
     lockApp() {
+      const temPin = !!(localStorage.getItem(LOCAL_PIN_HASH_KEY) || localStorage.getItem('ST_CUSTOM_PASS'));
+      if (!temPin) {
+        showToast('Nenhum PIN local configurado. Use "🔑 PIN Local" nas Ferramentas se quiser bloquear a tela.');
+        return;
+      }
       localStorage.removeItem('ST_AUTH');
       sessionStorage.removeItem('ST_AUTH');
       const overlay = document.getElementById('authOverlay');
@@ -2436,7 +2618,7 @@
         const inp = document.getElementById('authInput');
         if (inp) { inp.value = ''; inp.focus(); }
       }
-      showToast('Catálogo bloqueado!');
+      showToast('Tela bloqueada neste aparelho!');
     },
 
     setProductTier(id, tier) {
@@ -2599,32 +2781,43 @@
     avisarClientesPedido(pedidoId) {
       const ped = (state.pedidosTransito || []).find(p => String(p.id) === String(pedidoId));
       if (!ped) return;
-      const pids = new Set((ped.itens || []).map(it => Number(it.id_catalogo)));
-      const clientesChegou = (state.encomendas || []).filter(e =>
-        (e.status === 'chegou_bh' || e.status === 'pendente' || e.status === 'pedido_ao_fornecedor') &&
-        getEncomendaItens(e).some(it => pids.has(Number(it.produtoId)))
-      );
+      const vinculosIds = new Set((Array.isArray(ped.encomendaIds) ? ped.encomendaIds : []).map(String));
+      const clientesChegou = (state.encomendas || []).filter(e => {
+        if (!e || e.status === 'entregue' || e.status === 'cancelado') return false;
+        const temItemChegado = e.itensChegados && Object.values(e.itensChegados).some(q => Number(q) > 0);
+        if (vinculosIds.size > 0 || e.loteId) {
+          return (String(e.loteId || '') === String(ped.id) || vinculosIds.has(String(e.id))) && (e.status === 'chegou_bh' || temItemChegado);
+        }
+        const pids = new Set((ped.itens || []).map(it => Number(it.id_catalogo)));
+        return e.status === 'chegou_bh' && getEncomendaItens(e).some(it => pids.has(Number(it.produtoId)));
+      });
       if (!clientesChegou.length) {
-        showToast('Nenhum cliente com encomenda vinculada a este pedido.');
+        showToast('Nenhum cliente com chegada confirmada vinculada a este pedido.');
         return;
       }
-      const resumo = clientesChegou.map((e, i) => {
-        const itens = getEncomendaItens(e).map(it => `${it.qtd}x ${it.produtoNome}`).join(', ');
-        return `${i + 1}. ${e.cliente} (${e.telefone || 'sem tel'}) — ${itens}`;
-      }).join('\n');
       if (clientesChegou.length === 1) {
-        window.CRM.avisarClienteChegada(clientesChegou[0].id);
+        window.CRM.openAvisoChegadaWhatsApp(clientesChegou[0].id);
         return;
       }
-      navigator.clipboard?.writeText(`CLIENTES PARA AVISAR (PEDIDO #${ped.id}):\n${resumo}`);
-      alert(`📲 Clientes aguardando itens do pedido #${ped.id} (lista copiada!):\n\n${resumo}\n\nUse o painel "⚡ Operação do Dia" -> "Clientes para Avisar Hoje" para disparar 1 a 1 no WhatsApp.`);
+      window.CRM.openEncomendasModal('clientes');
+      const btnChegou = Array.from(document.querySelectorAll('.enc-filter-btn')).find(b => (b.getAttribute('onclick') || '').includes("'chegou_bh'"));
+      window.CRM.filterEncomendas('chegou_bh', btnChegou || null);
+      showToast(`🎉 ${clientesChegou.length} cliente(s) do pedido #${ped.id} prontos para avisar!`);
     },
 
     // =========================================================================
     // MOTOR DE ALERTAS, EXTRATO DE MOVIMENTAÇÕES & LISTA DO DIA (FUNIL)
     // =========================================================================
+    parseDateTs(val) {
+      return parseDateTs(val);
+    },
+
     calcularAlertas(force = false) {
       return calcularAlertas(force);
+    },
+
+    getDisponibilidade(pid) {
+      return getDisponibilidade(pid);
     },
 
     renderAlertasPanel(force = false) {
@@ -2984,9 +3177,9 @@
     },
 
     // =========================================================================
-    // ITEM 4: VENDA RÁPIDA (BOTÃO FLUTUANTE + FLUXO EM 3 PASSOS)
+    // VENDA UNIFICADA (3 PASSOS: PRODUTO / DOSE 120MG / CLIENTE + FRETE)
     // =========================================================================
-    _vrState: { productId: null, isDose: false, doseMg: 0 },
+    _vrState: { productId: null, isDose: false, doseMg: 0, customDose: false },
 
     openVendaRapidaModal(productId = null) {
       const modal = document.getElementById('vendaRapidaModal');
@@ -2994,10 +3187,19 @@
       window.CRM.populateEncClientesDatalist();
       const sInp = document.getElementById('vrSearchInput');
       if (sInp) sInp.value = '';
-      ['vrCliente', 'vrTelefone'].forEach(id => {
+      ['vrCliente', 'vrTelefone', 'vrEndereco', 'vrObs'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
+      const freteEl = document.getElementById('vrFrete');
+      if (freteEl) freteEl.value = '0';
+      const payEl = document.getElementById('vrPagamento');
+      if (payEl) payEl.value = 'pix';
+      const statusEl = document.getElementById('vrPayStatus');
+      if (statusEl) statusEl.value = 'pago';
+      const extraDet = document.getElementById('vrExtraDetails');
+      if (extraDet) extraDet.open = false;
+
       if (productId) {
         window.CRM.selectVendaRapidaProduto(productId);
       } else {
@@ -3017,8 +3219,8 @@
       if (s3) s3.style.display = step === 3 ? 'block' : 'none';
       if (sub) {
         sub.textContent = step === 1
-          ? 'Passo 1 de 3: Escolha o produto disponível'
-          : (step === 2 ? 'Passo 2 de 3: Quantidade / Dose e Valor' : 'Passo 3 de 3: Cliente e Pagamento');
+          ? 'Passo 1 de 3: Escolha o produto'
+          : (step === 2 ? 'Passo 2 de 3: Quantidade / Dose e Preço' : 'Passo 3 de 3: Cliente, Pagamento e Entrega');
       }
     },
 
@@ -3035,7 +3237,7 @@
           return tokens.every(t => hay.includes(t) || (GYM_SYNONYMS[t] && GYM_SYNONYMS[t].some(s => hay.includes(s))));
         });
       } else {
-        list = list.filter(({ disp }) => disp.estoqueBH > 0 || disp.disponivel > 0);
+        list = list.filter(({ p, disp }) => disp.estoqueBH > 0 || disp.disponivel > 0 || p.id === 9005 || p.id === 9006);
       }
 
       list.sort((a, b) => b.disp.disponivel - a.disp.disponivel || b.disp.estoqueBH - a.disp.estoqueBH);
@@ -3046,12 +3248,12 @@
           <div>
             <div style="font-size:12.5px;font-weight:800;color:#fff;">${escapeHtml(p.nombre)}</div>
             <div style="font-size:11px;color:${disp.disponivel > 0 ? '#10b981' : '#94a3b8'};">
-              ${disp.disponivel > 0 ? `🟢 ${disp.disponivel} disponível` : `BH: ${disp.estoqueBH} · Res: ${disp.reservado}`}
+              ${disp.disponivel > 0 ? `🟢 ${disp.disponivel} livre BH` : `BH: ${disp.estoqueBH} · Res: ${disp.reservado}`}
             </div>
           </div>
           <b style="color:#38bdf8;font-size:13px;white-space:nowrap;">${formatBRLInt(p.precoFinal)}</b>
         </button>
-      `).join('') : '<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:20px;">Nenhum produto disponível encontrado.</div>';
+      `).join('') : '<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:20px;">Nenhum produto encontrado.</div>';
     },
 
     selectVendaRapidaProduto(pid) {
@@ -3059,7 +3261,7 @@
       if (!raw) return;
       const p = computeProduct(raw);
       const disp = getDisponibilidade(p.id);
-      window.CRM._vrState = { productId: p.id, isDose: false, doseMg: 0 };
+      window.CRM._vrState = { productId: p.id, isDose: false, doseMg: 0, customDose: false };
 
       const badgeEl = document.getElementById('vrSelectedProdBadge');
       if (badgeEl) {
@@ -3071,12 +3273,35 @@
         `;
       }
 
+      const confDose = TABELA_DOSES_OFICIAIS[p.id];
       const doseBox = document.getElementById('vrDoseBox');
-      if (doseBox) {
-        doseBox.style.display = (p.id === 9005 || p.id === 9006 || TABELA_DOSES_OFICIAIS[p.id]) ? 'block' : 'none';
+      const doseButtons = document.getElementById('vrDoseButtons');
+      const doseSaldoInfo = document.getElementById('vrDoseSaldoInfo');
+      const customWrap = document.getElementById('vrCustomDoseWrap');
+      if (customWrap) customWrap.style.display = 'none';
+
+      if (doseBox && confDose) {
+        doseBox.style.display = 'block';
+        const frasco = (state.frascosDoses && state.frascosDoses[p.id]) || { mgRestante: 120, totalAplicadasMg: 0 };
+        if (doseSaldoInfo) {
+          doseSaldoInfo.innerHTML = `Frasco: <b>${Math.max(0, Number(frasco.mgRestante || 0))} mg</b> ` +
+            `<button type="button" class="btn" style="padding:1px 6px; font-size:10px; margin-left:4px; background:#1e293b; color:#fbbf24;" onclick="window.CRM.abrirNovoFrascoDose(${p.id}, true)">🔄 Abrir Novo</button>`;
+        }
+        if (doseButtons) {
+          doseButtons.innerHTML = confDose.doses.map(d =>
+            `<button type="button" class="btn btn-green" style="font-size:11px; padding:5px 9px; background:#065f46; color:#fff; font-weight:700;" onclick="window.CRM.setVendaRapidaDose(${d.mg}, ${d.preco})">💉 ${escapeHtml(d.label)} (R$ ${d.preco})</button>`
+          ).join('') +
+          `<button type="button" class="btn" style="font-size:11px; padding:5px 9px; background:#1e293b; color:#38bdf8;" onclick="window.CRM.setVendaRapidaDose('custom', 0)">⚙️ Outra</button>` +
+          `<button type="button" class="btn" style="font-size:11px; padding:5px 9px; background:#1e293b; color:#fff;" onclick="window.CRM.setVendaRapidaDose(0, 0)">📦 Frasco fechado</button>`;
+        }
+      } else if (doseBox) {
+        doseBox.style.display = 'none';
       }
+
       document.getElementById('vrQty').value = '1';
-      document.getElementById('vrUnitPrice').value = String(Math.round(p.precoFinal));
+      const pay = document.getElementById('vrPagamento')?.value || 'pix';
+      const isCard = pay === 'cartao_parcelado';
+      document.getElementById('vrUnitPrice').value = String(Math.round(isCard ? p.precoCartao : p.precoFinal));
       window.CRM.updateVendaRapidaTotal();
       window.CRM.setVendaRapidaStep(2);
     },
@@ -3086,15 +3311,54 @@
       const raw = rawCatalog.find(x => Number(x.id) === Number(pid));
       if (!raw) return;
       const p = computeProduct(raw);
-      if (mg > 0) {
+      const customWrap = document.getElementById('vrCustomDoseWrap');
+
+      if (mg === 'custom') {
         window.CRM._vrState.isDose = true;
-        window.CRM._vrState.doseMg = mg;
+        window.CRM._vrState.customDose = true;
+        const customMg = Math.max(0.5, Number(document.getElementById('vrCustomDoseMg')?.value || 10));
+        window.CRM._vrState.doseMg = customMg;
+        document.getElementById('vrQty').value = '1';
+        if (customWrap) customWrap.style.display = 'flex';
+        window.CRM.updateVendaRapidaTotal();
+        document.getElementById('vrCustomDoseMg')?.focus();
+        return;
+      }
+
+      if (customWrap) customWrap.style.display = 'none';
+      window.CRM._vrState.customDose = false;
+
+      if (Number(mg) > 0) {
+        window.CRM._vrState.isDose = true;
+        window.CRM._vrState.doseMg = Number(mg);
         document.getElementById('vrQty').value = '1';
         document.getElementById('vrUnitPrice').value = String(preco);
       } else {
         window.CRM._vrState.isDose = false;
         window.CRM._vrState.doseMg = 0;
-        document.getElementById('vrUnitPrice').value = String(Math.round(p.precoFinal));
+        const pay = document.getElementById('vrPagamento')?.value || 'pix';
+        document.getElementById('vrUnitPrice').value = String(Math.round(pay === 'cartao_parcelado' ? p.precoCartao : p.precoFinal));
+      }
+      window.CRM.updateVendaRapidaTotal();
+    },
+
+    onVrCustomDoseInput(val) {
+      const mg = Math.max(0, Number(val) || 0);
+      window.CRM._vrState.isDose = mg > 0;
+      window.CRM._vrState.doseMg = mg;
+      window.CRM.updateVendaRapidaTotal();
+    },
+
+    onVrPagamentoChange() {
+      if (window.CRM._vrState.isDose) return;
+      const pid = window.CRM._vrState.productId;
+      const raw = rawCatalog.find(x => Number(x.id) === Number(pid));
+      if (!raw) return;
+      const p = computeProduct(raw);
+      const pay = document.getElementById('vrPagamento')?.value || 'pix';
+      const unitInp = document.getElementById('vrUnitPrice');
+      if (unitInp) {
+        unitInp.value = String(Math.round(pay === 'cartao_parcelado' ? p.precoCartao : p.precoFinal));
       }
       window.CRM.updateVendaRapidaTotal();
     },
@@ -3102,138 +3366,218 @@
     updateVendaRapidaTotal() {
       const qty = Math.max(1, Number(document.getElementById('vrQty')?.value || 1));
       const unit = Math.max(0, Number(document.getElementById('vrUnitPrice')?.value || 0));
+      const frete = Math.max(0, Number(document.getElementById('vrFrete')?.value || 0));
+      const subtotal = qty * unit;
       const el = document.getElementById('vrTotalPreview');
-      if (el) el.textContent = formatBRL(qty * unit);
+      if (el) el.textContent = formatBRL(subtotal + frete);
+
+      const lucroEl = document.getElementById('vrLucroPreview');
+      if (lucroEl) {
+        const pid = window.CRM._vrState.productId;
+        const raw = rawCatalog.find(x => Number(x.id) === Number(pid));
+        if (raw) {
+          const p = computeProduct(raw);
+          const baseUnitCost = getCustoUnitarioReal(p);
+          const custo = window.CRM._vrState.isDose && window.CRM._vrState.doseMg > 0
+            ? Math.round(((baseUnitCost || 600) / 120) * window.CRM._vrState.doseMg) * qty
+            : baseUnitCost * qty;
+          const lucro = subtotal - custo;
+          const margemPct = subtotal > 0 ? Math.round((lucro / subtotal) * 100) : 0;
+          if (lucro < 0) {
+            lucroEl.style.color = '#f87171';
+            lucroEl.textContent = `🚨 Prejuízo: ${formatBRL(lucro)} (Custo ${formatBRL(custo)})`;
+          } else {
+            lucroEl.style.color = '#6ee7b7';
+            lucroEl.textContent = `Lucro: +${formatBRL(lucro)} (${margemPct}%)${frete > 0 ? ` · +Frete ${formatBRL(frete)}` : ''}`;
+          }
+        }
+      }
     },
 
     onVrClienteInput(val) {
       const cli = findClienteRecord(val);
       const telEl = document.getElementById('vrTelefone');
-      if (cli && telEl && !telEl.value && cli.telefone) {
-        telEl.value = cli.telefone;
-      }
+      if (cli && telEl && !telEl.value && cli.telefone) telEl.value = cli.telefone;
+      const endEl = document.getElementById('vrEndereco');
+      if (cli && endEl && !endEl.value && cli.endereco) endEl.value = cli.endereco;
     },
 
     confirmVendaRapida() {
+      if (window.CRM._vrSubmitting) return;
       const pid = window.CRM._vrState.productId;
       const raw = rawCatalog.find(x => Number(x.id) === Number(pid));
       if (!raw) return;
       const p = computeProduct(raw);
-      const qty = Math.max(1, Number(document.getElementById('vrQty')?.value || 1));
-      const unitVal = Math.max(0, Number(document.getElementById('vrUnitPrice')?.value || 0));
+      const qtyRaw = Number(document.getElementById('vrQty')?.value);
+      const unitRaw = Number(document.getElementById('vrUnitPrice')?.value);
+      if (!isFinite(qtyRaw) || qtyRaw <= 0 || Math.floor(qtyRaw) !== qtyRaw) {
+        alert('Informe uma quantidade inteira maior que zero.');
+        return;
+      }
+      if (!isFinite(unitRaw) || unitRaw <= 0) {
+        alert('Informe um valor unitário válido maior que zero.');
+        return;
+      }
+      const qty = qtyRaw;
+      const unitVal = unitRaw;
       const totalVal = unitVal * qty;
-      const cliente = (document.getElementById('vrCliente')?.value || '').trim() || 'Cliente';
+      const freteVal = Math.max(0, Number(document.getElementById('vrFrete')?.value || 0) || 0);
+      const totalComFrete = totalVal + freteVal;
+      const endereco = (document.getElementById('vrEndereco')?.value || '').trim();
+      const obsUser = (document.getElementById('vrObs')?.value || '').trim();
+      const cliente = (document.getElementById('vrCliente')?.value || '').trim();
+      if (!cliente || cliente.toLowerCase() === 'cliente') {
+        alert('Informe o nome real do cliente (obrigatório).');
+        window.CRM.setVendaRapidaStep(3);
+        document.getElementById('vrCliente')?.focus();
+        return;
+      }
       const telefone = (document.getElementById('vrTelefone')?.value || '').trim();
       const pay = document.getElementById('vrPagamento')?.value || 'pix';
       const payStatus = document.getElementById('vrPayStatus')?.value || 'pago';
       const isDose = !!window.CRM._vrState.isDose;
       const doseMg = Number(window.CRM._vrState.doseMg) || 0;
 
-      const payMap = { pix: '💠 À vista no PIX', cartao_parcelado: '💳 Cartão de Crédito', dinheiro: '💵 Dinheiro' };
+      const isGlp = isGlpProduct(p);
+      const payMap = {
+        pix: '💠 À vista no PIX',
+        cartao_parcelado: isGlp ? '💳 Cartão de Crédito (até 12x s/ juros)' : '💳 Cartão de Crédito (até 6x s/ juros)',
+        cartao_debito: '💳 Cartão Débito',
+        dinheiro: '💵 Dinheiro'
+      };
       const payLabel = payMap[pay] || pay;
       const nowIso = new Date().toISOString();
 
-      if (isDose && doseMg > 0) {
-        const custoDose = Math.round(((p.custo || 600) / 120) * doseMg);
-        if (totalVal < custoDose) {
-          alert(`🚫 Venda bloqueada por margem negativa! Custo da dose: ${formatBRL(custoDose)}`);
+      window.CRM._vrSubmitting = true;
+      try {
+        if (isDose) {
+          if (doseMg <= 0) {
+            alert('Informe a quantidade em mg da dose aplicada.');
+            return;
+          }
+          const baseUnitCost = getCustoUnitarioReal(p);
+          const custoDose = Math.round(((baseUnitCost || 600) / 120) * doseMg) * qty;
+          if (totalVal < custoDose) {
+            alert(`🚫 Venda bloqueada por margem negativa! Custo da dose: ${formatBRL(custoDose)}`);
+            return;
+          }
+          if (!state.frascosDoses) state.frascosDoses = {};
+          if (!state.frascosDoses[pid]) state.frascosDoses[pid] = { mgRestante: 120, totalAplicadasMg: 0, perdaMg: 0 };
+          const frasco = state.frascosDoses[pid];
+          const mgNeed = doseMg * qty;
+          if (frasco.mgRestante < mgNeed) {
+            const estoqueReserva = Number((state.meuEstoque || {})[pid] || 0);
+            if (estoqueReserva > 0 && confirm(`Frasco em uso tem apenas ${frasco.mgRestante} mg restantes (solicitado ${mgNeed} mg).\n\nDeseja abrir um novo frasco de 120 mg usando seu estoque reserva BH?`)) {
+              aplicarVariacaoEstoque(pid, -1, { tipo: 'ajuste', motivo: `Abertura novo frasco doses (${p.nombre})` });
+              frasco.perdaMg = (Number(frasco.perdaMg) || 0) + (Number(frasco.mgRestante) || 0);
+              frasco.mgRestante = 120;
+            } else {
+              if (estoqueReserva <= 0) alert(`Frasco só tem ${frasco.mgRestante} mg disponíveis e não há frasco reserva em BH.`);
+              return;
+            }
+          }
+          frasco.mgRestante = Math.max(0, frasco.mgRestante - mgNeed);
+          frasco.totalAplicadasMg = (frasco.totalAplicadasMg || 0) + mgNeed;
+          if (!Array.isArray(frasco.historico)) frasco.historico = [];
+          frasco.historico.unshift({ data: nowIso, cliente, doseMg: mgNeed, valor: totalComFrete });
+          frasco.historico = frasco.historico.slice(0, 30);
+
+          const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+          const encId = 'enc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+          const obsFinal = obsUser || 'Nova Venda (Dose)';
+          state.vendas = state.vendas || [];
+          state.vendas.unshift({
+            id: saleId, data: nowIso, produtoId: p.id, produtoNome: `${p.nombre} — Dose Avulsa ${doseMg} mg`,
+            marca: p.marca || '', qtd: qty, isDose: true, doseMg: mgNeed, estornada: false,
+            origemAparelho: /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac',
+            valorUnitario: unitVal, valorProdutos: totalVal, valorFrete: freteVal, valorTotal: totalComFrete,
+            formaPagamento: payLabel, statusPagamento: payStatus, cliente, telefone, endereco, obs: obsFinal,
+            custoTotal: custoDose, lucro: totalVal - custoDose
+          });
+          state.encomendas = state.encomendas || [];
+          state.encomendas.unshift({
+            id: encId, data: nowIso, tipoOperacao: 'pronta_entrega', status: 'entregue',
+            cliente, telefone, endereco, formaPagamento: pay, frete: freteVal,
+            valorProdutos: totalVal, valorTotal: totalComFrete, sinal: totalComFrete, saldoRestante: 0,
+            obs: obsFinal, vendaId: saleId,
+            itens: [{ produtoId: p.id, produtoNome: `${p.nombre} (Dose ${doseMg}mg)`, marca: p.marca || '', qtd: qty, precoUnit: unitVal, subtotal: totalVal }]
+          });
+          upsertClienteFromOperacao({ nome: cliente, telefone, endereco, valor: totalComFrete, data: nowIso, obs: obsFinal }, true);
+          logAuditoria('venda_rapida_dose', `${p.nombre} (${mgNeed}mg) - ${cliente} - ${formatBRL(totalComFrete)}`);
+          document.getElementById('vendaRapidaModal').classList.remove('open');
+          syncDomainUI();
+          showToast(`⚡ Dose confirmada (${formatBRL(totalComFrete)})! Restam ${frasco.mgRestante} mg.`);
+          window.CRM.openEncomendaReceiptModal(encId);
           return;
         }
-        if (!state.frascosDoses) state.frascosDoses = {};
-        if (!state.frascosDoses[pid]) state.frascosDoses[pid] = { mgRestante: 120, totalAplicadasMg: 0 };
-        const frasco = state.frascosDoses[pid];
-        if (frasco.mgRestante < doseMg) {
-          alert(`Frasco só tem ${frasco.mgRestante} mg disponíveis. Use a Venda Completa para abrir novo frasco.`);
+
+        const disp = getDisponibilidade(pid);
+        if (disp.estoqueBH <= 0 || qty > disp.estoqueBH) {
+          const msgSemSaldo = disp.estoqueBH <= 0
+            ? `⚠️ "${p.nombre}" está sem estoque físico em BH no momento.\nDeseja converter esta operação em Encomenda / Reserva para ${cliente}?`
+            : `⚠️ Saldo físico insuficiente em BH (Físico: ${disp.estoqueBH} un | Solicitado: ${qty} un).\nDeseja converter para Encomenda / Reserva para ${cliente}?`;
+          if (confirm(msgSemSaldo)) {
+            document.getElementById('vendaRapidaModal').classList.remove('open');
+            window.CRM.openNovaEncomendaModal(pid, 'encomenda');
+            const cInp = document.getElementById('encNovoCliente');
+            const tInp = document.getElementById('encNovoTelefone');
+            if (cInp) cInp.value = cliente;
+            if (tInp && telefone) tInp.value = telefone;
+          }
           return;
         }
-        frasco.mgRestante = Math.max(0, frasco.mgRestante - doseMg);
-        frasco.totalAplicadasMg = (frasco.totalAplicadasMg || 0) + doseMg;
-        if (!Array.isArray(frasco.historico)) frasco.historico = [];
-        frasco.historico.unshift({ data: nowIso, cliente, doseMg, valor: totalVal });
-        frasco.historico = frasco.historico.slice(0, 30);
+        const custoUnitTravado = getCustoUnitarioReal(p);
+        const lucroEst = totalVal - (custoUnitTravado * qty);
+        if (lucroEst < 0) {
+          alert(`🚫 Venda bloqueada por margem negativa! Custo: ${formatBRL(custoUnitTravado * qty)}`);
+          return;
+        }
+        let obsVenda = obsUser || 'Nova Venda';
+        if (qty > disp.disponivel) {
+          if (!confirm(`⚠️ Conflito com reserva!\n• Físico BH: ${disp.estoqueBH} un\n• Reservado: ${disp.reservado} un\n• Livre agora: ${disp.disponivel} un\n\nDeseja liberar unidade reservada e vender ${qty} un mesmo assim?`)) return;
+          const motivoExc = (prompt('Informe o motivo/autorização da exceção sobre reserva (ex: cliente prioritário):', 'Autorizado pelo operador') || 'Autorizado pelo operador').trim();
+          obsVenda = `${obsVenda} [Exceção sobre reserva: ${motivoExc}]`;
+          logAuditoria('excecao_reserva', `${p.nombre} x${qty} - ${cliente} - ${motivoExc}`);
+        }
 
         const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
         const encId = 'enc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        const resVar = aplicarVariacaoEstoque(pid, -qty, {
+          tipo: 'venda',
+          referenciaId: saleId,
+          motivo: `${obsVenda}: ${cliente}`,
+          custoUnitReal: custoUnitTravado
+        });
+        if (!resVar.ok) {
+          alert(resVar.erro || 'Estoque físico insuficiente.');
+          return;
+        }
         state.vendas = state.vendas || [];
         state.vendas.unshift({
-          id: saleId, data: nowIso, produtoId: p.id, produtoNome: `${p.nombre} — Dose Avulsa ${doseMg} mg`,
-          marca: p.marca || '', qtd: 1, isDose: true, doseMg, estornada: false,
+          id: saleId, data: nowIso, produtoId: p.id, produtoNome: p.nombre,
+          marca: p.marca || '', qtd: qty, isDose: false, estornada: false,
           origemAparelho: /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac',
-          valorUnitario: unitVal, valorProdutos: totalVal, valorFrete: 0, valorTotal: totalVal,
-          formaPagamento: payLabel, statusPagamento: payStatus, cliente, telefone, endereco: '', obs: 'Venda Rápida',
-          custoTotal: custoDose, lucro: totalVal - custoDose
+          valorUnitario: unitVal, valorProdutos: totalVal, valorFrete: freteVal, valorTotal: totalComFrete,
+          formaPagamento: payLabel, statusPagamento: payStatus, cliente, telefone, endereco, obs: obsVenda,
+          custoTotal: custoUnitTravado * qty, lucro: lucroEst
         });
         state.encomendas = state.encomendas || [];
         state.encomendas.unshift({
           id: encId, data: nowIso, tipoOperacao: 'pronta_entrega', status: 'entregue',
-          cliente, telefone, endereco: '', formaPagamento: pay, frete: 0,
-          valorProdutos: totalVal, valorTotal: totalVal, sinal: totalVal, saldoRestante: 0,
-          obs: 'Venda Rápida', vendaId: saleId,
-          itens: [{ produtoId: p.id, produtoNome: `${p.nombre} (Dose ${doseMg}mg)`, marca: p.marca || '', qtd: 1, precoUnit: unitVal, subtotal: totalVal }]
+          cliente, telefone, endereco, formaPagamento: pay, frete: freteVal,
+          valorProdutos: totalVal, valorTotal: totalComFrete, sinal: totalComFrete, saldoRestante: 0,
+          obs: obsVenda, vendaId: saleId,
+          itens: [{ produtoId: p.id, produtoNome: p.nombre, marca: p.marca || '', qtd: qty, precoUnit: unitVal, subtotal: totalVal }]
         });
-        upsertClienteFromOperacao({ nome: cliente, telefone, valor: totalVal, data: nowIso }, true);
-        logAuditoria('venda_rapida_dose', `${p.nombre} (${doseMg}mg) - ${cliente} - ${formatBRL(totalVal)}`);
-        saveState();
+        upsertClienteFromOperacao({ nome: cliente, telefone, endereco, valor: totalComFrete, data: nowIso, obs: obsVenda }, true);
+        logAuditoria('venda_rapida', `${p.nombre} x${qty} - ${cliente} - ${formatBRL(totalComFrete)}`);
         document.getElementById('vendaRapidaModal').classList.remove('open');
-        renderAll();
-        showToast(`⚡ Dose rápida confirmada (${formatBRL(totalVal)})!`);
+        syncDomainUI();
+        showToast(`⚡ Venda confirmada (${formatBRL(totalComFrete)})!`);
         window.CRM.openEncomendaReceiptModal(encId);
-        return;
+      } finally {
+        window.CRM._vrSubmitting = false;
       }
-
-      const disp = getDisponibilidade(pid);
-      if (disp.estoqueBH <= 0) {
-        if (confirm(`⚠️ "${p.nombre}" está sem estoque físico em BH no momento.\nDeseja converter esta operação em Encomenda / Reserva para ${cliente}?`)) {
-          document.getElementById('vendaRapidaModal').classList.remove('open');
-          window.CRM.openNovaEncomendaModal(pid, 'encomenda');
-          const cInp = document.getElementById('encNovoCliente');
-          const tInp = document.getElementById('encNovoTelefone');
-          if (cInp && cliente !== 'Cliente') cInp.value = cliente;
-          if (tInp && telefone) tInp.value = telefone;
-        }
-        return;
-      }
-      const custoUnitTravado = getCustoUnitarioReal(p);
-      const lucroEst = totalVal - (custoUnitTravado * qty);
-      if (lucroEst < 0) {
-        alert(`🚫 Venda bloqueada por margem negativa! Custo: ${formatBRL(custoUnitTravado * qty)}`);
-        return;
-      }
-      if (qty > disp.disponivel) {
-        if (!confirm(`⚠️ Há ${disp.reservado} un reservada(s). Livre agora: ${disp.disponivel} un.\nDeseja vender mesmo assim?`)) return;
-      }
-
-      const nextStock = disp.estoqueBH - qty;
-      if (nextStock <= 0) delete state.meuEstoque[pid];
-      else state.meuEstoque[pid] = nextStock;
-
-      const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-      const encId = 'enc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-      registrarMovimento('venda', p.id, -qty, saleId, `Venda Rápida: ${cliente}`);
-      state.vendas = state.vendas || [];
-      state.vendas.unshift({
-        id: saleId, data: nowIso, produtoId: p.id, produtoNome: p.nombre,
-        marca: p.marca || '', qtd: qty, isDose: false, estornada: false,
-        origemAparelho: /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac',
-        valorUnitario: unitVal, valorProdutos: totalVal, valorFrete: 0, valorTotal: totalVal,
-        formaPagamento: payLabel, statusPagamento: payStatus, cliente, telefone, endereco: '', obs: 'Venda Rápida',
-        custoTotal: custoUnitTravado * qty, lucro: lucroEst
-      });
-      state.encomendas = state.encomendas || [];
-      state.encomendas.unshift({
-        id: encId, data: nowIso, tipoOperacao: 'pronta_entrega', status: 'entregue',
-        cliente, telefone, endereco: '', formaPagamento: pay, frete: 0,
-        valorProdutos: totalVal, valorTotal: totalVal, sinal: totalVal, saldoRestante: 0,
-        obs: 'Venda Rápida', vendaId: saleId,
-        itens: [{ produtoId: p.id, produtoNome: p.nombre, marca: p.marca || '', qtd: qty, precoUnit: unitVal, subtotal: totalVal }]
-      });
-      upsertClienteFromOperacao({ nome: cliente, telefone, valor: totalVal, data: nowIso }, true);
-      logAuditoria('venda_rapida', `${p.nombre} x${qty} - ${cliente} - ${formatBRL(totalVal)}`);
-      saveState();
-      document.getElementById('vendaRapidaModal').classList.remove('open');
-      renderAll();
-      showToast(`⚡ Venda rápida confirmada (${formatBRL(totalVal)})!`);
-      window.CRM.openEncomendaReceiptModal(encId);
     },
 
     openNewProductModal() {
@@ -3286,8 +3630,7 @@
       state.customProducts.unshift(novoProd);
       rawCatalog.unshift(novoProd);
       if (estoqueQtd > 0) {
-        if (!state.meuEstoque) state.meuEstoque = {};
-        state.meuEstoque[newId] = estoqueQtd;
+        aplicarVariacaoEstoque(newId, estoqueQtd, { tipo: 'entrada', motivo: `Cadastro inicial de produto (${nombre})` });
       }
       logAuditoria('novo_produto', `SHAPE-${newId} ${nombre} (USD ${usd}, BH ${estoqueQtd})`);
       rebuildSearchIndex();
@@ -3518,29 +3861,16 @@
     changeMeuEstoque(id, delta) {
       if (!state.meuEstoque) state.meuEstoque = {};
       const current = Number(state.meuEstoque[id] || 0);
-      const next = Math.max(0, current + delta);
-      if (next === 0) {
-        delete state.meuEstoque[id];
-      } else {
-        state.meuEstoque[id] = next;
+      if (delta < 0 && current <= 0) {
+        showToast('Estoque BH já está zerado.');
+        return;
       }
-      const realDelta = next - current;
-      if (realDelta !== 0) {
-        registrarMovimento('ajuste', id, realDelta, '', 'Ajuste manual +/- no card');
-      }
-      logAuditoria('ajuste_estoque', `SKU ${id}: ${current} -> ${next}`);
-      saveState();
-      renderAll();
-      showToast(next > 0 ? `Estoque BH: ${next} un` : `Removido do estoque BH`);
-    },
-
-    resetEstoqueBase() {
-      if (confirm('Deseja restaurar o estoque físico para a contagem canônica de 32 itens em BH?')) {
-        state.meuEstoque = JSON.parse(JSON.stringify(ESTOQUE_CANONICO_BH));
-        saveState();
-        renderAll();
-        showToast('Estoque BH restaurado para 32 unidades!');
-      }
+      const adj = delta < 0 ? -Math.min(current, Math.abs(delta)) : delta;
+      const res = aplicarVariacaoEstoque(id, adj, { tipo: 'ajuste', motivo: 'Ajuste manual +/- no card' });
+      if (!res.ok) return;
+      logAuditoria('ajuste_estoque', `SKU ${id}: ${current} -> ${res.next}`);
+      syncDomainUI();
+      showToast(res.next > 0 ? `Estoque BH: ${res.next} un` : 'Removido do estoque BH');
     },
 
     toggleTopbarTools() {
@@ -3552,7 +3882,7 @@
         const badge = document.getElementById('badgeAlertasTools');
         const badgeText = badge ? badge.textContent : '0';
         const badgeStyle = badge ? badge.getAttribute('style') || '' : 'display:none;';
-        btn.innerHTML = `🛠️ Ferramentas <span id="badgeAlertasTools" class="badge-alertas" style="${badgeStyle}">${badgeText}</span> ${isCollapsed ? '▸' : '▾'}`;
+        btn.innerHTML = `⚙️ Ferramentas <span id="badgeAlertasTools" class="badge-alertas" style="${badgeStyle}">${badgeText}</span> ${isCollapsed ? '▸' : '▾'}`;
       }
     },
 
@@ -3580,22 +3910,12 @@
     },
 
     openDoseSaleModal(productId, doseMg, dosePreco) {
-      const modal = document.getElementById('saleModal');
-      const selectContainer = document.getElementById('saleProdSelectContainer');
-      selectContainer.style.display = 'none';
-
-      window.CRM.setSaleModalData(productId);
-
-      const isDoseInput = document.getElementById('saleIsDose');
-      const doseMgInput = document.getElementById('saleDoseMg');
-
+      window.CRM.openVendaRapidaModal(productId);
       if (doseMg === 'custom') {
-        window.CRM.selectSaleMode('custom', productId);
+        window.CRM.setVendaRapidaDose('custom', 0);
       } else {
-        window.CRM.selectSaleDose(productId, doseMg, dosePreco);
+        window.CRM.setVendaRapidaDose(doseMg, dosePreco);
       }
-
-      modal.classList.add('open');
     },
 
     openDoseImageModal(productId) {
@@ -3607,742 +3927,33 @@
       modal.classList.add('open');
     },
 
-    abrirNovoFrascoDose(productId) {
+    abrirNovoFrascoDose(productId, fromVr = false) {
       const conf = TABELA_DOSES_OFICIAIS[productId];
+      if (!conf) return;
       const doseState = (state.frascosDoses && state.frascosDoses[productId]) || { mgRestante: 120 };
       const estoqueFechados = Number((state.meuEstoque || {})[productId] || 0);
 
       const msg = `Frasco em uso atual possui ${doseState.mgRestante} mg restantes.\nVocê possui ${estoqueFechados} frascos fechados no Estoque Reserva de BH.\n\nDeseja abrir um novo frasco de 120mg e dar baixa de 1 unidade do seu estoque reserva?`;
       if (confirm(msg)) {
-        if (estoqueFechados <= 0) {
+        const res = aplicarVariacaoEstoque(productId, -1, { tipo: 'ajuste', motivo: `Abertura novo frasco doses 120mg (${conf.nome})` });
+        if (!res.ok) {
           alert('Você não tem frascos fechados no Estoque BH para abrir!');
           return;
         }
-        state.meuEstoque[productId] = estoqueFechados - 1;
         if (!state.frascosDoses) state.frascosDoses = {};
         state.frascosDoses[productId] = {
           mgRestante: 120,
           totalAplicadasMg: 0,
           perdaMg: (Number(doseState.perdaMg) || 0) + (Number(doseState.mgRestante) || 0)
         };
-        saveState();
-        renderAll();
+        syncDomainUI();
+        if (fromVr) window.CRM.selectVendaRapidaProduto(productId);
         showToast(`Novo frasco de ${conf.nome} aberto com sucesso (120 mg disponíveis)!`);
       }
     },
 
-    selectSaleMode(mode, productId) {
-      const raw = rawCatalog.find(x => x.id === productId);
-      if (!raw) return;
-      const p = computeProduct(raw);
-      const pay = document.getElementById('salePayment').value;
-      const isCartao = pay === 'cartao_parcelado' || pay === 'cartao_6x';
-
-      if (mode === 'frasco_inteiro') {
-        document.getElementById('saleIsDose').value = '0';
-        document.getElementById('saleDoseMg').value = '0';
-        document.getElementById('saleDoseCustomContainer').style.display = 'none';
-        const unitVal = isCartao ? p.precoCartao : p.precoFinal;
-        document.getElementById('saleUnitPrice').value = unitVal;
-        document.getElementById('saleTotalValue').value = unitVal;
-        document.getElementById('saleQty').value = 1;
-        document.getElementById('salePriceHint').textContent = `Frasco Fechado 120mg (${isCartao ? (isGlpProduct(p) ? 'Cartão até 12x s/ juros' : 'Cartão até 6x') : 'PIX'}): ${formatBRL(unitVal)}`;
-        window.CRM.updateSaleGrandTotal();
-      } else if (mode === 'custom') {
-        document.getElementById('saleIsDose').value = '1';
-        document.getElementById('saleDoseCustomContainer').style.display = 'grid';
-        document.getElementById('saleCustomDoseMg').focus();
-        window.CRM.updateSaleGrandTotal();
-      }
-    },
-
-    selectSaleDose(productId, doseMg, dosePreco) {
-      document.getElementById('saleIsDose').value = '1';
-      document.getElementById('saleDoseMg').value = doseMg;
-      document.getElementById('saleDoseCustomContainer').style.display = 'none';
-      document.getElementById('saleUnitPrice').value = dosePreco;
-      document.getElementById('saleTotalValue').value = dosePreco;
-      document.getElementById('saleQty').value = 1;
-      document.getElementById('salePriceHint').textContent = `Dose Individual Oficial: ${doseMg} mg ➔ ${formatBRL(dosePreco)}`;
-      window.CRM.updateSaleGrandTotal();
-    },
-
-    onCustomDoseChange() {
-      const mg = Number(document.getElementById('saleCustomDoseMg').value) || 0;
-      document.getElementById('saleDoseMg').value = mg;
-    },
-
-    onCustomDosePriceChange() {
-      const preco = Number(document.getElementById('saleCustomDosePrice').value) || 0;
-      document.getElementById('saleUnitPrice').value = preco;
-      document.getElementById('saleTotalValue').value = preco;
-      document.getElementById('salePriceHint').textContent = `Dose Personalizada: ${document.getElementById('saleDoseMg').value} mg ➔ ${formatBRL(preco)}`;
-      window.CRM.updateSaleGrandTotal();
-    },
-
     openSaleModal(productId) {
-      // Unificação Completa: abre o formulário consolidado já em modo Pronta Entrega BH (baixa imediata)
-      window.CRM.openNovaEncomendaModal(productId, 'pronta_entrega');
-    },
-
-    filterSaleProdutosSelect(query, selectedId = null) {
-      const select = document.getElementById('saleProdSelect');
-      const badge = document.getElementById('saleSearchCountBadge');
-      if (!select) return;
-
-      const q = (query || '').toLowerCase().trim();
-      const allComputed = rawCatalog.map(computeProduct);
-      const inStockProds = allComputed.filter(p => ((state.meuEstoque || {})[p.id] || 0) > 0);
-
-      let filtered = allComputed;
-      if (q === 'estoque' || q === 'em estoque') {
-        filtered = inStockProds;
-      } else if (q) {
-        filtered = allComputed.filter(p => {
-          const txt = `${p.id} ${p.nombre || ''} ${p.marca || ''} ${p.composicion || ''} ${p.categoria || ''}`.toLowerCase();
-          return txt.includes(q);
-        });
-      }
-
-      const filteredInStock = filtered
-        .filter(p => ((state.meuEstoque || {})[p.id] || 0) > 0)
-        .sort((a, b) => getDisponibilidade(b.id).disponivel - getDisponibilidade(a.id).disponivel);
-      const filteredOutStock = filtered.filter(p => !((state.meuEstoque || {})[p.id] || 0));
-
-      if (!filtered.length) {
-        select.innerHTML = `<option value="">Nenhum medicamento encontrado com "${escapeHtml(q)}"</option>`;
-        if (badge) badge.textContent = '0 opções';
-        return;
-      }
-
-      let optionsHtml = '';
-      if (filteredInStock.length > 0) {
-        optionsHtml += `<optgroup label="✅ Pronta Entrega BH (Em Estoque: ${filteredInStock.length})">`;
-        optionsHtml += filteredInStock.map(p => {
-          const disp = getDisponibilidade(p.id);
-          return `
-          <option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>
-            ${p.nombre} (Disp: ${disp.disponivel} | BH: ${disp.estoqueBH}${disp.reservado > 0 ? ` | Res: ${disp.reservado}` : ''})
-          </option>
-        `;
-        }).join('');
-        optionsHtml += `</optgroup>`;
-      }
-
-      if (filteredOutStock.length > 0) {
-        optionsHtml += `<optgroup label="📦 Outros Produtos (Estoque 0 ou Encomenda: ${filteredOutStock.length})">`;
-        optionsHtml += filteredOutStock.slice(0, 60).map(p => `
-          <option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>
-            ${p.nombre} (Disponível: 0 un)
-          </option>
-        `).join('');
-        optionsHtml += `</optgroup>`;
-      }
-
-      select.innerHTML = optionsHtml;
-      if (badge) {
-        badge.textContent = `${filteredInStock.length} em estoque · ${filtered.length} total`;
-      }
-
-      const hasSelected = selectedId && filtered.some(p => p.id === selectedId);
-      const targetId = hasSelected ? selectedId : (filteredInStock[0] ? filteredInStock[0].id : (filtered[0] ? filtered[0].id : null));
-      if (targetId) {
-        select.value = targetId;
-        window.CRM.setSaleModalData(targetId);
-      }
-    },
-
-    quickSearchSaleProduto(term) {
-      const inp = document.getElementById('saleProdBuscaInput');
-      if (inp) {
-        inp.value = term === 'estoque' ? '' : term;
-        inp.focus();
-      }
-      window.CRM.filterSaleProdutosSelect(term);
-    },
-
-    onSaleClienteSelect(val) {
-      const nome = (val || '').trim().toLowerCase();
-      if (!nome) return;
-      const all = [...(state.encomendas || []), ...(state.vendas || [])];
-      const match = all.find(x => (x.cliente || '').trim().toLowerCase() === nome);
-      if (match) {
-        const phoneInp = document.getElementById('saleClientPhone');
-        if (phoneInp && !phoneInp.value && match.telefone) {
-          phoneInp.value = match.telefone;
-        }
-        const addrInp = document.getElementById('saleClientAddress');
-        if (addrInp && !addrInp.value && match.endereco) {
-          addrInp.value = match.endereco;
-        }
-        const notesInp = document.getElementById('saleNotes');
-        if (notesInp && !notesInp.value && match.obs) {
-          notesInp.value = match.obs;
-        }
-      }
-      renderClientHistoryBanner(val, 'saleClientHistoryBanner');
-    },
-
-    onSaleProductSelect(val) {
-      window.CRM.setSaleModalData(Number(val));
-    },
-
-    setSaleModalData(productId) {
-      const raw = rawCatalog.find(x => x.id === productId);
-      if (!raw) return;
-      const p = computeProduct(raw);
-      const stock = (state.meuEstoque || {})[p.id] || 0;
-
-      document.getElementById('saleProdId').value = p.id;
-      document.getElementById('saleProdTitle').textContent = p.nombre;
-      document.getElementById('saleProdSub').textContent = `${(p.marca || '').toUpperCase()} · ${p.presentacion || p.categoria || ''}`;
-      document.getElementById('saleProdStockBadge').textContent = `📦 Em estoque agora: ${stock} unidades`;
-      document.getElementById('saleProdImg').src = p.localFoto || p.remoteFoto || '';
-
-      const qtyInput = document.getElementById('saleQty');
-      qtyInput.value = 1;
-      qtyInput.max = Math.max(1, stock);
-
-      const dateInput = document.getElementById('saleDate');
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      dateInput.value = now.toISOString().slice(0, 16);
-
-      document.getElementById('saleClientName').value = '';
-      document.getElementById('saleClientPhone').value = '';
-      if (document.getElementById('saleClientAddress')) document.getElementById('saleClientAddress').value = '';
-      document.getElementById('saleNotes').value = '';
-      document.getElementById('salePayment').value = 'pix';
-      const shipInput = document.getElementById('saleShipping');
-      if (shipInput) shipInput.value = '0';
-
-      // Configuração de doses fracionadas se for 9005 ou 9006
-      const doseBox = document.getElementById('saleDoseSelectorBox');
-      const doseButtonsContainer = document.getElementById('saleDoseButtons');
-      const confDose = TABELA_DOSES_OFICIAIS[productId];
-
-      if (confDose && doseBox && doseButtonsContainer) {
-        doseBox.style.display = 'block';
-        const doseState = (state.frascosDoses && state.frascosDoses[productId]) || { mgRestante: 120 };
-        document.getElementById('saleDoseFrascoSaldoBadge').textContent = `Frasco em uso: ${doseState.mgRestante} mg disponíveis`;
-
-        doseButtonsContainer.innerHTML = `
-          <button type="button" class="btn" style="font-size:11px; padding:5px 9px; background:#1e293b; color:#fff;" onclick="window.CRM.selectSaleMode('frasco_inteiro', ${productId})">
-            📦 Frasco Fechado (120mg)
-          </button>
-          ${confDose.doses.map(d => `
-            <button type="button" class="btn btn-green" style="font-size:11px; padding:5px 9px; background:#065f46; color:#fff; font-weight:700;" onclick="window.CRM.selectSaleDose(${productId}, ${d.mg}, ${d.preco})">
-              💉 ${d.label} (R$ ${d.preco})
-            </button>
-          `).join('')}
-          <button type="button" class="btn" style="font-size:11px; padding:5px 9px; background:#1e293b; color:#38bdf8;" onclick="window.CRM.selectSaleMode('custom', ${productId})">
-            ⚙️ Outra Dose
-          </button>
-        `;
-        document.getElementById('saleIsDose').value = '0';
-        document.getElementById('saleDoseMg').value = '0';
-        document.getElementById('saleDoseCustomContainer').style.display = 'none';
-      } else if (doseBox) {
-        doseBox.style.display = 'none';
-        document.getElementById('saleIsDose').value = '0';
-        document.getElementById('saleDoseMg').value = '0';
-        document.getElementById('saleDoseCustomContainer').style.display = 'none';
-      }
-
-      window.CRM.onSalePaymentChange();
-    },
-
-    onSalePaymentChange() {
-      const pid = Number(document.getElementById('saleProdId').value);
-      const raw = rawCatalog.find(x => x.id === pid);
-      if (!raw) return;
-      const p = computeProduct(raw);
-      const pay = document.getElementById('salePayment').value;
-      const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
-      const isDose = document.getElementById('saleIsDose') && document.getElementById('saleIsDose').value === '1';
-
-      if (isDose) {
-        // Se for dose, não altera o valor sugerido da dose oficial
-        return;
-      }
-
-      const isCartao = pay === 'cartao_parcelado' || pay === 'cartao_6x';
-      let unitPrice = p.precoFinal;
-      if (isCartao) {
-        unitPrice = p.precoCartao;
-      }
-      const total = unitPrice * qty;
-      document.getElementById('saleUnitPrice').value = unitPrice;
-      document.getElementById('saleTotalValue').value = total;
-      window.CRM.updateSaleGrandTotal();
-    },
-
-    onSaleUnitPriceChange() {
-      const unitVal = Number(document.getElementById('saleUnitPrice').value) || 0;
-      const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
-      const total = unitVal * qty;
-      document.getElementById('saleTotalValue').value = total;
-      window.CRM.updateSaleGrandTotal();
-    },
-
-    onSaleQtyChange() {
-      const unitVal = Number(document.getElementById('saleUnitPrice').value) || 0;
-      const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
-      const total = unitVal * qty;
-      document.getElementById('saleTotalValue').value = total;
-      window.CRM.updateSaleGrandTotal();
-    },
-
-    onSaleTotalValueChange() {
-      const totalVal = Number(document.getElementById('saleTotalValue').value) || 0;
-      const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
-      const unitVal = Math.round(totalVal / qty);
-      document.getElementById('saleUnitPrice').value = unitVal;
-      window.CRM.updateSaleGrandTotal();
-    },
-
-    onSaleShippingChange() {
-      window.CRM.updateSaleGrandTotal();
-    },
-
-    updateSaleGrandTotal() {
-      const subtotal = Math.max(0, Number(document.getElementById('saleTotalValue').value) || 0);
-      const shipEl = document.getElementById('saleShipping');
-      const frete = Math.max(0, Number(shipEl ? shipEl.value : 0) || 0);
-      const grandTotal = subtotal + frete;
-      const grandEl = document.getElementById('saleGrandTotal');
-      if (grandEl) grandEl.value = grandTotal;
-
-      const hintEl = document.getElementById('salePriceHint');
-      if (hintEl) {
-        const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
-        const unitVal = Math.round(subtotal / qty);
-        if (frete > 0) {
-          hintEl.textContent = `Produtos (${qty}x): ${formatBRL(subtotal)} + Frete: ${formatBRL(frete)} ➔ Total a Pagar: ${formatBRL(grandTotal)}`;
-        } else {
-          hintEl.textContent = `Subtotal: ${formatBRL(unitVal)} cada un × ${qty} = ${formatBRL(subtotal)}`;
-        }
-      }
-      return { subtotal, frete, grandTotal };
-    },
-
-    updateSaleTotalPreview() {
-      window.CRM.onSaleQtyChange();
-    },
-
-    confirmSale() {
-      const pid = Number(document.getElementById('saleProdId').value);
-      const raw = rawCatalog.find(x => x.id === pid);
-      if (!raw) {
-        showToast('Selecione um produto!');
-        return;
-      }
-      const p = computeProduct(raw);
-      const currentStock = Number((state.meuEstoque || {})[pid] || 0);
-      const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
-
-      const unitRaw = document.getElementById('saleUnitPrice').value.trim();
-      const totalRaw = document.getElementById('saleTotalValue').value.trim();
-      const unitVal = unitRaw !== '' && isFinite(Number(unitRaw)) ? Number(unitRaw) : p.precoFinal;
-      const totalVal = totalRaw !== '' && isFinite(Number(totalRaw)) ? Number(totalRaw) : (unitVal * qty);
-      const pay = document.getElementById('salePayment').value;
-      const isGlp = isGlpProduct(p);
-      const payLabelMap = {
-        'pix': '💠 À vista no PIX',
-        'cartao_parcelado': isGlp ? '💳 Cartão de Crédito (até 12x s/ juros)' : '💳 Cartão de Crédito (até 6x s/ juros)',
-        'cartao_6x': isGlp ? '💳 Cartão de Crédito (até 12x s/ juros)' : '💳 Cartão de Crédito (até 6x)',
-        'cartao_debito': '💳 Cartão Débito',
-        'dinheiro': '💵 Dinheiro em Espécie'
-      };
-      const payLabel = payLabelMap[pay] || pay;
-      const client = document.getElementById('saleClientName').value.trim() || 'Cliente';
-      const phone = document.getElementById('saleClientPhone').value.trim();
-      const address = (document.getElementById('saleClientAddress') ? document.getElementById('saleClientAddress').value.trim() : '');
-      const notes = document.getElementById('saleNotes').value.trim();
-      const dateVal = document.getElementById('saleDate').value || new Date().toISOString();
-
-      const isDose = document.getElementById('saleIsDose') && document.getElementById('saleIsDose').value === '1';
-      const doseMg = Number(document.getElementById('saleDoseMg') ? document.getElementById('saleDoseMg').value : 0) || 0;
-
-      const freteVal = Math.max(0, Number(document.getElementById('saleShipping') ? document.getElementById('saleShipping').value : 0) || 0);
-      const payStatus = (document.getElementById('salePaymentStatus') ? document.getElementById('salePaymentStatus').value : 'pago') || 'pago';
-      const subtotalVal = totalVal;
-      const totalComFrete = subtotalVal + freteVal;
-
-      // Se for venda de dose fracionada
-      if (isDose) {
-        if (doseMg <= 0) {
-          alert('Informe a quantidade em mg da dose aplicada!');
-          return;
-        }
-        const custoDosePre = Math.round(((p.custo || 600) / 120) * doseMg);
-        if (subtotalVal < custoDosePre) {
-          alert(`🚫 Venda bloqueada por margem negativa!\n\nCusto proporcional da dose: ${formatBRL(custoDosePre)}\nValor informado: ${formatBRL(subtotalVal)}`);
-          return;
-        }
-        if (!state.frascosDoses) state.frascosDoses = {};
-        if (!state.frascosDoses[pid]) state.frascosDoses[pid] = { mgRestante: 120, totalAplicadasMg: 0 };
-
-        const frascoAtual = state.frascosDoses[pid];
-        if (frascoAtual.mgRestante < doseMg) {
-          const abrirOutro = confirm(`Atenção: o frasco em uso só tem ${frascoAtual.mgRestante} mg restantes (a dose é de ${doseMg} mg).\n\nDeseja abrir um novo frasco de 120mg agora usando seu estoque de reserva?`);
-          if (abrirOutro) {
-            const estoqueReserva = Number((state.meuEstoque || {})[pid] || 0);
-            if (estoqueReserva <= 0) {
-              alert('Você não tem frascos reservas fechados no Estoque BH!');
-              return;
-            }
-            state.meuEstoque[pid] = estoqueReserva - 1;
-            frascoAtual.perdaMg = (Number(frascoAtual.perdaMg) || 0) + (Number(frascoAtual.mgRestante) || 0);
-            frascoAtual.mgRestante = 120;
-          } else {
-            return;
-          }
-        }
-
-        // Abate miligramas do frasco e registra histórico
-        frascoAtual.mgRestante = Math.max(0, frascoAtual.mgRestante - doseMg);
-        frascoAtual.totalAplicadasMg = (frascoAtual.totalAplicadasMg || 0) + doseMg;
-        if (!Array.isArray(frascoAtual.historico)) frascoAtual.historico = [];
-        frascoAtual.historico.unshift({ data: dateVal, cliente: client, doseMg, valor: totalComFrete });
-        frascoAtual.historico = frascoAtual.historico.slice(0, 30);
-
-        // Custo proporcional da dose
-        const custoDose = Math.round(((p.custo || 600) / 120) * doseMg);
-        const lucroEst = subtotalVal - custoDose;
-
-        const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-        const encId = 'enc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-        const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
-
-        const venda = {
-          id: saleId,
-          data: dateVal,
-          produtoId: p.id,
-          produtoNome: `${p.nombre} — Dose Avulsa ${doseMg} mg`,
-          marca: p.marca || '',
-          qtd: 1,
-          isDose: true,
-          doseMg: doseMg,
-          estornada: false,
-          origemAparelho: aparelhoOrigem,
-          valorUnitario: unitVal,
-          valorProdutos: subtotalVal,
-          valorFrete: freteVal,
-          valorTotal: totalComFrete,
-          formaPagamento: payLabel,
-          statusPagamento: payStatus,
-          cliente: client,
-          telefone: phone,
-          endereco: address,
-          obs: notes,
-          custoTotal: custoDose,
-          lucro: lucroEst
-        };
-
-        if (!state.vendas) state.vendas = [];
-        state.vendas.unshift(venda);
-
-        const novaEnc = {
-          id: encId,
-          data: dateVal,
-          tipoOperacao: 'pronta_entrega',
-          status: 'entregue',
-          cliente: client,
-          telefone: phone,
-          endereco: address,
-          formaPagamento: pay,
-          frete: freteVal,
-          valorProdutos: subtotalVal,
-          valorTotal: totalComFrete,
-          sinal: totalComFrete,
-          saldoRestante: 0,
-          obs: notes,
-          vendaId: saleId,
-          itens: [
-            {
-              produtoId: p.id,
-              produtoNome: `${p.nombre} (Dose ${doseMg}mg)`,
-              marca: p.marca || '',
-              qtd: 1,
-              precoUnit: unitVal,
-              subtotal: subtotalVal
-            }
-          ]
-        };
-        if (!Array.isArray(state.encomendas)) state.encomendas = [];
-        state.encomendas.unshift(novaEnc);
-
-        saveState();
-        upsertClienteFromOperacao({ nome: client, telefone: phone, endereco: address, valor: totalComFrete, data: dateVal, obs: notes });
-        logAuditoria('venda_dose', `${p.nombre} (${doseMg}mg) - ${client} - ${formatBRL(totalComFrete)}`);
-
-        document.getElementById('saleModal').classList.remove('open');
-        renderAll();
-        showToast(`✅ Dose de ${doseMg} mg confirmada! Restam ${frascoAtual.mgRestante} mg no frasco.`);
-        window.CRM.openEncomendaReceiptModal(encId);
-        return;
-      }
-
-      // Se for frasco/caixa fechada
-      const dispCaixa = getDisponibilidade(pid);
-      if (currentStock <= 0) {
-        alert('Item sem estoque físico em BH! Cadastre a entrada no Estoque BH ou registre como Encomenda.');
-        return;
-      }
-      const custoUnitSale = getCustoUnitarioReal(p);
-      const lucroEst = subtotalVal - (custoUnitSale * qty);
-      if (lucroEst < 0) {
-        alert(`🚫 Venda bloqueada por margem negativa!\n\nCusto (${qty}x): ${formatBRL(custoUnitSale * qty)}\nValor informado: ${formatBRL(subtotalVal)}\n\nAjuste o preço para cima antes de confirmar.`);
-        return;
-      }
-      if (qty > dispCaixa.disponivel && dispCaixa.reservado > 0) {
-        const prosseguirRes = confirm(`⚠️ Atenção: há ${dispCaixa.reservado} un reservada(s) para clientes.\nDisponível livre agora: ${dispCaixa.disponivel} un (Estoque BH: ${currentStock} un).\n\nDeseja vender mesmo assim?`);
-        if (!prosseguirRes) return;
-      } else if (qty > currentStock) {
-        const prosseguir = confirm(`Atenção: A quantidade informada (${qty}) é maior do que o estoque registrado no aparelho (${currentStock} un).\n\nDeseja registrar a venda e ajustar o estoque mesmo assim?`);
-        if (!prosseguir) return;
-      }
-      logAuditoria('venda_caixa', `${p.nombre} x${qty} - ${client} - ${formatBRL(totalComFrete)}`);
-
-      // Baixa no estoque
-      const nextStock = currentStock - qty;
-      if (nextStock <= 0) {
-        delete state.meuEstoque[pid];
-      } else {
-        state.meuEstoque[pid] = nextStock;
-      }
-
-      // Registro de Venda com Valor Unitário explícito
-      const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-      const encId = 'enc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-      const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
-      registrarMovimento('venda', p.id, -qty, saleId, `Venda: ${client}`);
-
-      const venda = {
-        id: saleId,
-        data: dateVal,
-        produtoId: p.id,
-        produtoNome: p.nombre,
-        marca: p.marca || '',
-        qtd: qty,
-        isDose: false,
-        estornada: false,
-        origemAparelho: aparelhoOrigem,
-        valorUnitario: unitVal,
-        valorProdutos: subtotalVal,
-        valorFrete: freteVal,
-        valorTotal: totalComFrete,
-        formaPagamento: payLabel,
-        statusPagamento: payStatus,
-        cliente: client,
-        telefone: phone,
-        endereco: address,
-        obs: notes,
-        custoTotal: custoUnitSale * qty,
-        lucro: lucroEst
-      };
-
-      if (!state.vendas) state.vendas = [];
-      state.vendas.unshift(venda);
-      upsertClienteFromOperacao({ nome: client, telefone: phone, endereco: address, valor: totalComFrete, data: dateVal, obs: notes }, true);
-
-      const novaEnc = {
-        id: encId,
-        data: dateVal,
-        tipoOperacao: 'pronta_entrega',
-        status: 'entregue',
-        cliente: client,
-        telefone: phone,
-        endereco: address,
-        formaPagamento: pay,
-        frete: freteVal,
-        valorProdutos: subtotalVal,
-        valorTotal: totalComFrete,
-        sinal: totalComFrete,
-        saldoRestante: 0,
-        obs: notes,
-        vendaId: saleId,
-        itens: [
-          {
-            produtoId: p.id,
-            produtoNome: p.nombre,
-            marca: p.marca || '',
-            qtd: qty,
-            precoUnit: unitVal,
-            subtotal: subtotalVal
-          }
-        ]
-      };
-      if (!Array.isArray(state.encomendas)) state.encomendas = [];
-      state.encomendas.unshift(novaEnc);
-
-      saveState();
-
-      document.getElementById('saleModal').classList.remove('open');
-      renderAll();
-      showToast(`✅ Venda registrada! Baixa de ${qty} un efetuada.`);
-
-      // Abre comprovante / recibo consolidado na mesma ação
-      window.CRM.openEncomendaReceiptModal(encId);
-    },
-
-    showSaleReceipt(venda, p) {
-      const modal = document.getElementById('saleReceiptModal');
-      const textarea = document.getElementById('saleReceiptText');
-      const dataFmt = new Date(venda.data).toLocaleString('pt-BR');
-      const temFrete = (Number(venda.valorFrete) || 0) > 0;
-      const subtotalProdutos = venda.valorProdutos || (venda.valorUnitario * venda.qtd);
-      const isPix = String(venda.formaPagamento).toLowerCase().includes('pix');
-
-      if (venda.isDose) {
-        const lines = [
-          `💉 *COMPROVANTE DE APLICAÇÃO DE DOSE — SHAPE TOTAL*`,
-          `━━━━━━━━━━━━━━━━━━━━━━━━━`,
-          `👤 *Paciente / Cliente:* ${venda.cliente}`,
-          `🧪 *Medicamento:* ${venda.produtoNome}`,
-          `💉 *Dosagem Aplicada:* *${venda.doseMg} mg* (Dose Individual)`,
-          temFrete ? `💵 *Valor da Dose:* ${formatBRL(subtotalProdutos)}` : ``,
-          temFrete ? `🚚 *Taxa de Entrega / Deslocamento:* ${formatBRL(venda.valorFrete)}` : ``,
-          `💰 *TOTAL A PAGAR:* *${formatBRL(venda.valorTotal)}*`,
-          `💳 *Forma de Pagamento:* ${venda.formaPagamento}`,
-          `📅 *Data da Aplicação:* ${dataFmt}`,
-          venda.endereco ? `📍 *Endereço de Entrega:* ${venda.endereco}` : `📍 *Local:* Atendimento Pronta Entrega Belo Horizonte`,
-          venda.obs ? `📝 *Observação:* ${venda.obs}` : ``,
-          `━━━━━━━━━━━━━━━━━━━━━━━━━`,
-          isPix ? `💠 *Chave PIX (CNPJ):* 64.228.053/0001-47\n🏦 *Beneficiário:* BAXTI IMPORTADOS LTDA (Banco Inter)\n━━━━━━━━━━━━━━━━━━━━━━━━━` : ``,
-          `🔒 *Procedência:* Medicamento 100% original com controle de pureza e diluição precisa.`,
-          `Conte sempre com a Shape Total para alcançar sua melhor versão com saúde! 🚀💪`
-        ].filter(Boolean);
-
-        textarea.value = lines.join('\n');
-        window._lastReceiptPhone = venda.telefone;
-        modal.classList.add('open');
-        return;
-      }
-
-      const lines = [
-        `✅ *COMPROVANTE DE PEDIDO — SHAPE TOTAL*`,
-        `━━━━━━━━━━━━━━━━━━━━━━━━━`,
-        `👤 *Cliente:* ${venda.cliente}`,
-        `📦 *Item:* ${venda.qtd}x *${venda.produtoNome}*`,
-        venda.qtd > 1 ? `💵 *Valor Unitário:* ${formatBRL(venda.valorUnitario)} cada` : ``,
-        temFrete ? `📦 *Subtotal Produtos:* ${formatBRL(subtotalProdutos)}` : ``,
-        temFrete ? `🚚 *Valor do Frete / Envio:* ${formatBRL(venda.valorFrete)}` : ``,
-        `💰 *TOTAL A PAGAR:* *${formatBRL(venda.valorTotal)}*`,
-        `💳 *Forma de Pagamento:* ${venda.formaPagamento}`,
-        `📅 *Data da Operação:* ${dataFmt}`,
-        venda.endereco ? `📍 *Endereço de Entrega:* ${venda.endereco}` : (temFrete ? `🚚 *Entrega:* Envio express (Uber Flash / Motoboy / Sedex)` : `🚚 *Entrega:* Pronta Entrega Belo Horizonte (Retirada em mãos ou Motoboy)`),
-        venda.obs ? `📝 *Observação:* ${venda.obs}` : ``,
-        `━━━━━━━━━━━━━━━━━━━━━━━━━`,
-        isPix ? `💠 *Chave PIX (CNPJ):* 64.228.053/0001-47\n🏦 *Beneficiário:* BAXTI IMPORTADOS LTDA (Banco Inter)\n━━━━━━━━━━━━━━━━━━━━━━━━━` : ``,
-        `🔒 *Garantia:* Medicamentos 100% originais com lacre e rastreio.`,
-        `Agradecemos a confiança e preferência! 🚀💪`
-      ].filter(Boolean);
-
-      textarea.value = lines.join('\n');
-      window._lastReceiptPhone = venda.telefone;
-      modal.classList.add('open');
-    },
-
-    openReceiptWhatsApp(useDirectPhone = false) {
-      const text = document.getElementById('saleReceiptText').value;
-      const phone = (window._lastReceiptPhone || '').replace(/\D/g, '');
-      let url = 'https://api.whatsapp.com/send?';
-      if (useDirectPhone && phone && phone !== '31972191092' && phone !== '5531972191092') {
-        const fullPhone = phone.startsWith('55') ? phone : `55${phone}`;
-        url += `phone=${fullPhone}&`;
-      }
-      url += `text=${encodeURIComponent(text)}`;
-
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        window.location.href = url;
-      } else {
-        const win = window.open(url, '_blank');
-        if (!win || win.closed || typeof win.closed === 'undefined') {
-          window.location.href = url;
-        }
-      }
-      showToast('Abrindo WhatsApp para você escolher a pessoa...');
-    },
-
-    shareReceiptNative() {
-      const text = document.getElementById('saleReceiptText').value;
-      if (!text) return;
-      if (navigator.share) {
-        navigator.share({
-          title: 'Comprovante Shape Total / Baxti',
-          text: text
-        }).catch(() => {
-          window.CRM.openReceiptWhatsApp(false);
-        });
-      } else {
-        window.CRM.openReceiptWhatsApp(false);
-      }
-    },
-
-    copyReceiptText() {
-      const text = document.getElementById('saleReceiptText').value;
-      navigator.clipboard.writeText(text);
-      showToast('Comprovante copiado para a área de transferência!');
-    },
-
-    previewSaleWhatsAppQuote() {
-      const pid = Number(document.getElementById('saleProdId').value);
-      const raw = rawCatalog.find(x => x.id === pid);
-      if (!raw) {
-        showToast('Selecione um produto!');
-        return;
-      }
-      const p = computeProduct(raw);
-      const qty = Math.max(1, Number(document.getElementById('saleQty').value) || 1);
-      const unitRaw = document.getElementById('saleUnitPrice').value.trim();
-      const totalRaw = document.getElementById('saleTotalValue').value.trim();
-      const unitVal = unitRaw !== '' && isFinite(Number(unitRaw)) ? Number(unitRaw) : p.precoFinal;
-      const subtotalVal = totalRaw !== '' && isFinite(Number(totalRaw)) ? Number(totalRaw) : (unitVal * qty);
-
-      const freteVal = Math.max(0, Number(document.getElementById('saleShipping') ? document.getElementById('saleShipping').value : 0) || 0);
-      const grandTotal = subtotalVal + freteVal;
-
-      const pay = document.getElementById('salePayment').value;
-      const isGlp = isGlpProduct(p);
-      const payLabelMap = {
-        'pix': '💠 À vista no PIX',
-        'cartao_parcelado': isGlp ? '💳 Cartão de Crédito (até 12x s/ juros)' : '💳 Cartão de Crédito (até 6x s/ juros)',
-        'cartao_6x': isGlp ? '💳 Cartão de Crédito (até 12x s/ juros)' : '💳 Cartão de Crédito (até 6x)',
-        'cartao_debito': '💳 Cartão Débito',
-        'dinheiro': '💵 Dinheiro em Espécie'
-      };
-      const payLabel = payLabelMap[pay] || pay;
-      const client = document.getElementById('saleClientName').value.trim() || 'Cliente';
-      const phone = document.getElementById('saleClientPhone').value.trim();
-      const notes = document.getElementById('saleNotes').value.trim();
-      const isPix = pay === 'pix';
-
-      const lines = [
-        `*ORÇAMENTO & PROPOSTA — SHAPE TOTAL BH* 📦✨`,
-        `━━━━━━━━━━━━━━━━━━━━━━━━━`,
-        `👤 *Cliente:* ${client}`,
-        `🧪 *Medicamento:* ${qty}x *${p.nombre}*`,
-        qty > 1 ? `💵 *Valor Unitário:* ${formatBRL(unitVal)} cada` : ``,
-        `📦 *Subtotal Medicamento:* ${formatBRL(subtotalVal)}`,
-        freteVal > 0 ? `🚚 *Frete / Envio (Uber Flash / Motoboy):* ${formatBRL(freteVal)}` : `🚚 *Frete:* Retirada em mãos / Frete a combinar`,
-        `━━━━━━━━━━━━━━━━━━━━━━━━━`,
-        `💰 *TOTAL A PAGAR:* *${formatBRL(grandTotal)}*`,
-        `💳 *Forma de Pagamento:* ${payLabel}`,
-        notes ? `📍 *Endereço / Observação:* ${notes}` : ``,
-        `━━━━━━━━━━━━━━━━━━━━━━━━━`,
-        isPix ? `💠 *Chave PIX (CNPJ):* 64.228.053/0001-47\n🏦 *Beneficiário:* BAXTI IMPORTADOS LTDA (Banco Inter)\n━━━━━━━━━━━━━━━━━━━━━━━━━` : ``,
-        `🔒 *Garantia:* Medicamento 100% original, lacrado e com procedência.`,
-        `Assim que confirmar, já providenciamos a separação e o envio imediato! 🚀💪`
-      ].filter(Boolean);
-
-      const modal = document.getElementById('saleReceiptModal');
-      const textarea = document.getElementById('saleReceiptText');
-      if (textarea) textarea.value = lines.join('\n');
-      window._lastReceiptPhone = phone;
-      if (modal) modal.classList.add('open');
-      showToast('Mensagem de WhatsApp com frete e total gerada!');
+      window.CRM.openVendaRapidaModal(productId || null);
     },
 
     openSalesHistoryModal() {
@@ -4416,21 +4027,30 @@
           const addMg = Number(v.doseMg || 0);
           if (curMg + addMg > 120) {
             // Se houve abertura de novo frasco após esta dose, devolve 1 frasco fechado à reserva
-            if (!state.meuEstoque) state.meuEstoque = {};
-            state.meuEstoque[v.produtoId] = (Number(state.meuEstoque[v.produtoId]) || 0) + 1;
+            aplicarVariacaoEstoque(v.produtoId, 1, {
+              tipo: 'devolucao',
+              referenciaId: vidStr,
+              motivo: `Estorno dose (recompõe frasco): ${v.cliente}`
+            });
             state.frascosDoses[v.produtoId].mgRestante = (curMg + addMg) - 120;
           } else {
             state.frascosDoses[v.produtoId].mgRestante = curMg + addMg;
           }
           state.frascosDoses[v.produtoId].totalAplicadasMg = Math.max(0, (Number(state.frascosDoses[v.produtoId].totalAplicadasMg) || 0) - addMg);
         } else if (Array.isArray(v.itens) && v.itens.length > 0) {
-          if (!state.meuEstoque) state.meuEstoque = {};
           v.itens.forEach(it => {
-            state.meuEstoque[it.produtoId] = (Number(state.meuEstoque[it.produtoId]) || 0) + (Number(it.qtd) || 1);
+            aplicarVariacaoEstoque(it.produtoId, Number(it.qtd) || 1, {
+              tipo: 'devolucao',
+              referenciaId: vidStr,
+              motivo: `Estorno venda: ${v.cliente}`
+            });
           });
         } else {
-          if (!state.meuEstoque) state.meuEstoque = {};
-          state.meuEstoque[v.produtoId] = (Number(state.meuEstoque[v.produtoId]) || 0) + v.qtd;
+          aplicarVariacaoEstoque(v.produtoId, Number(v.qtd) || 1, {
+            tipo: 'devolucao',
+            referenciaId: vidStr,
+            motivo: `Estorno venda: ${v.cliente}`
+          });
         }
 
         // Se houver encomenda vinculada à venda, cancela a baixa e devolve o status
@@ -4445,8 +4065,7 @@
         v.estornadaEm = new Date().toISOString();
         logAuditoria('estorno_venda', `${v.produtoNome} - ${v.cliente} (${formatBRL(v.valorTotal || 0)})`);
 
-        saveState();
-        renderAll();
+        syncDomainUI();
         window.CRM.openSalesHistoryModal();
         showToast(v.isDose ? `Venda estornada! +${v.doseMg} mg devolvidos ao frasco.` : `Venda estornada! Itens devolvidos ao Estoque BH.`);
       }
@@ -4511,18 +4130,32 @@
       emTransito.forEach(ped => {
         totalInvestido += Number(ped.custo_total_reais || 0);
         (ped.itens || []).forEach(it => {
+          const rawCat = rawCatalog.find(x => Number(x.id) === Number(it.id_catalogo));
+          const pCat = rawCat ? computeProduct(rawCat) : null;
+          const pixFallback = pCat ? pCat.precoFinal : 0;
+          const cartaoFallback = pCat ? pCat.precoCartao : 0;
           totalQtd += Number(it.qtd || 0);
-          totalVendaPix += (Number(it.preco_venda_pix || 900) * Number(it.qtd || 0));
-          totalVendaCartao += (Number(it.preco_venda_cartao || 1000) * Number(it.qtd || 0));
+          totalVendaPix += (Number(it.preco_venda_pix || pixFallback || 0) * Number(it.qtd || 0));
+          totalVendaCartao += (Number(it.preco_venda_cartao || cartaoFallback || 0) * Number(it.qtd || 0));
         });
       });
 
       const totalLucro = totalVendaPix - totalInvestido;
+      const entreguesCount = pedidos.filter(p => p.status === 'entregue').length;
+      const roiPct = totalInvestido > 0 ? ((totalLucro / totalInvestido) * 100).toFixed(1) : '0.0';
 
       document.getElementById('kpiTransitoInvestido').textContent = formatBRL(totalInvestido);
       document.getElementById('kpiTransitoFaturamento').textContent = formatBRL(totalVendaPix);
       document.getElementById('kpiTransitoLucro').textContent = `+${formatBRL(totalLucro)}`;
       document.getElementById('kpiTransitoQtd').textContent = `${totalQtd} unidades`;
+      const elResumo = document.getElementById('kpiTransitoResumoPedidos');
+      if (elResumo) elResumo.textContent = `${emTransito.length} pedido(s) a chegar (${entreguesCount} entregue(s))`;
+      const elCartao = document.getElementById('kpiTransitoCartao');
+      if (elCartao) elCartao.textContent = `No Cartão: ${formatBRL(totalVendaCartao)}`;
+      const elRoi = document.getElementById('kpiTransitoRoi');
+      if (elRoi) elRoi.textContent = `ROI projetado: +${roiPct}%`;
+      const elSubQtd = document.getElementById('kpiTransitoSubQtd');
+      if (elSubQtd) elSubQtd.textContent = `${emTransito.length} lote(s) ativo(s)`;
 
       const container = document.getElementById('transitoPedidosContainer');
       if (!pedidos.length) {
@@ -4552,13 +4185,15 @@
                   ${(ped.itens || []).map(it => {
                     const dispIt = getDisponibilidade(it.id_catalogo);
                     const aguardando = dispIt.reservasDetalhes.length;
+                    const rawCat = rawCatalog.find(x => Number(x.id) === Number(it.id_catalogo));
+                    const pixPreco = Number(it.preco_venda_pix || (rawCat ? computeProduct(rawCat).precoFinal : 0) || 0);
                     return `
                     <div style="background:#0b1120; padding:6px 10px; border-radius:6px; border:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; gap:6px;">
                       <div>
                         <span style="color:#f8fafc; font-weight:700;">${it.qtd}x ${it.nome}</span>
                         ${aguardando > 0 ? `<div style="font-size:10px;color:#f59e0b;font-weight:700;">🟡 ${aguardando} cliente(s) aguardando</div>` : ''}
                       </div>
-                      <span style="color:#34d399; font-weight:800; font-size:11px;">PIX ${formatBRLInt(it.preco_venda_pix || 900)}</span>
+                      <span style="color:#34d399; font-weight:800; font-size:11px;">PIX ${pixPreco > 0 ? formatBRLInt(pixPreco) : '—'}</span>
                     </div>
                   `;
                   }).join('')}
@@ -4591,6 +4226,10 @@
     confirmarChegadaPedido(pedidoId) {
       const ped = (state.pedidosTransito || []).find(p => p.id === pedidoId);
       if (!ped) return;
+      if (ped.status === 'entregue' || ped.recebimentoConfirmadoEm) {
+        showToast(`Pedido #${ped.id} já foi recebido anteriormente.`);
+        return;
+      }
 
       const totalItens = (ped.itens || []).reduce((s, it) => s + Number(it.qtd || 0), 0);
       if (confirm(`Confirmar o recebimento físico do pedido #${ped.id}? ${totalItens} unidades serão adicionadas automaticamente ao seu Estoque de Pronta Entrega em BH.`)) {
@@ -4601,50 +4240,112 @@
         if (!state.meuEstoque) state.meuEstoque = {};
         if (!state.custosReais) state.custosReais = {};
 
-        // Soma valor base por item para rateio proporcional das despesas extras
-        const totalValorItens = (ped.itens || []).reduce((acc, it) => {
+        // Rateio exato em centavos (reutiliza ShapeDominio quando carregado, com fallback determinístico)
+        const extrasCent = Math.round(despesasExtras * 100);
+        const pesosItens = (ped.itens || []).map(it => {
           const rawIt = rawCatalog.find(p => Number(p.id) === Number(it.id_catalogo));
-          const unitBase = Number(it.custo_unit_brl || (rawIt ? computeProduct(rawIt).custo : 0)) || 1;
-          return acc + unitBase * (Number(it.qtd) || 0);
-        }, 0);
+          const unitBase = Number(it.custo_unit_reais || it.custo_unit_brl || (rawIt ? computeProduct(rawIt).custo : 0)) || 1;
+          return Math.max(1, Math.round(unitBase * 100) * Math.max(1, Number(it.qtd) || 0));
+        });
+        let extrasPorItemCent = new Array(pesosItens.length).fill(0);
+        if (extrasCent > 0 && pesosItens.length > 0) {
+          if (window.ShapeDominio && typeof window.ShapeDominio.ratearDespesasCentavos === 'function') {
+            extrasPorItemCent = window.ShapeDominio.ratearDespesasCentavos(extrasCent, pesosItens);
+          } else {
+            const somaPesos = pesosItens.reduce((a, b) => a + b, 0) || 1;
+            const quotas = pesosItens.map((w, i) => {
+              const exato = (extrasCent * w) / somaPesos;
+              const piso = Math.floor(exato);
+              return { i, piso, resto: exato - piso };
+            });
+            let falta = extrasCent - quotas.reduce((s, q) => s + q.piso, 0);
+            quotas.sort((a, b) => b.resto - a.resto);
+            quotas.forEach(q => {
+              extrasPorItemCent[q.i] = q.piso + (falta > 0 ? 1 : 0);
+              if (falta > 0) falta--;
+            });
+          }
+        }
 
-        (ped.itens || []).forEach(it => {
+        const qtdRecebidaPorPid = new Map();
+        (ped.itens || []).forEach((it, idx) => {
           const pid = Number(it.id_catalogo);
-          const qIn = Number(it.qtd || 0);
+          const qIn = Math.max(0, Number(it.qtd || 0));
+          if (qIn <= 0) return;
+          qtdRecebidaPorPid.set(pid, (qtdRecebidaPorPid.get(pid) || 0) + qIn);
+
           const prevQtd = Number(state.meuEstoque[pid] || 0);
-          state.meuEstoque[pid] = prevQtd + qIn;
-
           const rawIt = rawCatalog.find(p => Number(p.id) === pid);
-          const unitBase = Number(it.custo_unit_brl || (rawIt ? computeProduct(rawIt).custo : 0)) || (totalItens > 0 ? custoBasePed / totalItens : 0);
-          const propExtra = totalValorItens > 0
-            ? (despesasExtras * ((unitBase * qIn) / totalValorItens)) / Math.max(1, qIn)
-            : (totalItens > 0 ? despesasExtras / totalItens : 0);
-          const custoUnitReal = Math.round((unitBase + propExtra) * 100) / 100;
+          const unitBase = Number(it.custo_unit_reais || it.custo_unit_brl || (rawIt ? computeProduct(rawIt).custo : 0)) || (totalItens > 0 ? custoBasePed / totalItens : 0);
+          const extraItemBrl = (extrasPorItemCent[idx] || 0) / 100;
+          const custoUnitReal = Math.round(((unitBase * qIn + extraItemBrl) / Math.max(1, qIn)) * 100) / 100;
 
-          // Atualiza custo real por média ponderada quando já havia saldo em BH
           const prevCusto = Number(state.custosReais[pid] || unitBase || 0);
           state.custosReais[pid] = (prevQtd > 0 && prevCusto > 0)
             ? Math.round((((prevQtd * prevCusto) + (qIn * custoUnitReal)) / (prevQtd + qIn)) * 100) / 100
             : custoUnitReal;
 
-          registrarMovimento('entrada', pid, qIn, `TR-${ped.id}`, `Entrada Trânsito #${ped.id}${despesasExtras > 0 ? ` (+R$${despesasExtras} rateado)` : ''}`, custoUnitReal);
+          aplicarVariacaoEstoque(pid, qIn, {
+            tipo: 'entrada',
+            referenciaId: `TR-${ped.id}`,
+            motivo: `Entrada Trânsito #${ped.id}${despesasExtras > 0 ? ` (+R$${despesasExtras.toFixed(2)} rateado)` : ''}`,
+            custoUnitReal
+          });
         });
 
-        // Marca encomendas de clientes ligadas aos itens recebidos como 'chegou_bh' para avisar hoje
-        const pidsRecebidos = new Set((ped.itens || []).map(it => Number(it.id_catalogo)));
+        // Alocação por vínculo real (loteId / ped.encomendaIds) e quantidade recebida (suporta lote parcial)
+        const vinculosIds = new Set((Array.isArray(ped.encomendaIds) ? ped.encomendaIds : []).map(String));
+        const encsElegiveis = (state.encomendas || []).filter(enc => {
+          if (!enc || enc.status === 'entregue' || enc.status === 'cancelado') return false;
+          if (vinculosIds.size > 0 || enc.loteId) {
+            return String(enc.loteId || '') === String(ped.id) || vinculosIds.has(String(enc.id));
+          }
+          return enc.status === 'pendente' || enc.status === 'pedido_ao_fornecedor';
+        });
+
         let clientesParaAvisar = 0;
-        (state.encomendas || []).forEach(enc => {
-          if (enc.status === 'pendente' || enc.status === 'pedido_ao_fornecedor') {
-            if (getEncomendaItens(enc).some(it => pidsRecebidos.has(Number(it.produtoId)))) {
+        const disponivelParaAlocar = new Map(qtdRecebidaPorPid);
+        encsElegiveis.forEach(enc => {
+          const itensEnc = getEncomendaItens(enc);
+          if (!enc.itensChegados) enc.itensChegados = {};
+          let algumaAlocacao = false;
+          let todosCompletos = true;
+
+          itensEnc.forEach(it => {
+            const pid = Number(it.produtoId);
+            const pedida = Math.max(1, Number(it.qtd) || 1);
+            const jaChegou = Math.max(0, Number(enc.itensChegados[pid] || 0));
+            const falta = Math.max(0, pedida - jaChegou);
+            if (falta > 0) {
+              const dispQtd = disponivelParaAlocar.get(pid) || 0;
+              const alocar = Math.min(falta, dispQtd);
+              if (alocar > 0) {
+                enc.itensChegados[pid] = jaChegou + alocar;
+                disponivelParaAlocar.set(pid, dispQtd - alocar);
+                algumaAlocacao = true;
+              }
+            }
+            if (Number(enc.itensChegados[pid] || 0) < pedida) {
+              todosCompletos = false;
+            }
+          });
+
+          if (algumaAlocacao) {
+            clientesParaAvisar++;
+            if (todosCompletos) {
               enc.status = 'chegou_bh';
               enc.chegouEm = new Date().toISOString();
-              clientesParaAvisar++;
+            } else {
+              enc.status = 'pedido_ao_fornecedor';
+              enc.chegadaParcialEm = new Date().toISOString();
             }
           }
         });
 
         ped.status = 'entregue';
         ped.data_entrega = new Date().toISOString();
+        ped.recebimentoConfirmadoEm = ped.data_entrega;
+        ped.despesasExtras = despesasExtras;
 
         saveState();
         renderAll();
@@ -4652,9 +4353,9 @@
         showToast(clientesParaAvisar > 0
           ? `Pedido recebido (+${totalItens} un)! ${clientesParaAvisar} cliente(s) prontos para avisar!`
           : `Pedido recebido! ${totalItens} unidades somadas ao Estoque BH.`);
-        if (clientesParaAvisar > 0 && confirm(`📦 Pedido recebido!\n\n${clientesParaAvisar} cliente(s) estavam aguardando esses itens.\nDeseja ir agora para "⚡ Operação do Dia" para avisar no WhatsApp?`)) {
+        if (clientesParaAvisar > 0 && confirm(`📦 Pedido recebido!\n\n${clientesParaAvisar} cliente(s) vinculados têm itens que chegaram em BH.\nDeseja abrir a fila de aviso agora?`)) {
           document.getElementById('transitoModal')?.classList.remove('open');
-          window.CRM.filterByGroup('operacao_dia');
+          window.CRM.avisarClientesPedido(ped.id);
         }
       }
     },
@@ -4671,16 +4372,6 @@
       }
     },
 
-    resetPedidosTransito() {
-      if (confirm('Restaurar os pedidos canônicos (3 pedidos em trânsito com 21 unidades a chegar — R$ 10.476,96 investidos + 1 entregue)?')) {
-        state.pedidosTransito = JSON.parse(JSON.stringify(PEDIDOS_TRANSITO_CANONICOS));
-        state.canonVistos = PEDIDOS_TRANSITO_CANONICOS.map(c => String(c.id));
-        saveState();
-        renderAll();
-        window.CRM.openTransitoModal();
-        showToast('Pedidos em trânsito restaurados com sucesso (21 un a chegar)!');
-      }
-    },
 
     toggleNewPurchaseForm() {
       const box = document.getElementById('newPurchaseBox');
@@ -4781,11 +4472,12 @@
       const pid = Number(document.getElementById('addStockSelect').value);
       const qty = Math.max(1, Number(document.getElementById('addStockQty').value) || 1);
       if (!pid) return;
-      if (!state.meuEstoque) state.meuEstoque = {};
-      state.meuEstoque[pid] = (Number(state.meuEstoque[pid]) || 0) + qty;
-      saveState();
+      aplicarVariacaoEstoque(pid, qty, {
+        tipo: 'entrada',
+        motivo: 'Inclusão manual Estoque BH'
+      });
+      syncDomainUI();
       document.getElementById('addStockModal').classList.remove('open');
-      renderAll();
       showToast(`+${qty} un adicionadas ao seu Estoque BH!`);
     },
 
@@ -5450,9 +5142,9 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
                     💰 Baixar Estoque
                   </button>
                 `}
-                ${e.status === 'chegou_bh' ? `
-                  <button class="btn btn-xs btn-green" style="background:#0284c7; color:#fff; font-size:11px;" title="Avisar no WhatsApp que chegou em BH" onclick="window.CRM.openAvisoChegadaWhatsApp('${e.id}')">
-                    🎉 Avisar Chegada
+                ${(e.status === 'chegou_bh' || (e.itensChegados && Object.values(e.itensChegados).some(q => Number(q) > 0))) && e.status !== 'entregue' ? `
+                  <button class="btn btn-xs btn-green" style="background:#0284c7; color:#fff; font-size:11px;" title="${e.avisoChegadaEm ? 'Já avisado em ' + new Date(e.avisoChegadaEm).toLocaleDateString('pt-BR') + ' — clicar para reenviar' : 'Avisar no WhatsApp que chegou em BH'}" onclick="window.CRM.openAvisoChegadaWhatsApp('${e.id}')">
+                    ${e.avisoChegadaEm ? '✓ Avisar Novamente' : '🎉 Avisar Chegada'}
                   </button>
                 ` : ''}
                 <button class="btn btn-xs btn-danger" style="background:#dc2626; color:#fff; font-size:11px;" title="Excluir Encomenda" onclick="window.CRM.deleteEncomenda('${e.id}')">
@@ -5964,6 +5656,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       }
 
       // Se o usuário selecionou o produto no catálogo mas não clicou no botão "➕ Adicionar ao Pedido"
+      let autoAddedFallback = false;
       if (!novaEncomendaItens.length) {
         const sel = document.getElementById('encNovoProdutoSelect');
         const pid = Number(sel ? sel.value : 0);
@@ -5984,6 +5677,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
               precoUnit: precoUnit,
               subtotal: qtd * precoUnit
             });
+            autoAddedFallback = true;
           }
         }
       }
@@ -5998,27 +5692,23 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const saldoRestante = Math.max(0, valorTotal - sinal);
       const isProntaEntrega = currentPedidoOperacao === 'pronta_entrega';
 
-      // 1. Se for pronta entrega, valida disponibilidade livre e abate do estoque físico BH
+      // 1. Se for pronta entrega, valida saldo físico e disponibilidade livre antes de abater estoque BH
       if (isProntaEntrega) {
         for (const it of novaEncomendaItens) {
           const disp = getDisponibilidade(it.produtoId);
+          if (it.qtd > disp.estoqueBH) {
+            if (autoAddedFallback) novaEncomendaItens.pop();
+            alert(`🚫 Saldo físico insuficiente em BH para "${it.produtoNome}" (Em BH: ${disp.estoqueBH} un | Solicitado: ${it.qtd} un).\n\nDê entrada no estoque ou troque a operação para "Encomenda".`);
+            return;
+          }
           if (it.qtd > disp.disponivel) {
-            const msgDisp = disp.reservado > 0
-              ? `⚠️ "${it.produtoNome}" tem ${disp.reservado} un reservada(s) para outros clientes.\nDisponível livre: ${disp.disponivel} un (BH: ${disp.estoqueBH} un).\n\nDeseja vender mesmo assim (ou trocar para Encomenda)?`
-              : `⚠️ "${it.produtoNome}" tem apenas ${disp.disponivel} un disponível em BH (solicitado: ${it.qtd}).\n\nDeseja vender mesmo assim?`;
-            if (!confirm(msgDisp)) return;
+            const msgDisp = `⚠️ "${it.produtoNome}" tem ${disp.reservado} un reservada(s) para outros clientes.\nDisponível livre: ${disp.disponivel} un (BH: ${disp.estoqueBH} un).\n\nDeseja vender mesmo assim (ou trocar para Encomenda)?`;
+            if (!confirm(msgDisp)) {
+              if (autoAddedFallback) novaEncomendaItens.pop();
+              return;
+            }
           }
         }
-        if (!state.meuEstoque) state.meuEstoque = {};
-        novaEncomendaItens.forEach(it => {
-          const curStock = Number(state.meuEstoque[it.produtoId] || 0);
-          const nextStock = curStock - it.qtd;
-          if (nextStock <= 0) {
-            delete state.meuEstoque[it.produtoId];
-          } else {
-            state.meuEstoque[it.produtoId] = nextStock;
-          }
-        });
       }
 
       // 2. Calcula custo total e lucro líquido real do pedido
@@ -6026,13 +5716,26 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       novaEncomendaItens.forEach(it => {
         const raw = rawCatalog.find(x => x.id === it.produtoId) || {};
         const p = computeProduct(raw);
-        custoTotalBrl += (p.custo || 0) * it.qtd;
+        custoTotalBrl += getCustoUnitarioReal(p) * it.qtd;
       });
       const lucroEst = subtotalProdutos - custoTotalBrl;
 
       const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
       const encId = 'ENC-' + Date.now().toString().slice(-6) + '-' + Math.random().toString(36).substr(2, 3);
       const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
+
+      if (isProntaEntrega) {
+        novaEncomendaItens.forEach(it => {
+          const raw = rawCatalog.find(x => x.id === it.produtoId) || {};
+          const p = computeProduct(raw);
+          aplicarVariacaoEstoque(it.produtoId, -(Number(it.qtd) || 1), {
+            tipo: 'venda',
+            referenciaId: saleId,
+            motivo: `Pronta Entrega (${encId}): ${cliente}`,
+            custoUnitReal: getCustoUnitarioReal(p)
+          });
+        });
+      }
 
       // 3. Se for pronta entrega, grava a venda oficial no histórico com conciliação imediata
       if (isProntaEntrega) {
@@ -6099,13 +5802,11 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         loteId: null,
         vendaId: isProntaEntrega ? saleId : null
       };
-      novaEncomendaItens.forEach(it => {
-        if (isProntaEntrega) {
-          registrarMovimento('venda', it.produtoId, -(Number(it.qtd) || 1), saleId, `Pronta Entrega (${encId}): ${cliente}`);
-        } else {
+      if (!isProntaEntrega) {
+        novaEncomendaItens.forEach(it => {
           registrarMovimento('reserva', it.produtoId, Number(it.qtd) || 1, encId, `Reserva Encomenda: ${cliente}`);
-        }
-      });
+        });
+      }
 
       if (!Array.isArray(state.encomendas)) state.encomendas = [];
       state.encomendas.unshift(newEnc);
@@ -6198,16 +5899,30 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         return;
       }
 
-      // 1. Abate estoque físico em BH para cada item da encomenda
+      // 0. Valida saldo físico antes de baixar (impede saldo negativo)
       if (!state.meuEstoque) state.meuEstoque = {};
-      itens.forEach(it => {
+      for (const it of itens) {
         const curStock = Number(state.meuEstoque[it.produtoId] || 0);
-        const nextStock = curStock - it.qtd;
-        if (nextStock <= 0) {
-          delete state.meuEstoque[it.produtoId];
-        } else {
-          state.meuEstoque[it.produtoId] = nextStock;
+        if (curStock < (Number(it.qtd) || 1)) {
+          alert(`🚫 Saldo físico insuficiente em BH para "${it.produtoNome}" (Em BH: ${curStock} un | Pedido: ${it.qtd} un).\n\nConfirme a chegada do lote em Trânsito ou dê entrada no estoque antes de entregar.`);
+          return;
         }
+      }
+
+      const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
+
+      // 1. Abate estoque físico em BH para cada item da encomenda pela rotina única de domínio
+      itens.forEach(it => {
+        const q = Math.max(1, Number(it.qtd) || 1);
+        const raw = rawCatalog.find(x => x.id === it.produtoId) || {};
+        const p = computeProduct(raw);
+        aplicarVariacaoEstoque(it.produtoId, -q, {
+          tipo: 'venda',
+          referenciaId: saleId,
+          motivo: `Entrega encomenda ${enc.id}: ${enc.cliente}`,
+          custoUnitReal: getCustoUnitarioReal(p)
+        });
       });
 
       // 2. Registro oficial de Venda no CRM
@@ -6222,9 +5937,6 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         custoTotal += getCustoUnitarioReal(p) * it.qtd;
       });
       const lucroEst = valorProdutos - custoTotal;
-
-      const saleId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-      const aparelhoOrigem = /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Mac';
 
       const primeiroItem = itens[0] || {};
       const nomesProdutos = itens.length === 1 ? primeiroItem.produtoNome : `${itens.length} medicamentos: ` + itens.map(it => `${it.qtd}x ${it.produtoNome}`).join(' + ');
@@ -6265,11 +5977,10 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         obs: enc.obs || ''
       }, true);
 
-      // 3. Atualiza status da encomenda, baixa reserva e registra movimento de venda
+      // 3. Atualiza status da encomenda e libera a reserva (a baixa de venda já foi registrada na etapa 1)
       itens.forEach(it => {
         const q = Number(it.qtd) || 1;
         registrarMovimento('liberacao', it.produtoId, -q, enc.id, `Baixa p/ entrega: ${enc.cliente}`);
-        registrarMovimento('venda', it.produtoId, -q, saleId, `Entrega encomenda ${enc.id}: ${enc.cliente}`);
       });
       enc.status = 'entregue';
       enc.etapa = 'entrega';
@@ -6302,13 +6013,14 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
 
       if (!confirm(confirmMsg)) return;
 
-      // 1. Devolve os medicamentos ao estoque físico em BH
-      if (!state.meuEstoque) state.meuEstoque = {};
+      // 1. Devolve os medicamentos ao estoque físico em BH pela rotina única de domínio
       itens.forEach(it => {
-        const q = Number(it.qtd) || 1;
-        const curStock = Number(state.meuEstoque[it.produtoId] || 0);
-        state.meuEstoque[it.produtoId] = curStock + q;
-        registrarMovimento('devolucao', it.produtoId, q, enc.id, `Estorno entrega: ${enc.cliente}`);
+        const q = Math.max(1, Number(it.qtd) || 1);
+        aplicarVariacaoEstoque(it.produtoId, q, {
+          tipo: 'devolucao',
+          referenciaId: enc.id,
+          motivo: `Estorno entrega: ${enc.cliente}`
+        });
         registrarMovimento('reserva', it.produtoId, q, enc.id, `Retorno para pendente: ${enc.cliente}`);
       });
 
@@ -6345,11 +6057,13 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (!confirm(msg)) return;
 
       if (enc.status === 'entregue') {
-        if (!state.meuEstoque) state.meuEstoque = {};
         itens.forEach(it => {
           const q = Number(it.qtd) || 1;
-          state.meuEstoque[it.produtoId] = (Number(state.meuEstoque[it.produtoId]) || 0) + q;
-          registrarMovimento('devolucao', it.produtoId, q, enc.id, `Cancelamento encomenda entregue: ${enc.cliente}`);
+          aplicarVariacaoEstoque(it.produtoId, q, {
+            tipo: 'devolucao',
+            referenciaId: enc.id,
+            motivo: `Cancelamento encomenda entregue: ${enc.cliente}`
+          });
         });
         if (enc.vendaId && Array.isArray(state.vendas)) {
           const v = state.vendas.find(x => String(x.id) === String(enc.vendaId));
@@ -6366,10 +6080,33 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       }
 
       state.encomendas = state.encomendas.filter(e => e.id !== encId);
-      saveState();
-      renderAll();
+      syncDomainUI();
       window.CRM.renderEncomendas();
       showToast(`Encomenda de "${enc.cliente}" cancelada com sucesso!`);
+    },
+
+    cancelarEncomenda(encId) {
+      const enc = (state.encomendas || []).find(e => e.id === encId);
+      if (!enc) return;
+      if (enc.status === 'cancelado') {
+        showToast(`Encomenda de "${enc.cliente}" já está cancelada.`);
+        return;
+      }
+      if (enc.status === 'entregue') {
+        window.CRM.deleteEncomenda(encId);
+        return;
+      }
+      if (!confirm(`Cancelar encomenda de "${enc.cliente}" e liberar a reserva imediatamente?`)) return;
+      const itens = getEncomendaItens(enc);
+      itens.forEach(it => {
+        const q = Number(it.qtd) || 1;
+        registrarMovimento('liberacao', it.produtoId, -q, enc.id, `Reserva liberada por cancelamento: ${enc.cliente}`);
+      });
+      enc.status = 'cancelado';
+      enc.canceladoEm = new Date().toISOString();
+      syncDomainUI();
+      window.CRM.renderEncomendas();
+      showToast(`Encomenda cancelada e reserva liberada!`);
     },
 
     openScriptColetaWhatsApp() {
@@ -6383,7 +6120,9 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (t) t.textContent = '📋 Script Coleta de Dados do Cliente';
       if (s) s.textContent = 'Envie este texto rápido para o cliente preencher seus dados de entrega e emissão de recibo:';
 
+      currentReceiptEncId = null;
       currentReceiptPhone = '';
+      pendingAvisoEncId = null;
       textarea.value = [
         `Olá! Para formalizar a sua encomenda e emitir o comprovante de reserva, por gentileza preencha os dados abaixo:`,
         ``,
@@ -6404,6 +6143,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (!enc) return;
       currentReceiptEncId = encId;
       currentReceiptPhone = enc.telefone || '';
+      pendingAvisoEncId = null;
 
       // Fecha o modal de central de encomendas para evitar sobreposição de telas
       const mEnc = document.getElementById('encomendasModal');
@@ -6572,6 +6312,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (!enc) return;
       currentReceiptEncId = encId;
       currentReceiptPhone = enc.telefone || '';
+      pendingAvisoEncId = encId;
 
       const mEnc = document.getElementById('encomendasModal');
       if (mEnc) mEnc.classList.remove('open');
@@ -6587,6 +6328,15 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       if (s) s.textContent = 'Mensagem comemorativa avisando o cliente que o medicamento acabou de desembarcar:';
 
       const itens = getEncomendaItens(enc);
+      const chegMap = enc.itensChegados && typeof enc.itensChegados === 'object' ? enc.itensChegados : null;
+      const itensChegaram = chegMap
+        ? itens.filter(it => Number(chegMap[Number(it.produtoId)] || 0) > 0).map(it => ({ ...it, qtdChegou: Math.min(Number(it.qtd) || 1, Number(chegMap[Number(it.produtoId)] || 0)) }))
+        : itens.map(it => ({ ...it, qtdChegou: Number(it.qtd) || 1 }));
+      const itensFaltando = chegMap
+        ? itens.filter(it => Number(chegMap[Number(it.produtoId)] || 0) < (Number(it.qtd) || 1))
+        : [];
+      const ehParcial = itensFaltando.length > 0 && itensChegaram.length > 0;
+
       const cNomeEl = document.getElementById('encReceiptClienteNome');
       if (cNomeEl) cNomeEl.textContent = enc.cliente;
       const dEl = document.getElementById('encReceiptData');
@@ -6597,15 +6347,18 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       const fotoPublicUrl = p.localFoto ? `https://itabh92.github.io/shapetotal-crm/${p.localFoto}` : (p.remoteFoto || '');
 
       const saldo = Number(enc.saldoRestante) || Math.max(0, enc.valorTotal - (Number(enc.sinal) || 0));
-      const descItens = itens.map(it => `*${it.produtoNome}* (${it.qtd} cx)`).join(' + ');
+      const descItens = (itensChegaram.length ? itensChegaram : itens).map(it => `*${it.produtoNome}* (${it.qtdChegou || it.qtd} cx)`).join(' + ');
 
       const lines = [
-        `*BOA NOTÍCIA! SEU PEDIDO CHEGOU EM BH* 🎉📦`,
+        ehParcial ? `*ATUALIZAÇÃO PARCIAL! PARTE DO SEU PEDIDO CHEGOU EM BH* 📦✨` : `*BOA NOTÍCIA! SEU PEDIDO CHEGOU EM BH* 🎉📦`,
         ``,
         `Olá, *${enc.cliente}*!`,
-        `A sua encomenda de ${descItens} acabou de desembarcar em nosso estoque em Belo Horizonte.`,
+        ehParcial
+          ? `Já desembarcou em BH: ${descItens}.`
+          : `A sua encomenda de ${descItens} acabou de desembarcar em nosso estoque em Belo Horizonte.`,
+        ehParcial ? `⏳ *Ainda a caminho:* ${itensFaltando.map(it => `${it.produtoNome} (${Math.max(0, (Number(it.qtd) || 1) - Number(chegMap[Number(it.produtoId)] || 0))} cx)`).join(', ')}.` : ``,
         ``
-      ];
+      ].filter((v, idx, arr) => !(v === '' && idx > 0 && arr[idx - 1] === ''));
 
       if (saldo > 0) lines.push(`💰 *Saldo a acertar na entrega:* ${formatBRL(saldo)}`);
       if (enc.endereco) lines.push(`📍 *Endereço cadastrado:* ${enc.endereco}`);
@@ -6643,6 +6396,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         return;
       }
       
+      markPendingAvisoChegadaSent();
       try {
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text).catch(() => {});
@@ -6680,6 +6434,8 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         navigator.share({
           title: 'Recibo Shape Total / Baxti',
           text: text
+        }).then(() => {
+          markPendingAvisoChegadaSent();
         }).catch(() => {
           window.CRM.openEncomendaWhatsAppDirect(false);
         });
@@ -6691,7 +6447,10 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
     copyEncomendaReceiptText() {
       const textarea = document.getElementById('encReceiptText');
       if (textarea) {
-        navigator.clipboard.writeText(textarea.value);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(textarea.value).catch(() => {});
+        }
+        markPendingAvisoChegadaSent();
         showToast('Comprovante copiado para o WhatsApp!');
       }
     },
@@ -6791,19 +6550,21 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       });
 
       const loteId = 'PED-' + Date.now().toString().slice(-6);
+      const encomendaIds = pendentes.map(e => String(e.id));
       const novoPedidoTransito = {
         id: loteId,
         data_compra: new Date().toLocaleDateString('pt-BR'),
         fornecedor: 'Shape Total / Importação Paraguai (Lote Encomendas)',
         status: 'em_transito',
         custo_total_reais: Math.round(totalCustoBrl),
+        encomendaIds,
         itens: itensTransito
       };
 
       if (!Array.isArray(state.pedidosTransito)) state.pedidosTransito = [];
       state.pedidosTransito.unshift(novoPedidoTransito);
 
-      // Marca todas as encomendas pendentes como "pedido_ao_fornecedor" com o loteId
+      // Marca todas as encomendas pendentes vinculadas como "pedido_ao_fornecedor" com o loteId
       pendentes.forEach(e => {
         e.status = 'pedido_ao_fornecedor';
         e.loteId = loteId;
@@ -6963,24 +6724,30 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
     },
 
     gerarPedidoFornecedorDasEncomendas() {
-      const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente');
+      const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente' && !e.loteId);
       if (!Array.isArray(state.pedidoFornecedorItens)) state.pedidoFornecedorItens = [];
       if (pendentes.length > 0) {
-        // Mantém itens manuais e consolida de forma idempotente as encomendas pendentes
+        // Consolidação idempotente por encomenda.id preservando itens manuais separados
         const manuais = state.pedidoFornecedorItens.filter(x => x.origem === 'manual');
         const consolidadoMap = new Map();
         pendentes.forEach(e => {
           getEncomendaItens(e).forEach(it => {
             const pid = Number(it.produtoId);
             const q = Math.max(1, Number(it.qtd) || 1);
-            consolidadoMap.set(pid, (consolidadoMap.get(pid) || 0) + q);
+            const prev = consolidadoMap.get(pid) || { qtd: 0, encomendaIds: [] };
+            prev.qtd += q;
+            if (!prev.encomendaIds.includes(String(e.id))) prev.encomendaIds.push(String(e.id));
+            consolidadoMap.set(pid, prev);
           });
         });
         const novosItens = [...manuais];
-        consolidadoMap.forEach((qtdTotal, pid) => {
-          const ex = novosItens.find(x => Number(x.produtoId) === pid);
-          if (ex) ex.qtd = Math.max(Number(ex.qtd) || 0, qtdTotal);
-          else novosItens.push({ produtoId: pid, qtd: qtdTotal, origem: 'encomenda_cliente' });
+        consolidadoMap.forEach((info, pid) => {
+          novosItens.push({
+            produtoId: pid,
+            qtd: info.qtd,
+            origem: 'encomenda_cliente',
+            encomendaIds: info.encomendaIds
+          });
         });
         state.pedidoFornecedorItens = novosItens;
         saveState();
@@ -6994,7 +6761,11 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
     },
 
     avisarClientesChegada() {
-      const chegaram = (state.encomendas || []).filter(e => e && e.status === 'chegou_bh');
+      const chegaram = (state.encomendas || []).filter(e => {
+        if (!e || e.status === 'entregue' || e.status === 'cancelado') return false;
+        if (e.status === 'chegou_bh') return true;
+        return !!(e.itensChegados && Object.values(e.itensChegados).some(q => Number(q) > 0));
+      });
       if (chegaram.length === 1) {
         window.CRM.openAvisoChegadaWhatsApp(chegaram[0].id);
         return;
@@ -7010,9 +6781,9 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
     },
 
     carregarEncomendasClientesNoPedidoFornecedor() {
-      const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente' || e.status === 'pedido_ao_fornecedor');
+      const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente' && !e.loteId);
       if (!pendentes.length) {
-        alert('Nenhuma encomenda pendente de cliente no momento.');
+        alert('Nenhuma encomenda pendente sem lote no momento.');
         return;
       }
 
@@ -7026,19 +6797,22 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
         itens.forEach(it => {
           const pid = Number(it.produtoId);
           const q = Number(it.qtd) || 1;
-          consolidadoMap.set(pid, (consolidadoMap.get(pid) || 0) + q);
+          const prev = consolidadoMap.get(pid) || { qtd: 0, encomendaIds: [] };
+          prev.qtd += q;
+          if (!prev.encomendaIds.includes(String(e.id))) prev.encomendaIds.push(String(e.id));
+          consolidadoMap.set(pid, prev);
           adicionados += q;
         });
       });
 
       const novosItens = [...manuais];
-      consolidadoMap.forEach((qtdTotal, pid) => {
-        const exist = novosItens.find(x => Number(x.produtoId) === pid);
-        if (exist) {
-          exist.qtd = Math.max(Number(exist.qtd) || 0, qtdTotal);
-        } else {
-          novosItens.push({ produtoId: pid, qtd: qtdTotal, origem: 'encomenda_cliente' });
-        }
+      consolidadoMap.forEach((info, pid) => {
+        novosItens.push({
+          produtoId: pid,
+          qtd: info.qtd,
+          origem: 'encomenda_cliente',
+          encomendaIds: info.encomendaIds
+        });
       });
       state.pedidoFornecedorItens = novosItens;
 
@@ -7236,26 +7010,32 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       });
 
       const loteId = 'PED-' + Date.now().toString().slice(-6);
+      const encIdsVinculadas = Array.from(new Set(
+        itens.flatMap(it => Array.isArray(it.encomendaIds) ? it.encomendaIds.map(String) : [])
+      ));
       const novoPedidoTransito = {
         id: loteId,
         data_compra: new Date().toLocaleDateString('pt-BR'),
         fornecedor: 'Shape Total / Importação Paraguai',
         status: 'em_transito',
         custo_total_reais: Math.round(totalCustoBrl),
+        encomendaIds: encIdsVinculadas,
         itens: itensTransito
       };
 
       if (!Array.isArray(state.pedidosTransito)) state.pedidosTransito = [];
       state.pedidosTransito.unshift(novoPedidoTransito);
 
-      // Se houver encomendas pendentes de clientes correspondentes, marca-as como pedido_ao_fornecedor
-      const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente');
+      // Vincula explicitamente as encomendas pendentes que entraram neste pedido ao fornecedor
+      const pendentes = (state.encomendas || []).filter(e => e.status === 'pendente' && !e.loteId);
       pendentes.forEach(e => {
-        const eItens = getEncomendaItens(e);
-        const bateu = eItens.some(it => itens.some(pi => pi.produtoId === it.produtoId));
-        if (bateu) {
+        const eid = String(e.id);
+        const vinculadaPorId = encIdsVinculadas.includes(eid);
+        const vinculadaLegada = encIdsVinculadas.length === 0 && getEncomendaItens(e).some(it => itens.some(pi => Number(pi.produtoId) === Number(it.produtoId)));
+        if (vinculadaPorId || vinculadaLegada) {
           e.status = 'pedido_ao_fornecedor';
           e.loteId = loteId;
+          if (!novoPedidoTransito.encomendaIds.includes(eid)) novoPedidoTransito.encomendaIds.push(eid);
         }
       });
 
@@ -7402,7 +7182,7 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       }
       renderLimit = 60;
       clearTimeout(searchTimer);
-      searchTimer = setTimeout(renderAll, 80);
+      searchTimer = setTimeout(renderSearchResultsOnly, 160);
     });
 
     document.getElementById('subCatSelect').addEventListener('change', e => {
@@ -7516,8 +7296,9 @@ _Aplicação de Doses Fracionadas com Medicamentos Originais de 120 mg_
       }).catch(() => {});
     }
 
-    // Check initial authentication
-    const isAuthed = localStorage.getItem('ST_AUTH') === 'true' || sessionStorage.getItem('ST_AUTH') === 'true';
+    // Bloqueio local opcional: só exibe a tela de PIN se o usuário tiver configurado um PIN neste navegador
+    const temPinLocal = !!(localStorage.getItem(LOCAL_PIN_HASH_KEY) || localStorage.getItem('ST_CUSTOM_PASS'));
+    const isAuthed = !temPinLocal || localStorage.getItem('ST_AUTH') === 'true' || sessionStorage.getItem('ST_AUTH') === 'true';
     const overlay = document.getElementById('authOverlay');
     if (overlay) {
       overlay.style.display = isAuthed ? 'none' : 'flex';

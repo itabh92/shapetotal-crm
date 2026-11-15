@@ -2,6 +2,7 @@ export * from './db.js';
 export * from './reducers.js';
 export * from './migracao.js';
 
+import { getMeta, openDatabase, setMeta } from './db.js';
 import { executarMigracaoLocalStorageParaIdb, MIGRATION_FLAG_KEY } from './migracao.js';
 
 function downloadJsonBrowser(filename, text) {
@@ -51,7 +52,6 @@ export async function iniciarMigracaoSeguraBrowser() {
   } catch {}
 
   const catalog = (window.SHAPETOTAL_RAW && window.SHAPETOTAL_RAW.productos) || [];
-  const jaMigrado = !!localStorage.getItem(MIGRATION_FLAG_KEY);
 
   const run = () =>
     executarMigracaoLocalStorageParaIdb({
@@ -65,7 +65,8 @@ export async function iniciarMigracaoSeguraBrowser() {
         const frete = Number(st.fretePct) ?? 30;
         return Math.round(Number(prod.precio || 0) * cot * (1 + frete / 100) * 100) / 100;
       },
-      downloader: jaMigrado ? null : downloadJsonBrowser
+      // Nunca dispara download automático em primeiro acesso; cópia recuperável fica salva no IndexedDB
+      downloader: null
     });
 
   const res = navigator.locks && typeof navigator.locks.request === 'function'
@@ -79,9 +80,57 @@ export async function iniciarMigracaoSeguraBrowser() {
   return res;
 }
 
+export async function obterInfoBackupMigracao() {
+  if (typeof window === 'undefined' || !window.indexedDB) return null;
+  let db = null;
+  try {
+    db = await openDatabase();
+    const info = await getMeta(db, 'backup_pre_migracao');
+    if (!info) return null;
+    return { filename: info.filename, bytes: info.bytes, geradoEm: info.geradoEm || null, disponivel: !!info.jsonStr };
+  } catch {
+    return null;
+  } finally {
+    if (db) try { db.close(); } catch {}
+  }
+}
+
+export async function exportarBackupMigracao() {
+  if (typeof window === 'undefined' || !window.indexedDB) return false;
+  let db = null;
+  try {
+    db = await openDatabase();
+    const info = await getMeta(db, 'backup_pre_migracao');
+    if (!info || !info.jsonStr) return false;
+    downloadJsonBrowser(info.filename || `backup-pre-migracao-${new Date().toISOString().slice(0, 10)}.json`, info.jsonStr);
+    return true;
+  } catch {
+    return false;
+  } finally {
+    if (db) try { db.close(); } catch {}
+  }
+}
+
+export async function salvarSnapshotEstado(snapshot) {
+  if (typeof window === 'undefined' || !window.indexedDB || !snapshot) return false;
+  let db = null;
+  try {
+    db = await openDatabase();
+    await setMeta(db, 'ultimo_snapshot_crm', snapshot);
+    return true;
+  } catch {
+    return false;
+  } finally {
+    if (db) try { db.close(); } catch {}
+  }
+}
+
 if (typeof window !== 'undefined') {
   window.CRM_STORE = {
-    iniciarMigracaoSeguraBrowser
+    iniciarMigracaoSeguraBrowser,
+    obterInfoBackupMigracao,
+    exportarBackupMigracao,
+    salvarSnapshotEstado
   };
   window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
