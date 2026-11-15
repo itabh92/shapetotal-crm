@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import os
+import textwrap
 import urllib.request
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -171,6 +172,87 @@ def main():
                 fotos_atualizadas += 1
             elif res_status == 'error':
                 fotos_erro += 1
+
+    # Garante 100% de cobertura visual: gera card limpo 400x400 para SKUs sem foto oficial no site
+    fotos_geradas = 0
+    missing_photo_prods = [
+        p for p in merged_prods
+        if not (os.path.exists(os.path.join(FOTOS_DIR, f"producto-{p['id']}.jpg"))
+                and os.path.getsize(os.path.join(FOTOS_DIR, f"producto-{p['id']}.jpg")) > 100)
+    ]
+    if missing_photo_prods:
+        try:
+            from PIL import Image, ImageDraw, ImageFont
+
+            def load_font(size, bold=False):
+                candidates = (
+                    ['/System/Library/Fonts/Helvetica.ttc', '/Library/Fonts/Arial Bold.ttf', '/System/Library/Fonts/Supplemental/Arial Bold.ttf']
+                    if bold else
+                    ['/System/Library/Fonts/Helvetica.ttc', '/Library/Fonts/Arial.ttf', '/System/Library/Fonts/Supplemental/Arial.ttf']
+                )
+                for path in candidates:
+                    if os.path.exists(path):
+                        try:
+                            return ImageFont.truetype(path, size)
+                        except Exception:
+                            pass
+                return ImageFont.load_default()
+
+            f_brand = load_font(18, bold=True)
+            f_title = load_font(22, bold=True)
+            f_sub = load_font(15, bold=False)
+            f_footer = load_font(13, bold=True)
+
+            palette = {
+                'emagrecedores': ('#064e3b', '#10b981', 'GLP-1 · EMAGRECEDORES'),
+                'anabolizante': ('#1e1b4b', '#6366f1', 'PERFORMANCE · ANABOLIZANTES'),
+                'hgh': ('#0c4a6e', '#0ea5e9', 'SOMATROPINA · HGH'),
+                'peptideo': ('#3b0764', '#a855f7', 'PEPTIDEOS BIO-REGENERATIVOS'),
+                'estetico': ('#831843', '#ec4899', 'ESTETICA & HARMONIZACAO'),
+                'suplementos': ('#14532d', '#22c55e', 'SAUDE & SUPLEMENTACAO'),
+            }
+
+            for p in missing_photo_prods:
+                dest = os.path.join(FOTOS_DIR, f"producto-{p['id']}.jpg")
+                cat_key = str(p.get('categoria') or '').lower()
+                bg_hex, acc_hex, cat_label = palette.get(cat_key, ('#0f172a', '#38bdf8', 'SHAPE TOTAL · ORIGINAL'))
+                img = Image.new('RGB', (400, 400), '#f8fafc')
+                draw = ImageDraw.Draw(img)
+
+                # Topo escuro + faixa de destaque
+                draw.rectangle([0, 0, 400, 82], fill=bg_hex)
+                draw.rectangle([0, 82, 400, 88], fill=acc_hex)
+
+                marca = str(p.get('marca') or 'SHAPE TOTAL').strip().upper()[:26]
+                draw.text((24, 20), marca, fill='#ffffff', font=f_brand)
+                draw.text((24, 48), cat_label[:34], fill='#cbd5e1', font=f_sub)
+
+                # Frasco estilizado central/direito sutil ao fundo
+                draw.rounded_rectangle([24, 110, 376, 336], radius=16, fill='#ffffff', outline='#cbd5e1', width=2)
+                draw.rounded_rectangle([40, 126, 210, 152], radius=8, fill=bg_hex)
+                draw.text((52, 131), f"ID #{p['id']} · OFICIAL", fill='#ffffff', font=f_footer)
+
+                nome_clean = str(p.get('nombre') or 'Produto Shape Total').strip()
+                lines = textwrap.wrap(nome_clean, width=24)[:4]
+                y_txt = 176
+                for ln in lines:
+                    draw.text((40, y_txt), ln, fill='#0f172a', font=f_title)
+                    y_txt += 30
+
+                pres = str(p.get('presentacion') or '').strip()[:36]
+                if pres:
+                    draw.text((40, 304), pres, fill='#475569', font=f_sub)
+
+                # Rodape
+                draw.rectangle([0, 356, 400, 400], fill='#0f172a')
+                draw.text((24, 370), "SHAPE TOTAL · QUALIDADE GARANTIDA", fill='#38bdf8', font=f_footer)
+
+                img.save(dest, 'JPEG', quality=90)
+                fotos_geradas += 1
+        except Exception as e:
+            log(f"Aviso ao gerar cards para fotos ausentes: {e}")
+
+    log(f"Cobertura de fotos: {novas_fotos} novas | {fotos_atualizadas} atualizadas | {fotos_geradas} cards gerados | {fotos_erro} erros.")
 
     # Mantém shapetotal_mobile.html como redirecionador seguro para index.html
     try:

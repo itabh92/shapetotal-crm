@@ -1153,7 +1153,7 @@
     const stockTotal = cde + pj + sg;
 
     const desc = ov.desc !== undefined ? ov.desc : (p.desc_comercial || '');
-    const localFoto = p.foto ? `fotos/producto-${p.id}.jpg` : '';
+    const localFoto = `fotos/producto-${p.id}.jpg`;
     const remoteFoto = p.foto ? `https://shapetotal.com${p.foto}` : '';
 
     return {
