@@ -1,28 +1,28 @@
 // Shape Total CRM - Service Worker PWA Offline
 // Estratégia Network-First: busca a versão mais recente na rede e faz fallback instantâneo para cache offline.
 
-const CACHE_NAME = 'shapetotal-crm-v20261114_2200';
+const CACHE_NAME = 'shapetotal-crm-v20261114_2215';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
-  './styles.css?v=20261114_2200',
+  './styles.css?v=20261114_2215',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
-  './dominio/index.js?v=20261114_2200',
+  './dominio/index.js?v=20261114_2215',
   './dominio/dinheiro.js',
   './dominio/hlc.js',
   './dominio/custo.js',
   './dominio/lotes.js',
   './dominio/estoque.js',
-  './store/index.js?v=20261114_2200',
+  './store/index.js?v=20261114_2215',
   './store/db.js',
   './store/reducers.js',
   './store/migracao.js',
-  './pricing_config.js?v=20261114_2200',
-  './dados_catalogo.js?v=20261114_2200',
-  './app.js?v=20261114_2200'
+  './pricing_config.js?v=20261114_2215',
+  './dados_catalogo.js?v=20261114_2215',
+  './app.js?v=20261114_2215'
 ];
 
 self.addEventListener('install', event => {

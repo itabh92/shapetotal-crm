@@ -7203,13 +7203,27 @@ ${fmtDoseList(reta)}
     const freteInput = document.getElementById('inputFrete');
     const cartaoInput = document.getElementById('inputTaxaCartao');
 
-    cotInput.value = state.cotacao;
+    cotInput.value = Number(state.cotacao || DEFAULT_COTACAO).toFixed(2);
     freteInput.value = FIXED_FRETE_PCT;
     freteInput.readOnly = true;
     cartaoInput.value = state.taxaCartaoPct;
 
     cotInput.addEventListener('input', e => {
-      state.cotacao = Number(e.target.value) || 0;
+      const parsed = parseFloat(String(e.target.value || '').replace(',', '.'));
+      if (!Number.isFinite(parsed) || parsed <= 0) return;
+      state.cotacao = parsed;
+      state.cotacaoAtualizadaEm = new Date().toISOString();
+      saveState();
+      renderAll();
+    });
+    cotInput.addEventListener('change', e => {
+      const parsed = parseFloat(String(e.target.value || '').replace(',', '.'));
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        e.target.value = Number(state.cotacao || DEFAULT_COTACAO).toFixed(2);
+        return;
+      }
+      state.cotacao = Math.round(parsed * 10000) / 10000;
+      e.target.value = state.cotacao.toFixed(2);
       state.cotacaoAtualizadaEm = new Date().toISOString();
       saveState();
       renderAll();

@@ -6,13 +6,15 @@ para o CRM local em /Users/italosouza/Medicamentos/ShapeTotalCRM/.
 Faz Smart Merge preservando SKUs exclusivos de BH (id >= 9000), coleções canônicas,
 preços fixados, estoque físico de BH e pedidos em trânsito.
 """
+import argparse
+import hashlib
 import json
 import os
 import urllib.request
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from pricing_engine import write_pricing_config_js
+from pricing_engine import load_pricing_config, write_pricing_config_js, CONFIG_JSON_PATH
 
 BASE_DIR = '/Users/italosouza/Medicamentos/ShapeTotalCRM'
 FOTOS_DIR = os.path.join(BASE_DIR, 'fotos')
@@ -45,7 +47,20 @@ def classificar_colecao(p):
     return ('4_estetica', '✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA')
 
 def main():
+    parser = argparse.ArgumentParser(description='Sincroniza catálogo e fotos da Shape Total.')
+    parser.add_argument('--refresh-fotos', action='store_true', help='Rebaixa todas as fotos do site e substitui as que mudaram.')
+    parser.add_argument('--cotacao', type=float, default=None, help='Atualiza a cotação do dólar padrão em pricing_config.json (ex: 5.85).')
+    args = parser.parse_args()
+
     log("Iniciando sincronização diária inteligente da Shape Total...")
+    if args.cotacao is not None and args.cotacao > 0:
+        cfg = load_pricing_config()
+        cfg['cotacao'] = round(float(args.cotacao), 4)
+        with open(CONFIG_JSON_PATH, 'w', encoding='utf-8') as fc:
+            json.dump(cfg, fc, ensure_ascii=False, indent=2)
+            fc.write('\n')
+        log(f"Cotação padrão atualizada para R$ {cfg['cotacao']:.2f} em pricing_config.json.")
+
     os.makedirs(FOTOS_DIR, exist_ok=True)
 
     # Carrega base local existente para preservar enriquecimentos e SKUs locais
@@ -121,29 +136,41 @@ def main():
     with open(DADOS_JS_PATH, 'w', encoding='utf-8') as f:
         f.write(js_content)
 
-    # Baixa fotos novas se houver
+    # Baixa fotos novas (e rebaixa todas quando --refresh-fotos estiver ativo)
     prods_with_foto = [p for p in merged_prods if p.get('foto') and int(p.get('id', 0)) < 9000]
     def dl(p):
         dest = os.path.join(FOTOS_DIR, f"producto-{p['id']}.jpg")
-        if os.path.exists(dest) and os.path.getsize(dest) > 100:
-            return False
+        existed = os.path.exists(dest) and os.path.getsize(dest) > 100
+        if existed and not args.refresh_fotos:
+            return 'skip'
         try:
             r = urllib.request.Request('https://shapetotal.com' + p['foto'], headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(r, timeout=12) as res:
+            with urllib.request.urlopen(r, timeout=15) as res:
                 b = res.read()
                 if len(b) > 100:
+                    if existed:
+                        with open(dest, 'rb') as old_f:
+                            if hashlib.sha256(old_f.read()).digest() == hashlib.sha256(b).digest():
+                                return 'same'
                     with open(dest, 'wb') as out:
                         out.write(b)
-                    return True
+                    return 'updated' if existed else 'new'
         except Exception:
-            return False
-        return False
+            return 'error'
+        return 'error'
 
     novas_fotos = 0
+    fotos_atualizadas = 0
+    fotos_erro = 0
     with ThreadPoolExecutor(max_workers=16) as ex:
         for fut in as_completed([ex.submit(dl, p) for p in prods_with_foto]):
-            if fut.result():
+            res_status = fut.result()
+            if res_status == 'new':
                 novas_fotos += 1
+            elif res_status == 'updated':
+                fotos_atualizadas += 1
+            elif res_status == 'error':
+                fotos_erro += 1
 
     # Mantém shapetotal_mobile.html como redirecionador seguro para index.html
     try:
@@ -162,7 +189,7 @@ def main():
     except Exception as e:
         log(f"Aviso ao atualizar bundle mobile: {e}")
 
-    log(f"Sincronização concluída com sucesso: {len(merged_prods)} SKUs | {novas_fotos} novas fotos.")
+    log(f"Sincronização concluída com sucesso: {len(merged_prods)} SKUs | {novas_fotos} novas fotos | {fotos_atualizadas} fotos atualizadas | {fotos_erro} erros.")
 
 if __name__ == '__main__':
     main()

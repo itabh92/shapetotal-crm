@@ -48,16 +48,16 @@
           <button class="btn btn-blue internal-only" style="font-weight:700;" onclick="window.CRM.openSalesHistoryModal()" title="Histórico de vendas, lucro e a receber">💰 Vendas (<span id="countVendasBadge">0</span>)</button>
           <button class="btn internal-only" style="background:#0f766e; color:#ffffff; font-weight:800; border:1px solid #14b8a6;" onclick="window.CRM.openClientesModal()" title="CRM de Clientes & WhatsApp">👥 Clientes (<span id="countClientesBadge">0</span>)</button>
           <button id="btnClientMode" class="btn" title="Ocultar custos, margens e botões administrativos para mostrar a tela ao cliente">👁️ Modo Cliente</button>
+          <div class="ctrl-group internal-only" style="margin:0; padding:4px 8px; background:#0f172a; border:1px solid #334155; border-radius:8px;" title="Cotação do dólar variável (altere aqui para recalcular todo o catálogo; apenas o frete de 30% é fixo)">
+            <label for="inputCotacao" style="font-size:11px; font-weight:800; color:#fbbf24;">💵 Dólar (R$):</label>
+            <input id="inputCotacao" class="ctrl-input" type="number" step="0.01" min="0.10" inputmode="decimal" value="5.80" style="width:68px; font-weight:800; color:#fef08a;" />
+          </div>
           <button id="btnToggleTopbarTools" class="btn internal-only" style="background:#1e293b; border-color:#475569; color:#38bdf8; font-weight:800;" onclick="window.CRM.toggleTopbarTools()">⚙️ Ferramentas <span id="badgeAlertasTools" class="badge-alertas" style="display:none;">0</span> ▸</button>
         </div>
       </div>
 
       <div id="topbarToolsDrawer" class="topbar-tools-drawer collapsed">
         <div class="global-controls internal-only">
-          <div class="ctrl-group">
-            <label for="inputCotacao">💵 Dólar (R$):</label>
-            <input id="inputCotacao" class="ctrl-input" type="number" step="0.01" value="5.80" />
-          </div>
           <div class="ctrl-group">
             <label for="inputFrete">🚚 Frete Fixo (%):</label>
             <input id="inputFrete" class="ctrl-input" type="number" step="1" value="30" readonly title="Frete fixo de 30% sobre o preço do site em USD (varia apenas Dólar ou USD do site)" style="opacity:0.85; cursor:not-allowed;" />
@@ -1423,11 +1423,11 @@
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script type="module" src="dominio/index.js?v=20261114_2200"></script>
-  <script src="pricing_config.js?v=20261114_2200"></script>
-  <script src="dados_catalogo.js?v=20261114_2200"></script>
-  <script src="app.js?v=20261114_2200"></script>
-  <script type="module" src="store/index.js?v=20261114_2200"></script>
+  <script type="module" src="dominio/index.js?v=20261114_2215"></script>
+  <script src="pricing_config.js?v=20261114_2215"></script>
+  <script src="dados_catalogo.js?v=20261114_2215"></script>
+  <script src="app.js?v=20261114_2215"></script>
+  <script type="module" src="store/index.js?v=20261114_2215"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
