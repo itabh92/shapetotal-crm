@@ -2,8 +2,8 @@
   // Fonte canônica de precificação compartilhada com pricing_config.json / pricing_engine.py.
   // Dados operacionais (estoque, pedidos em trânsito e clientes) ficam exclusivamente no armazenamento local do aparelho (localStorage/IndexedDB).
   const FALLBACK_PRICING_CONFIG = {
-    version: '2026-11-14-v2',
-    cotacao: 5.80,
+    version: '2026-11-17-v1',
+    cotacao: 5.85,
     fretePct: 30,
     taxaCartaoPct: 12,
     minValidUsd: 0.05,
@@ -57,7 +57,7 @@
   const PRICING_CONFIG = (typeof window !== 'undefined' && window.SHAPETOTAL_PRICING_CONFIG)
     ? window.SHAPETOTAL_PRICING_CONFIG
     : FALLBACK_PRICING_CONFIG;
-  const PRICING_POLICY_VERSION = PRICING_CONFIG.version || '2026-11-14-v2';
+  const PRICING_POLICY_VERSION = PRICING_CONFIG.version || '2026-11-17-v1';
   const FIXED_FRETE_PCT = Number(PRICING_CONFIG.fretePct ?? 30);
   const DEFAULT_GROUP_MARGINS = JSON.parse(JSON.stringify(PRICING_CONFIG.groupMargins));
 
@@ -67,7 +67,7 @@
 
   let state = {
     pricingPolicyVersion: PRICING_POLICY_VERSION,
-    cotacao: Number(PRICING_CONFIG.cotacao) || 5.80,
+    cotacao: Number(PRICING_CONFIG.cotacao) || 5.85,
     fretePct: FIXED_FRETE_PCT,
     taxaCartaoPct: Number(PRICING_CONFIG.taxaCartaoPct ?? 12),
     activeTier: 'rec', // 'min' | 'rec' | 'max'

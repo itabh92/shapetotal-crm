@@ -1,10 +1,10 @@
 // Arquivo gerado automaticamente a partir de pricing_config.json.
 // Nao edite manualmente sem atualizar pricing_config.json.
 window.SHAPETOTAL_PRICING_CONFIG = {
-  "version": "2026-11-14-v2",
-  "updatedAt": "2026-11-14",
+  "version": "2026-11-17-v1",
+  "updatedAt": "2026-11-17",
   "currencyNote": "Custo fixo = USD site * cotacao * (1 + fretePct / 100). Frete fixo 30%; muda apenas Dolar ou preco USD do site.",
-  "cotacao": 5.8,
+  "cotacao": 5.85,
   "fretePct": 30,
   "taxaCartaoPct": 12,
   "minValidUsd": 0.05,

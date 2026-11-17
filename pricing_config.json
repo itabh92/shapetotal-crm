@@ -1,8 +1,8 @@
 {
-  "version": "2026-11-14-v2",
-  "updatedAt": "2026-11-14",
+  "version": "2026-11-17-v1",
+  "updatedAt": "2026-11-17",
   "currencyNote": "Custo fixo = USD site * cotacao * (1 + fretePct / 100). Frete fixo 30%; muda apenas Dolar ou preco USD do site.",
-  "cotacao": 5.8,
+  "cotacao": 5.85,
   "fretePct": 30,
   "taxaCartaoPct": 12,
   "minValidUsd": 0.05,
@@ -70,9 +70,21 @@
       "totalMg": 120,
       "fotoTabela": "fotos/tabela_doses_tirzepatida_120mg.jpg",
       "doses": [
-        { "mg": 2.5, "label": "2,5 mg", "fatorFracionamento": 2.5 },
-        { "mg": 5.0, "label": "5,0 mg", "fatorFracionamento": 2.35 },
-        { "mg": 7.5, "label": "7,5 mg", "fatorFracionamento": 2.25 }
+        {
+          "mg": 2.5,
+          "label": "2,5 mg",
+          "fatorFracionamento": 2.5
+        },
+        {
+          "mg": 5.0,
+          "label": "5,0 mg",
+          "fatorFracionamento": 2.35
+        },
+        {
+          "mg": 7.5,
+          "label": "7,5 mg",
+          "fatorFracionamento": 2.25
+        }
       ]
     },
     "9005": {
@@ -82,9 +94,21 @@
       "totalMg": 120,
       "fotoTabela": "fotos/tabela_doses_retatrutida_120mg.jpg",
       "doses": [
-        { "mg": 2.5, "label": "2,5 mg", "fatorFracionamento": 3.0 },
-        { "mg": 5.0, "label": "5,0 mg", "fatorFracionamento": 2.85 },
-        { "mg": 7.5, "label": "7,5 mg", "fatorFracionamento": 2.7 }
+        {
+          "mg": 2.5,
+          "label": "2,5 mg",
+          "fatorFracionamento": 3.0
+        },
+        {
+          "mg": 5.0,
+          "label": "5,0 mg",
+          "fatorFracionamento": 2.85
+        },
+        {
+          "mg": 7.5,
+          "label": "7,5 mg",
+          "fatorFracionamento": 2.7
+        }
       ]
     }
   }
