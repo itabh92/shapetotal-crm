@@ -1410,9 +1410,34 @@
 
   let _dispCache = null;
 
+  // Mapa canônico de desmembramento: caixa/kit fechado (4 ampolas) -> ampola avulsa individual
+  const BOX_TO_VIAL_MAP = {
+    2988: { vialId: 9001, ampolasPorCaixa: 4, labelCaixa: 'Lipoland 60 mg (4x15 mg)' },
+    3207: { vialId: 9002, ampolasPorCaixa: 4, labelCaixa: 'Tirzec 60 mg (4x15 mg)' },
+    2848: { vialId: 9003, ampolasPorCaixa: 4, labelCaixa: 'TG 60 mg Indufar (4x15 mg)' },
+    2889: { vialId: 9004, ampolasPorCaixa: 4, labelCaixa: 'Lipoless 60 mg (4x15 mg)' },
+    3136: { vialId: 9007, ampolasPorCaixa: 4, labelCaixa: 'Tirzedral 60 mg Catedral (4x15 mg)' },
+    3370: { vialId: 2830, ampolasPorCaixa: 4, labelCaixa: 'Retatrutida Gen-Health 240 mg (Kit 4x60 mg)' }
+  };
+  const VIAL_TO_BOX_MAP = Object.fromEntries(
+    Object.entries(BOX_TO_VIAL_MAP).map(([boxId, info]) => [
+      Number(info.vialId),
+      { boxId: Number(boxId), ampolasPorCaixa: info.ampolasPorCaixa, labelCaixa: info.labelCaixa }
+    ])
+  );
+
+  function getCustoAmpolaDeCaixa(boxId, ampolasPorCaixa) {
+    const rawBox = rawCatalog.find(p => Number(p.id) === Number(boxId));
+    const custoCaixa = (state.custosReais && Number(state.custosReais[boxId]) > 0)
+      ? Number(state.custosReais[boxId])
+      : (rawBox ? Number(computeProduct(rawBox).custo || 0) : 0);
+    return custoCaixa > 0 ? Math.round((custoCaixa / ampolasPorCaixa) * 100) / 100 : 0;
+  }
+
   /**
    * Única rotina de domínio para variar estoque físico em BH.
-   * Impede saldo negativo por padrão, atualiza timestamp e registra movimentação.
+   * Quando sai ampola avulsa sem saldo solto suficiente e há caixa fechada correspondente,
+   * abre automaticamente a(s) caixa(s) necessária(s) e converte em ampolas avulsas antes de baixar.
    */
   function aplicarVariacaoEstoque(produtoId, delta, opts = {}) {
     const pid = Number(produtoId);
@@ -1421,7 +1446,44 @@
       return { ok: true, prev: Number((state.meuEstoque || {})[pid] || 0), next: Number((state.meuEstoque || {})[pid] || 0) };
     }
     if (!state.meuEstoque || typeof state.meuEstoque !== 'object') state.meuEstoque = {};
-    const prev = Math.max(0, Number(state.meuEstoque[pid] || 0));
+    let prev = Math.max(0, Number(state.meuEstoque[pid] || 0));
+    let caixasAbertas = 0;
+
+    if (d < 0 && prev + d < 0 && !opts._semDesmembrar && VIAL_TO_BOX_MAP[pid]) {
+      const { boxId, ampolasPorCaixa, labelCaixa } = VIAL_TO_BOX_MAP[pid];
+      const faltam = Math.abs(d) - prev;
+      const caixasAbrir = Math.ceil(faltam / ampolasPorCaixa);
+      const saldoCaixa = Math.max(0, Number(state.meuEstoque[boxId] || 0));
+      if (saldoCaixa >= caixasAbrir) {
+        const custoAmp = getCustoAmpolaDeCaixa(boxId, ampolasPorCaixa);
+        if (custoAmp > 0) {
+          if (!state.custosReais || typeof state.custosReais !== 'object') state.custosReais = {};
+          if (!Number(state.custosReais[pid])) state.custosReais[pid] = custoAmp;
+        }
+        const totalAmpGeradas = caixasAbrir * ampolasPorCaixa;
+        const resCaixa = aplicarVariacaoEstoque(boxId, -caixasAbrir, {
+          tipo: 'ajuste',
+          referenciaId: opts.referenciaId || null,
+          motivo: `Abertura automática de ${caixasAbrir} caixa(s) para venda de ampola avulsa (SKU ${pid})`,
+          _semDesmembrar: true
+        });
+        if (resCaixa.ok) {
+          aplicarVariacaoEstoque(pid, totalAmpGeradas, {
+            tipo: 'entrada',
+            referenciaId: opts.referenciaId || null,
+            motivo: `Desmembramento de ${caixasAbrir}x ${labelCaixa} (+${totalAmpGeradas} ampolas)`,
+            custoUnitReal: custoAmp || null,
+            _semDesmembrar: true
+          });
+          caixasAbertas = caixasAbrir;
+          prev = Math.max(0, Number(state.meuEstoque[pid] || 0));
+          if (typeof logAuditoria === 'function') {
+            logAuditoria('abertura_caixa', `${caixasAbrir}x ${labelCaixa} -> +${totalAmpGeradas} ampolas SKU ${pid}`);
+          }
+        }
+      }
+    }
+
     const nextRaw = prev + d;
     if (!opts.allowNegative && nextRaw < 0) {
       return { ok: false, prev, next: prev, erro: `Estoque físico insuficiente para SKU ${pid} (atual: ${prev}, solicitado: ${Math.abs(d)})` };
@@ -1434,7 +1496,7 @@
     if (opts.tipo) {
       registrarMovimento(opts.tipo, pid, d, opts.referenciaId || null, opts.motivo || '', opts.custoUnitReal || null);
     }
-    return { ok: true, prev, next };
+    return { ok: true, prev, next, caixasAbertas };
   }
 
   /**
@@ -1562,13 +1624,34 @@
       });
     }
 
-    const disponivel = Math.max(0, estoqueBH - reservado);
+    let ampolasViaCaixa = 0;
+    let estoqueComCaixas = estoqueBH;
+    const vinculoCaixa = VIAL_TO_BOX_MAP[pid];
+    if (vinculoCaixa) {
+      const caixasTotais = Math.max(0, Number((state.meuEstoque || {})[vinculoCaixa.boxId] || 0));
+      let caixasReservadas = 0;
+      if (_dispCache) {
+        caixasReservadas = Number((_dispCache.reservadoMap.get(vinculoCaixa.boxId) || {}).total || 0);
+      } else {
+        (state.encomendas || []).forEach(enc => {
+          if (enc.status !== 'pendente' && enc.status !== 'pedido_ao_fornecedor' && enc.status !== 'chegou_bh') return;
+          getEncomendaItens(enc).forEach(it => {
+            if (Number(it.produtoId) === vinculoCaixa.boxId) caixasReservadas += Math.max(0, Number(it.qtd) || 0);
+          });
+        });
+      }
+      const caixasLivres = Math.max(0, caixasTotais - caixasReservadas);
+      ampolasViaCaixa = caixasLivres * vinculoCaixa.ampolasPorCaixa;
+      estoqueComCaixas = estoqueBH + (caixasTotais * vinculoCaixa.ampolasPorCaixa);
+    }
+
+    const disponivel = Math.max(0, (estoqueBH + ampolasViaCaixa) - reservado);
     let status = 'encomenda';
     if (disponivel > 0) status = 'pronta';
     else if (reservado > 0) status = 'reservado';
     else if (chegando > 0) status = 'chegando';
 
-    return { estoqueBH, reservado, chegando, disponivel, status, reservasDetalhes, transitoDetalhes };
+    return { estoqueBH, estoqueComCaixas, ampolasViaCaixa, reservado, chegando, disponivel, status, reservasDetalhes, transitoDetalhes };
   }
 
   function getDisponibilidadeTotals() {
@@ -3566,10 +3649,11 @@
         }
 
         const disp = getDisponibilidade(pid);
-        if (disp.estoqueBH <= 0 || qty > disp.estoqueBH) {
-          const msgSemSaldo = disp.estoqueBH <= 0
+        const fisicoParaVenda = disp.estoqueComCaixas ?? disp.estoqueBH;
+        if (fisicoParaVenda <= 0 || qty > fisicoParaVenda) {
+          const msgSemSaldo = fisicoParaVenda <= 0
             ? `⚠️ "${p.nombre}" está sem estoque físico em BH no momento.\nDeseja converter esta operação em Encomenda / Reserva para ${cliente}?`
-            : `⚠️ Saldo físico insuficiente em BH (Físico: ${disp.estoqueBH} un | Solicitado: ${qty} un).\nDeseja converter para Encomenda / Reserva para ${cliente}?`;
+            : `⚠️ Saldo físico insuficiente em BH (Físico: ${fisicoParaVenda} un | Solicitado: ${qty} un).\nDeseja converter para Encomenda / Reserva para ${cliente}?`;
           if (confirm(msgSemSaldo)) {
             document.getElementById('vendaRapidaModal').classList.remove('open');
             window.CRM.openNovaEncomendaModal(pid, 'encomenda');
@@ -3914,17 +3998,19 @@
 
     changeMeuEstoque(id, delta) {
       if (!state.meuEstoque) state.meuEstoque = {};
+      const disp = getDisponibilidade(id);
       const current = Number(state.meuEstoque[id] || 0);
-      if (delta < 0 && current <= 0) {
+      const fisicoEfetivo = disp.estoqueComCaixas ?? current;
+      if (delta < 0 && fisicoEfetivo <= 0) {
         showToast('Estoque BH já está zerado.');
         return;
       }
-      const adj = delta < 0 ? -Math.min(current, Math.abs(delta)) : delta;
+      const adj = delta < 0 ? -Math.min(fisicoEfetivo, Math.abs(delta)) : delta;
       const res = aplicarVariacaoEstoque(id, adj, { tipo: 'ajuste', motivo: 'Ajuste manual +/- no card' });
       if (!res.ok) return;
       logAuditoria('ajuste_estoque', `SKU ${id}: ${current} -> ${res.next}`);
       syncDomainUI();
-      showToast(res.next > 0 ? `Estoque BH: ${res.next} un` : 'Removido do estoque BH');
+      showToast(res.caixasAbertas ? `Caixa aberta automaticamente (${res.next} ampolas restantes)` : (res.next > 0 ? `Estoque BH: ${res.next} un` : 'Removido do estoque BH'));
     },
 
     toggleTopbarTools() {
@@ -5752,9 +5838,10 @@ ${fmtDoseList(reta)}
       if (isProntaEntrega) {
         for (const it of novaEncomendaItens) {
           const disp = getDisponibilidade(it.produtoId);
-          if (it.qtd > disp.estoqueBH) {
+          const fisicoParaEntrega = disp.estoqueComCaixas ?? disp.estoqueBH;
+          if (it.qtd > fisicoParaEntrega) {
             if (autoAddedFallback) novaEncomendaItens.pop();
-            alert(`🚫 Saldo físico insuficiente em BH para "${it.produtoNome}" (Em BH: ${disp.estoqueBH} un | Solicitado: ${it.qtd} un).\n\nDê entrada no estoque ou troque a operação para "Encomenda".`);
+            alert(`🚫 Saldo físico insuficiente em BH para "${it.produtoNome}" (Em BH: ${fisicoParaEntrega} un | Solicitado: ${it.qtd} un).\n\nDê entrada no estoque ou troque a operação para "Encomenda".`);
             return;
           }
           if (it.qtd > disp.disponivel) {
@@ -5958,7 +6045,8 @@ ${fmtDoseList(reta)}
       // 0. Valida saldo físico antes de baixar (impede saldo negativo)
       if (!state.meuEstoque) state.meuEstoque = {};
       for (const it of itens) {
-        const curStock = Number(state.meuEstoque[it.produtoId] || 0);
+        const dispItem = getDisponibilidade(it.produtoId);
+        const curStock = dispItem.estoqueComCaixas ?? dispItem.estoqueBH;
         if (curStock < (Number(it.qtd) || 1)) {
           alert(`🚫 Saldo físico insuficiente em BH para "${it.produtoNome}" (Em BH: ${curStock} un | Pedido: ${it.qtd} un).\n\nConfirme a chegada do lote em Trânsito ou dê entrada no estoque antes de entregar.`);
           return;

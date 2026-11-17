@@ -479,3 +479,53 @@ test('migracao automatica de estado legado (5.60 e customPrice) preserva histori
   const tg60 = CRM.computeProduct({ id: 2848, precio: 85, categoria: 'emagrecedores' });
   assert.equal(tg60.precoFinal, 950);
 });
+
+test('venda de ampola avulsa abre caixa fechada automaticamente (4x15mg e 4x60mg)', () => {
+  const { CRM, doc, getState } = createHarness({
+    initialState: {
+      meuEstoque: { 2889: 2, 3370: 1, 9003: 3, 2830: 3 }
+    }
+  });
+
+  // Antes da venda: 0 avulsas de Lipoless (9004), mas 2 caixas fechadas (2889) => 8 disponiveis
+  const dispAntes = CRM.getDisponibilidade(9004);
+  assert.equal(dispAntes.estoqueBH, 0);
+  assert.equal(dispAntes.ampolasViaCaixa, 8);
+  assert.equal(dispAntes.disponivel, 8);
+
+  // Vende 1 ampola avulsa de Lipoless 15mg (9004)
+  CRM.openVendaRapidaModal(9004);
+  doc.getElementById('vrCliente').value = 'Paciente Teste Lipoless';
+  doc.getElementById('vrQty').value = '1';
+  doc.getElementById('vrUnitPrice').value = '250';
+  CRM.updateVendaRapidaTotal();
+  CRM.confirmVendaRapida();
+
+  let st = getState();
+  assert.equal(st.meuEstoque[2889], 1); // abriu 1 caixa de 2 -> 1
+  assert.equal(st.meuEstoque[9004], 3); // 4 da caixa - 1 vendida = 3
+
+  // Vende mais 5 avulsas de uma vez -> precisa abrir a 2a caixa (3 + 4 - 5 = 2)
+  CRM.openVendaRapidaModal(9004);
+  doc.getElementById('vrCliente').value = 'Paciente Lote Avulso';
+  doc.getElementById('vrQty').value = '5';
+  doc.getElementById('vrUnitPrice').value = '250';
+  CRM.updateVendaRapidaTotal();
+  CRM.confirmVendaRapida();
+
+  st = getState();
+  assert.equal(st.meuEstoque[2889] || 0, 0);
+  assert.equal(st.meuEstoque[9004], 2);
+
+  // Vende 4 Retatrutida 60mg (2830) tendo 3 avulsas + 1 kit 240mg (3370): abre o kit e sobram 3 avulsas
+  CRM.openVendaRapidaModal(2830);
+  doc.getElementById('vrCliente').value = 'Paciente Retatrutida';
+  doc.getElementById('vrQty').value = '4';
+  doc.getElementById('vrUnitPrice').value = '950';
+  CRM.updateVendaRapidaTotal();
+  CRM.confirmVendaRapida();
+
+  st = getState();
+  assert.equal(st.meuEstoque[3370] || 0, 0);
+  assert.equal(st.meuEstoque[2830], 3);
+});

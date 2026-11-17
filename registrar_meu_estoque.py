@@ -29,13 +29,15 @@ DOWNLOADS_DIR = '/Users/italosouza/Downloads'
 DESKTOP_DIR = '/Users/italosouza/Desktop'
 
 # ITENS FÍSICOS EM MÃOS — preços calculados automaticamente pelo motor pricing_engine.py (Dólar + 30% frete + % grupo)
+CUSTO_TOTAL_PAGO_LOTE = 3175.00
+
 ESTOQUE_LOCAL = [
     {
         'id_catalogo': 2848,
         'nome': 'TG 60 mg — Indufar (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 1,
+        'qtd': 0,
         'obs': 'Caixa lacrada original Indufar'
     },
     {
@@ -43,7 +45,7 @@ ESTOQUE_LOCAL = [
         'nome': 'Tirzec 60 mg Ampola Única — Quimfa (1x2 mL)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Frasco ampola única multi-dosis de 2 mL (60 mg total / 15 mg por 0,5 mL)',
-        'qtd': 2,
+        'qtd': 0,
         'obs': 'Ampola única multi-dosis lacrada original Quimfa'
     },
     {
@@ -51,16 +53,24 @@ ESTOQUE_LOCAL = [
         'nome': 'Tirzec 60 mg — Quimfa (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 2,
-        'obs': 'Caixa lacrada original Quimfa'
+        'qtd': 3,
+        'obs': 'Caixa lacrada original Quimfa (4x15 mg)'
+    },
+    {
+        'id_catalogo': 2988,
+        'nome': 'Lipoland 60 mg — Landerlan (4x15 mg)',
+        'tipo': 'caixa_fechada',
+        'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
+        'qtd': 0,
+        'obs': 'Caixa lacrada original Landerlan'
     },
     {
         'id_catalogo': 2889,
         'nome': 'Lipoless 60 mg — Eticos (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 3,
-        'obs': 'Caixa lacrada original Eticos Labs'
+        'qtd': 2,
+        'obs': 'Caixa lacrada original Eticos Labs (4x15 mg)'
     },
     {
         'id_catalogo': 3136,
@@ -76,7 +86,7 @@ ESTOQUE_LOCAL = [
         'tipo': 'kit_fechado',
         'apresentacao': 'Kit fechado com 4 frascos de 60 mg + 1 Água Bacteriostática',
         'qtd': 1,
-        'obs': 'Kit fechado de fábrica completo com diluente estéril'
+        'obs': 'Caixa fechada 240 mg (4x60 mg) Gen-Health'
     },
     {
         'id_catalogo': 2830,
@@ -84,14 +94,14 @@ ESTOQUE_LOCAL = [
         'tipo': 'ampola_fechada',
         'apresentacao': 'Ampola liofilizada de 60 mg + Água Bacteriostática',
         'qtd': 3,
-        'obs': '3 ampolas fechadas de 60 mg com diluente estéril incluso'
+        'obs': '3 ampolas avulsas de 60 mg Gen-Health'
     },
     {
         'id_catalogo': 9001,
         'nome': 'Lipoland 15 mg (Ampola Avulsa)',
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Landerlan)',
-        'qtd': 3,
+        'qtd': 0,
         'obs': 'Ampola avulsa oficial Landerlan'
     },
     {
@@ -99,8 +109,8 @@ ESTOQUE_LOCAL = [
         'nome': 'Tirzec 15 mg (Ampola Avulsa)',
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Quimfa)',
-        'qtd': 3,
-        'obs': 'Ampola avulsa oficial Quimfa'
+        'qtd': 0,
+        'obs': 'Ampola avulsa oficial Quimfa (sai da caixa 4x15 mg ao vender)'
     },
     {
         'id_catalogo': 9003,
@@ -108,22 +118,22 @@ ESTOQUE_LOCAL = [
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Indufar)',
         'qtd': 3,
-        'obs': 'Ampola avulsa oficial Indufar'
+        'obs': '3 ampolas avulsas de TG 15 mg Indufar'
     },
     {
         'id_catalogo': 9004,
         'nome': 'Lipoless 15 mg (Ampola Avulsa)',
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Eticos)',
-        'qtd': 2,
-        'obs': 'Ampola avulsa oficial Eticos Labs'
+        'qtd': 0,
+        'obs': 'Ampola avulsa oficial Eticos Labs (sai da caixa 4x15 mg ao vender)'
     },
     {
         'id_catalogo': 9007,
         'nome': 'Catedral Tirzedral 15 mg (Ampola Avulsa)',
         'tipo': 'ampola_avulsa',
         'apresentacao': '1 ampola liofilizada de 15 mg (Catedral)',
-        'qtd': 3,
+        'qtd': 0,
         'obs': 'Ampola avulsa oficial Catedral'
     },
     {
@@ -131,7 +141,7 @@ ESTOQUE_LOCAL = [
         'nome': 'Retatrutida Gen-Health 120 mg (Frasco para Doses)',
         'tipo': 'frasco_doses',
         'apresentacao': 'Frasco de 120 mg aberto reservado para aplicação fracionada',
-        'qtd': 1,
+        'qtd': 0,
         'obs': 'Frasco aberto exclusivo para doses locais'
     },
     {
@@ -139,7 +149,7 @@ ESTOQUE_LOCAL = [
         'nome': 'Tirzepatida Gen-Tirz 120 mg (Frasco para Doses)',
         'tipo': 'frasco_doses',
         'apresentacao': 'Frasco de 120 mg aberto reservado para aplicação fracionada',
-        'qtd': 1,
+        'qtd': 0,
         'obs': 'Frasco aberto exclusivo para doses locais'
     }
 ]
@@ -164,9 +174,28 @@ def main():
         itens_calculados.append(enriched)
 
     total_caixas_60 = sum(item['qtd'] for item in itens_calculados if item['tipo'] == 'caixa_fechada')
-    total_ampolas_60 = sum(item['qtd'] for item in itens_calculados if item['tipo'] in ['ampola_fechada', 'kit_fechado'])
+    total_ampolas_60 = sum(
+        (item['qtd'] * 4 if item['tipo'] == 'kit_fechado' else item['qtd'])
+        for item in itens_calculados if item['tipo'] in ['ampola_fechada', 'kit_fechado']
+    )
     total_ampolas_15 = sum(item['qtd'] for item in itens_calculados if item['tipo'] == 'ampola_avulsa')
     total_frascos_120 = sum(item['qtd'] for item in itens_calculados if item['tipo'] == 'frasco_doses')
+
+    # Rateio proporcional exato do valor total pago informado (CUSTO_TOTAL_PAGO_LOTE = R$ 3.175,00)
+    total_tabela_custo = sum(item['qtd'] * item['custo_brl'] for item in itens_calculados if item['qtd'] > 0)
+    custos_reais_seed = {}
+    pago_cent_restante = int(round(CUSTO_TOTAL_PAGO_LOTE * 100))
+    ativos_pago = [it for it in itens_calculados if it['qtd'] > 0]
+    for idx_it, item in enumerate(ativos_pago):
+        peso = item['qtd'] * item['custo_brl']
+        if idx_it == len(ativos_pago) - 1:
+            parcela_cent = pago_cent_restante
+        else:
+            parcela_cent = int(round((CUSTO_TOTAL_PAGO_LOTE * 100) * (peso / total_tabela_custo))) if total_tabela_custo > 0 else 0
+            pago_cent_restante -= parcela_cent
+        item['custo_pago_total_brl'] = round(parcela_cent / 100.0, 2)
+        item['custo_pago_unit_brl'] = round((parcela_cent / 100.0) / item['qtd'], 2)
+        custos_reais_seed[str(item['id_catalogo'])] = item['custo_pago_unit_brl']
 
     total_faturamento_pix = sum(item['qtd'] * item['preco_pix'] for item in itens_calculados)
     total_faturamento_cartao = sum(item['qtd'] * item['preco_cartao'] for item in itens_calculados)
@@ -177,12 +206,15 @@ def main():
         'local': 'Belo Horizonte / MG (Pronta Entrega)',
         'resumo': {
             'caixas_fechadas_60mg': total_caixas_60,
-            'ampolas_retatrutida_60mg': total_ampolas_60 + 3,
+            'ampolas_retatrutida_60mg': total_ampolas_60,
             'ampolas_avulsas_15mg': total_ampolas_15,
             'frascos_doses_120mg': total_frascos_120,
-            'total_itens_contabilizados': len(itens_calculados),
+            'total_itens_contabilizados': len([it for it in itens_calculados if it['qtd'] > 0]),
+            'custo_total_pago_brl': round(CUSTO_TOTAL_PAGO_LOTE, 2),
+            'custo_referencia_site_brl': round(total_tabela_custo, 2),
             'faturamento_potencial_pix': total_faturamento_pix,
-            'faturamento_potencial_cartao': total_faturamento_cartao
+            'faturamento_potencial_cartao': total_faturamento_cartao,
+            'lucro_potencial_pix_sobre_pago': round(total_faturamento_pix - CUSTO_TOTAL_PAGO_LOTE, 2)
         },
         'itens': itens_calculados
     }
@@ -200,7 +232,8 @@ def main():
     qtd_map = {}
     for item in ESTOQUE_LOCAL:
         cid = item['id_catalogo']
-        qtd_map[cid] = qtd_map.get(cid, 0) + item['qtd']
+        if item['qtd'] > 0:
+            qtd_map[cid] = qtd_map.get(cid, 0) + item['qtd']
 
     cat_data.pop('meu_estoque_resumo', None)
     cat_data.pop('meu_estoque_qtds', None)
@@ -228,6 +261,7 @@ def main():
     with open(seed_path, 'w', encoding='utf-8') as fs_seed:
         json.dump({
             'meuEstoque': qtd_map,
+            'custosReais': custos_reais_seed,
             'pedidosTransito': pedidos_transito
         }, fs_seed, ensure_ascii=False, indent=2)
 
