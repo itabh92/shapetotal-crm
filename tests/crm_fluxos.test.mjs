@@ -382,46 +382,76 @@ test('seguranca e limpeza UI: sem credenciais/estoque hardcoded/modais mortos e 
   assert.match(storeIdx, /downloader:\s*null/);
 });
 
-test('precificacao padronizada: dolar 5.85 + 30% frete (7.605), cartao +12%, sem precos fixos e 100% alinhado com pricing_config.json', () => {
+test('precificacao padronizada: dolar 5.84 + 30% frete (7.592), cartao 12x s/j (+12.012% sem perda), estrategia REC/MAX e alinhamento com pricing_config.json', () => {
   const { CRM, doc } = createHarness();
   const snap = CRM.getPricingSnapshot();
 
   assert.equal(snap.pricingPolicyVersion, pricingJson.version);
-  assert.equal(snap.cotacao, 5.85);
+  assert.equal(snap.cotacao, 5.84);
   assert.equal(snap.fretePct, 30);
-  assert.equal(snap.taxaCartaoPct, 12);
+  assert.equal(snap.taxaCartaoPct, 12.012);
+  assert.equal(snap.activeTier, 'auto');
   assert.deepEqual(JSON.parse(JSON.stringify(snap.groupMargins)), pricingJson.groupMargins);
 
   const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'catalogo_dados.json'), 'utf8')).productos;
   const byId = id => catalog.find(x => Number(x.id) === Number(id));
 
-  // Tirzepatida TG 60mg (USD 85 * 7.605 = R$ 646,42): 35%/48%/65%
+  // Tirzepatida TG 60mg (USD 85 * 7.592 = R$ 645,32): competitivo -> REC (48%)
   const tg60 = CRM.computeProduct(byId(2848));
-  assert.equal(Math.round(tg60.custo * 100) / 100, 646.42);
+  assert.equal(Math.round(tg60.custo * 100) / 100, 645.32);
   assert.equal(tg60.groupKey, 'emagrecedores');
+  assert.equal(tg60.chosenTier, 'rec');
   assert.equal(tg60.precoMin, 880);
   assert.equal(tg60.precoRec, 960);
   assert.equal(tg60.precoMax, 1070);
+  assert.equal(tg60.precoFinal, 960);
   assert.equal(tg60.precoCartao, 1080);
+  assert.ok(tg60.liquidoCartao12x >= tg60.precoFinal);
 
-  // ZPHC Retatrutida 60mg (USD 190 * 7.605 = R$ 1.444,95) nunca mais da prejuizo (era R$ 1.000 fixo)
+  // Retatrutida Gen-Health 60mg (2830): alta demanda -> MAX (65%)
+  const genReta60 = CRM.computeProduct(byId(2830));
+  assert.equal(genReta60.chosenTier, 'max');
+  assert.equal(genReta60.precoFinal, 1070);
+  assert.equal(genReta60.precoCartao, 1200);
+  assert.ok(genReta60.liquidoCartao12x >= genReta60.precoFinal);
+
+  // Retatrutida Gen-Health 240mg Kit (3370): MAX (65%)
+  const genReta240 = CRM.computeProduct(byId(3370));
+  assert.equal(genReta240.chosenTier, 'max');
+  assert.equal(genReta240.precoFinal, 2890);
+  assert.equal(genReta240.precoCartao, 3240);
+  assert.ok(genReta240.liquidoCartao12x >= genReta240.precoFinal);
+
+  // ZPHC Retatrutida 60mg (USD 190 * 7.592 = R$ 1.442,48) <= R$ 1.800 -> MAX (65%)
   const zphcReta = CRM.computeProduct(byId(2965));
-  assert.equal(Math.round(zphcReta.custo * 100) / 100, 1444.95);
-  assert.ok(zphcReta.precoRec > zphcReta.custo);
-  assert.equal(zphcReta.precoRec, 2140);
-  assert.equal(zphcReta.precoCartao, 2400);
+  assert.equal(Math.round(zphcReta.custo * 100) / 100, 1442.48);
+  assert.equal(zphcReta.chosenTier, 'max');
+  assert.equal(zphcReta.precoFinal, 2390);
+  assert.equal(zphcReta.precoCartao, 2680);
 
-  // Somatropina rotulada como anabolizante na API (ID 3214) cai no grupo hgh (35% Rec)
+  // Somatropina rotulada como anabolizante na API (ID 3214) cai no grupo hgh -> sempre REC (35%)
   const bratvaGh = CRM.computeProduct(byId(3214));
   assert.equal(bratvaGh.groupKey, 'hgh');
+  assert.equal(bratvaGh.chosenTier, 'rec');
   assert.equal(bratvaGh.recPct, 35);
-  assert.equal(bratvaGh.precoRec, 2060);
 
-  // Diluente micro-ticket (ID 1522 USD 1.50 -> R$ 11,41) tem margem de suporte (75% Rec) e cartao proporcional (+12%)
+  // Diluente micro-ticket (ID 1522 USD 1.50 -> R$ 11,39) cai em potencia_suporte -> sempre MAX (100%)
   const dil = CRM.computeProduct(byId(1522));
   assert.equal(dil.groupKey, 'potencia_suporte');
-  assert.equal(dil.precoRec, 20);
-  assert.equal(dil.precoCartao, 23);
+  assert.equal(dil.chosenTier, 'max');
+  assert.equal(dil.precoFinal, 23);
+  assert.equal(dil.precoCartao, 26);
+
+  // Garantia matematica: 100% dos produtos validos do catalogo recebem liquido >= PIX no 12x sem juros
+  for (const raw of catalog) {
+    const comp = CRM.computeProduct(raw);
+    if (!comp.hasPriceIssue && comp.precoFinal > 0) {
+      assert.ok(
+        comp.liquidoCartao12x >= comp.precoFinal,
+        `SKU ${raw.id} perdeu no 12x: liq=${comp.liquidoCartao12x} < pix=${comp.precoFinal}`
+      );
+    }
+  }
 
   // Produto com USD <= 0.05 nao gera venda a R$ 0,00
   const zeroUsd = CRM.computeProduct(byId(3433));
@@ -429,21 +459,23 @@ test('precificacao padronizada: dolar 5.85 + 30% frete (7.605), cartao +12%, sem
   assert.equal(zeroUsd.precoFinal, 0);
   assert.equal(zeroUsd.precoCartao, 0);
 
-  // Doses de 120mg acompanham a cotacao do frasco dinamicamente
+  // Doses de 120mg acompanham a estrategia do frasco dinamicamente
   const doseTirz = CRM.computeDoseVialConfig(9006);
+  assert.equal(doseTirz.frascoPricing.chosenTier, 'rec');
   assert.deepEqual(Array.from(doseTirz.doses.map(d => d.preco)), [65, 125, 175]);
   const doseReta = CRM.computeDoseVialConfig(9005);
-  assert.deepEqual(Array.from(doseReta.doses.map(d => d.preco)), [80, 150, 210]);
+  assert.equal(doseReta.frascoPricing.chosenTier, 'max');
+  assert.deepEqual(Array.from(doseReta.doses.map(d => d.preco)), [90, 165, 235]);
 
-  // WhatsApp dinamico Tirz & Reta usa os precos calculados (sem R$ 900/1.000 fixo legado)
+  // WhatsApp dinamico Tirz & Reta usa os precos calculados (TG 960 e Reta 60mg 1070)
   CRM.openWhatsAppCatalogModal('tabela_especial');
   const waText = doc.getElementById('waCatalogText').value;
   assert.match(waText, /960,00/);
-  assert.match(waText, /2\.140,00/);
+  assert.match(waText, /1\.070,00/);
   assert.doesNotMatch(waText, /R\$ 900,00/);
 });
 
-test('migracao automatica de estado legado (5.60 e customPrice) preserva historico e adota regra 5.85 + 30%', () => {
+test('migracao automatica de estado legado (5.60 e customPrice) preserva historico e adota regra 5.84 + 30% + 12.012% + estrategico', () => {
   const { CRM, getState } = createHarness({
     initialState: {
       cotacao: 5.6,
@@ -463,10 +495,10 @@ test('migracao automatica de estado legado (5.60 e customPrice) preserva histori
 
   const snap = CRM.getPricingSnapshot();
   assert.equal(snap.pricingPolicyVersion, pricingJson.version);
-  assert.equal(snap.cotacao, 5.85);
+  assert.equal(snap.cotacao, 5.84);
   assert.equal(snap.fretePct, 30);
-  assert.equal(snap.taxaCartaoPct, 12);
-  assert.equal(snap.activeTier, 'rec');
+  assert.equal(snap.taxaCartaoPct, 12.012);
+  assert.equal(snap.activeTier, 'auto');
   assert.equal(snap.groupMargins.emagrecedores.rec, 48);
 
   const saved = getState();

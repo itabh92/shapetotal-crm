@@ -43,7 +43,7 @@ COLECOES_CONFIG = {
         'brand_bar_border': '#86efac',
         'brand_bar_text': '#065f46',
         'price_pix_color': '#047857',
-        'garantia_texto': 'Garantia Shape Total: Triplos e duplos agonistas GLP-1/GIP/Glucagon autênticos, termogênicos e lipolíticos formulados para máxima queima de gordura e definição corporal. Pagamento seguro à vista no PIX com margem tabelada ou Cartão de Crédito em até 12x sem juros para Tirzepatidas e Retatrutida (demais em até 6x).'
+        'garantia_texto': 'Garantia Shape Total: Triplos e duplos agonistas GLP-1/GIP/Glucagon autênticos, termogênicos e lipolíticos formulados para máxima queima de gordura e definição corporal. Pagamento seguro à vista no PIX com margem tabelada ou Cartão de Crédito em até 12x sem juros.'
     },
     '2_anabolizantes': {
         'id': '2_anabolizantes',
@@ -56,7 +56,7 @@ COLECOES_CONFIG = {
         'brand_bar_border': '#fcd34d',
         'brand_bar_text': '#78350f',
         'price_pix_color': '#b45309',
-        'garantia_texto': 'Garantia Shape Total: Esteroides injetáveis e orais 100% originais com QR Code de autenticidade, SARMs purificados e protetores pós-ciclo (TPC). Pagamento à vista no PIX ou Cartão de Crédito parcelado em até 6x sem juros.'
+        'garantia_texto': 'Garantia Shape Total: Esteroides injetáveis e orais 100% originais com QR Code de autenticidade, SARMs purificados e protetores pós-ciclo (TPC). Pagamento à vista no PIX ou Cartão de Crédito parcelado em até 12x sem juros.'
     },
     '3_hgh_peptideos': {
         'id': '3_hgh_peptideos',
@@ -69,7 +69,7 @@ COLECOES_CONFIG = {
         'brand_bar_border': '#7dd3fc',
         'brand_bar_text': '#0369a1',
         'price_pix_color': '#0284c7',
-        'garantia_texto': 'Garantia Shape Total Biotech: Somatropina autêntica e peptídeos liofilizados com certificação de pureza analítica 99.5%+. Suporte celular, regeneração de ligamentos e anti-aging. Pagamento à vista no PIX ou Cartão de Crédito em até 6x.'
+        'garantia_texto': 'Garantia Shape Total Biotech: Somatropina autêntica e peptídeos liofilizados com certificação de pureza analítica 99.5%+. Suporte celular, regeneração de ligamentos e anti-aging. Pagamento à vista no PIX ou Cartão de Crédito em até 12x sem juros.'
     },
     '4_estetica': {
         'id': '4_estetica',
@@ -82,7 +82,7 @@ COLECOES_CONFIG = {
         'brand_bar_border': '#fbcfe8',
         'brand_bar_text': '#9d174d',
         'price_pix_color': '#be185d',
-        'garantia_texto': 'Garantia Shape Total Estética: Produtos médicos originais para harmonização facial e corporal de distribuidores oficiais. Cadeia de frio e lote rastreável. Pagamento à vista no PIX ou Cartão em até 6x sem juros.'
+        'garantia_texto': 'Garantia Shape Total Estética: Produtos médicos originais para harmonização facial e corporal de distribuidores oficiais. Cadeia de frio e lote rastreável. Pagamento à vista no PIX ou Cartão em até 12x sem juros.'
     },
     '5_saude_mental_suporte': {
         'id': '5_saude_mental_suporte',
@@ -95,7 +95,7 @@ COLECOES_CONFIG = {
         'brand_bar_border': '#c7d2fe',
         'brand_bar_text': '#3730a3',
         'price_pix_color': '#4338ca',
-        'garantia_texto': 'Garantia Shape Total Saúde: Nootrópicos de alta performance para foco e produtividade, potencializadores de vigor e diluentes estéreis. Pagamento à vista no PIX com margem máxima ou Cartão parcelado em até 6x.'
+        'garantia_texto': 'Garantia Shape Total Saúde: Nootrópicos de alta performance para foco e produtividade, potencializadores de vigor e diluentes estéreis. Pagamento à vista no PIX ou Cartão parcelado em até 12x sem juros.'
     }
 }
 
@@ -143,7 +143,7 @@ def classify_product(p):
     return '2_anabolizantes'
 
 def get_product_prices(p, col_id):
-    res = compute_product_pricing(p, tier='rec', cfg=PRICING_CFG)
+    res = compute_product_pricing(p, tier='auto', cfg=PRICING_CFG)
     return res['preco_pix'], res['preco_cartao'], res['has_price_issue']
 
 def get_product_image(pid, max_w=95, max_h=95):
@@ -423,8 +423,7 @@ def generate_pdf_for_collection(col_id, prods, cfg):
             
             for p in b_prods:
                 pix, cartao, has_price_issue = get_product_prices(p, col_id)
-                is_12x = ('tirzepatid' in (p.get('nombre') or '').lower() or 'retatrutid' in (p.get('nombre') or '').lower() or int(p.get('id') or 0) in range(9001, 9008))
-                num_parc = 12 if is_12x else 6
+                num_parc = 12
                 parc = round(cartao / num_parc, 2) if cartao > 0 else 0
                 
                 nome = p.get('nombre') or 'Produto sem nome'

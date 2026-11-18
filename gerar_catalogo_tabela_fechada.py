@@ -338,7 +338,7 @@ def main():
         
         for p in sec['produtos']:
             prod_raw = cat_by_id.get(int(p['id_catalogo']), {'id': p['id_catalogo'], 'precio': 0, 'categoria': 'emagrecedores'})
-            pricing = compute_product_pricing(prod_raw, tier='rec', cfg=pricing_cfg)
+            pricing = compute_product_pricing(prod_raw, tier='auto', cfg=pricing_cfg)
             pix = pricing['preco_pix']
             cartao = pricing['preco_cartao']
             parc = round(cartao / 12, 2) if cartao > 0 else 0

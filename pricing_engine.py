@@ -103,8 +103,51 @@ def map_category_to_group_key(product_or_cat):
     return 'potencia_suporte'
 
 
-def compute_product_pricing(product, tier='rec', cotacao=None, frete_pct=None, taxa_cartao_pct=None, cfg=None):
-    """Calcula custo aterrisado e faixas Mínimo / Recomendado / Máximo + Cartão."""
+def resolve_strategic_tier(product, custo, gkey=None, cfg=None):
+    """Decide entre 'rec' e 'max' por perfil de margem, ticket e elasticidade."""
+    if cfg is None:
+        cfg = load_pricing_config()
+    if gkey is None:
+        gkey = map_category_to_group_key(product)
+    strategy = cfg.get('tierStrategy', {})
+    always_rec = set(strategy.get('alwaysRecGroups', ['hgh']))
+    always_max = set(strategy.get('alwaysMaxGroups', ['potencia_suporte']))
+
+    if gkey in always_rec:
+        return 'rec', 'Ticket alto / mercado competitivo'
+    if gkey in always_max:
+        return 'max', 'Ticket baixo de conveniência'
+
+    nom = (product.get('nombre') or '').lower()
+    comp = (product.get('composicion') or '').lower()
+    txt = f"{nom} {comp}".strip()
+
+    if gkey == 'emagrecedores':
+        emag_cfg = strategy.get('emagrecedores', {})
+        reta_cutoff = float(emag_cfg.get('retatrutidaMaxCostCutoff', 1800))
+        def_cutoff = float(emag_cfg.get('defaultMaxCostCutoff', 350))
+        if 'retatrutid' in txt or 'retratutid' in txt:
+            if custo > reta_cutoff:
+                return 'rec', 'Retatrutida ultra-ticket'
+            return 'max', 'Retatrutida alta demanda'
+        if custo <= def_cutoff:
+            return 'max', 'Ampola/emagrecedor ticket acessível'
+        return 'rec', 'GLP-1 competitivo de giro'
+
+    if gkey == 'peptideo':
+        pep_cutoff = float(strategy.get('peptideoMaxCostCutoff', 700))
+        if custo <= pep_cutoff:
+            return 'max', 'Peptídeo de nicho técnico'
+        return 'rec', 'Peptídeo ticket alto'
+
+    def_cutoff = float(strategy.get('defaultMaxCostCutoff', 300))
+    if custo <= def_cutoff:
+        return 'max', 'Ticket acessível (+lucro)'
+    return 'rec', 'Ticket médio/alto competitivo'
+
+
+def compute_product_pricing(product, tier='auto', cotacao=None, frete_pct=None, taxa_cartao_pct=None, cfg=None):
+    """Calcula custo aterrisado e faixas Mínimo / Recomendado / Máximo + Cartão 12x sem perda."""
     if cfg is None:
         cfg = load_pricing_config()
     cot = float(cotacao if cotacao is not None else cfg['cotacao'])
@@ -131,11 +174,15 @@ def compute_product_pricing(product, tier='rec', cotacao=None, frete_pct=None, t
             'min_pct': min_pct,
             'rec_pct': rec_pct,
             'max_pct': max_pct,
+            'effective_tier': 'rec',
+            'tier_reason': 'USD pendente',
             'preco_min': 0,
             'preco_rec': 0,
             'preco_max': 0,
             'preco_pix': 0,
             'preco_cartao': 0,
+            'parcela_12x': 0.0,
+            'liquido_12x': 0.0,
             'lucro_pix': 0.0,
             'has_price_issue': True,
         }
@@ -144,14 +191,23 @@ def compute_product_pricing(product, tier='rec', cotacao=None, frete_pct=None, t
     preco_rec = round_retail_brl(custo * (1.0 + rec_pct / 100.0), cfg)
     preco_max = round_retail_brl(custo * (1.0 + max_pct / 100.0), cfg)
 
-    if tier == 'min':
+    effective_tier = tier
+    tier_reason = ''
+    if tier == 'auto':
+        effective_tier, tier_reason = resolve_strategic_tier(product, custo, gkey, cfg)
+
+    if effective_tier == 'min':
         preco_pix = preco_min
-    elif tier == 'max':
+    elif effective_tier == 'max':
         preco_pix = preco_max
     else:
+        effective_tier = 'rec'
         preco_pix = preco_rec
 
     preco_cartao = round_retail_brl(preco_pix * (1.0 + cartao_pct / 100.0), cfg)
+    liquido_12x = round(preco_cartao / (1.0 + cartao_pct / 100.0), 2) if preco_cartao > 0 else 0.0
+    parcela_12x = round(preco_cartao / 12.0, 2) if preco_cartao > 0 else 0.0
+
     return {
         'usd': usd,
         'mult_custo': mult_custo,
@@ -160,17 +216,21 @@ def compute_product_pricing(product, tier='rec', cotacao=None, frete_pct=None, t
         'min_pct': min_pct,
         'rec_pct': rec_pct,
         'max_pct': max_pct,
+        'effective_tier': effective_tier,
+        'tier_reason': tier_reason,
         'preco_min': preco_min,
         'preco_rec': preco_rec,
         'preco_max': preco_max,
         'preco_pix': preco_pix,
         'preco_cartao': preco_cartao,
+        'parcela_12x': parcela_12x,
+        'liquido_12x': liquido_12x,
         'lucro_pix': round(preco_pix - custo, 2),
         'has_price_issue': False,
     }
 
 
-def compute_dose_table(product, tier='rec', cfg=None):
+def compute_dose_table(product, tier='auto', cfg=None):
     """Calcula preços dinâmicos por dose fracionada (mg) para frascos de 120mg."""
     if cfg is None:
         cfg = load_pricing_config()

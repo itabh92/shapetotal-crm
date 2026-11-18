@@ -1,11 +1,88 @@
 {
-  "version": "2026-11-17-v1",
-  "updatedAt": "2026-11-17",
-  "currencyNote": "Custo fixo = USD site * cotacao * (1 + fretePct / 100). Frete fixo 30%; muda apenas Dolar ou preco USD do site.",
-  "cotacao": 5.85,
+  "version": "2026-11-18-v2",
+  "updatedAt": "2026-11-18",
+  "currencyNote": "Custo fixo = USD site * cotacao * (1 + fretePct / 100). Frete fixo 30%; cartao 12x s/ juros usa 12.012% (simulacao R$ 1.000 -> R$ 1.120,12 = 12x R$ 93,34) garantindo liquido >= PIX.",
+  "cotacao": 5.84,
   "fretePct": 30,
-  "taxaCartaoPct": 12,
+  "taxaCartaoPct": 12.012,
+  "defaultTier": "auto",
   "minValidUsd": 0.05,
+  "cardInstallments": {
+    "1": {
+      "markupPct": 3.04,
+      "mdrPct": 2.9503,
+      "sampleTotal1000": 1030.4
+    },
+    "2": {
+      "markupPct": 3.648,
+      "mdrPct": 3.5196,
+      "sampleTotal1000": 1036.48
+    },
+    "3": {
+      "markupPct": 4.395,
+      "mdrPct": 4.21,
+      "sampleTotal1000": 1043.95
+    },
+    "4": {
+      "markupPct": 5.152,
+      "mdrPct": 4.8996,
+      "sampleTotal1000": 1051.52
+    },
+    "5": {
+      "markupPct": 5.92,
+      "mdrPct": 5.5891,
+      "sampleTotal1000": 1059.2
+    },
+    "6": {
+      "markupPct": 6.702,
+      "mdrPct": 6.281,
+      "sampleTotal1000": 1067.02
+    },
+    "7": {
+      "markupPct": 7.84,
+      "mdrPct": 7.27,
+      "sampleTotal1000": 1078.4
+    },
+    "8": {
+      "markupPct": 8.648,
+      "mdrPct": 7.9597,
+      "sampleTotal1000": 1086.48
+    },
+    "9": {
+      "markupPct": 9.468,
+      "mdrPct": 8.6491,
+      "sampleTotal1000": 1094.68
+    },
+    "10": {
+      "markupPct": 10.3,
+      "mdrPct": 9.3382,
+      "sampleTotal1000": 1103.0
+    },
+    "11": {
+      "markupPct": 11.143,
+      "mdrPct": 10.0258,
+      "sampleTotal1000": 1111.43
+    },
+    "12": {
+      "markupPct": 12.012,
+      "mdrPct": 10.7239,
+      "sampleTotal1000": 1120.12
+    }
+  },
+  "tierStrategy": {
+    "alwaysRecGroups": [
+      "hgh"
+    ],
+    "alwaysMaxGroups": [
+      "potencia_suporte"
+    ],
+    "emagrecedores": {
+      "retatrutidaMaxCostCutoff": 1800,
+      "defaultMaxCostCutoff": 350
+    },
+    "peptideoMaxCostCutoff": 700,
+    "defaultMaxCostCutoff": 300
+  },
   "rounding": {
     "below50Step": 1,
     "from50To299Step": 5,

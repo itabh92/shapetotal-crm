@@ -139,6 +139,7 @@ body {
   cursor: pointer;
   transition: 0.15s;
 }
+.tier-btn.active-auto { background: linear-gradient(135deg, #059669, #d97706); color: #fff; }
 .tier-btn.active-min { background: #0284c7; color: #fff; }
 .tier-btn.active-rec { background: var(--accent); color: #fff; }
 .tier-btn.active-max { background: #d97706; color: #fff; }

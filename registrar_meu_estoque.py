@@ -166,9 +166,10 @@ def main():
     itens_calculados = []
     for item in ESTOQUE_LOCAL:
         prod = cat_by_id.get(int(item['id_catalogo']), {'id': item['id_catalogo'], 'precio': 0, 'categoria': 'emagrecedores'})
-        pr = compute_product_pricing(prod, tier='rec', cfg=pricing_cfg)
+        pr = compute_product_pricing(prod, tier='auto', cfg=pricing_cfg)
         enriched = dict(item)
         enriched['custo_brl'] = pr['custo']
+        enriched['tier_estrategico'] = pr['effective_tier']
         enriched['preco_pix'] = float(pr['preco_pix'])
         enriched['preco_cartao'] = float(pr['preco_cartao'])
         itens_calculados.append(enriched)
@@ -357,7 +358,7 @@ def main():
         qtd = item['qtd']
         pix = item['preco_pix']
         cartao = item['preco_cartao']
-        num_parc = 12 if item['tipo'] in ['caixa_fechada', 'kit_fechado', 'ampola_fechada', 'ampola_avulsa', 'frasco_doses'] else 6
+        num_parc = 12
         parc = round(cartao / num_parc, 2)
         obs = item['obs']
 

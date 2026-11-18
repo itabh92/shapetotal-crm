@@ -2,11 +2,36 @@
   // Fonte canônica de precificação compartilhada com pricing_config.json / pricing_engine.py.
   // Dados operacionais (estoque, pedidos em trânsito e clientes) ficam exclusivamente no armazenamento local do aparelho (localStorage/IndexedDB).
   const FALLBACK_PRICING_CONFIG = {
-    version: '2026-11-17-v1',
-    cotacao: 5.85,
+    version: '2026-11-18-v2',
+    cotacao: 5.84,
     fretePct: 30,
-    taxaCartaoPct: 12,
+    taxaCartaoPct: 12.012,
+    defaultTier: 'auto',
     minValidUsd: 0.05,
+    cardInstallments: {
+      1: { markupPct: 3.04, mdrPct: 2.9503, sampleTotal1000: 1030.40 },
+      2: { markupPct: 3.648, mdrPct: 3.5196, sampleTotal1000: 1036.48 },
+      3: { markupPct: 4.395, mdrPct: 4.2100, sampleTotal1000: 1043.95 },
+      4: { markupPct: 5.152, mdrPct: 4.8996, sampleTotal1000: 1051.52 },
+      5: { markupPct: 5.92, mdrPct: 5.5891, sampleTotal1000: 1059.20 },
+      6: { markupPct: 6.702, mdrPct: 6.2810, sampleTotal1000: 1067.02 },
+      7: { markupPct: 7.84, mdrPct: 7.2700, sampleTotal1000: 1078.40 },
+      8: { markupPct: 8.648, mdrPct: 7.9597, sampleTotal1000: 1086.48 },
+      9: { markupPct: 9.468, mdrPct: 8.6491, sampleTotal1000: 1094.68 },
+      10: { markupPct: 10.3, mdrPct: 9.3382, sampleTotal1000: 1103.00 },
+      11: { markupPct: 11.143, mdrPct: 10.0258, sampleTotal1000: 1111.43 },
+      12: { markupPct: 12.012, mdrPct: 10.7239, sampleTotal1000: 1120.12 }
+    },
+    tierStrategy: {
+      alwaysRecGroups: ['hgh'],
+      alwaysMaxGroups: ['potencia_suporte'],
+      emagrecedores: {
+        retatrutidaMaxCostCutoff: 1800,
+        defaultMaxCostCutoff: 350
+      },
+      peptideoMaxCostCutoff: 700,
+      defaultMaxCostCutoff: 300
+    },
     rounding: {
       below50Step: 1,
       from50To299Step: 5,
@@ -57,7 +82,7 @@
   const PRICING_CONFIG = (typeof window !== 'undefined' && window.SHAPETOTAL_PRICING_CONFIG)
     ? window.SHAPETOTAL_PRICING_CONFIG
     : FALLBACK_PRICING_CONFIG;
-  const PRICING_POLICY_VERSION = PRICING_CONFIG.version || '2026-11-17-v1';
+  const PRICING_POLICY_VERSION = PRICING_CONFIG.version || '2026-11-18-v2';
   const FIXED_FRETE_PCT = Number(PRICING_CONFIG.fretePct ?? 30);
   const DEFAULT_GROUP_MARGINS = JSON.parse(JSON.stringify(PRICING_CONFIG.groupMargins));
 
@@ -67,10 +92,10 @@
 
   let state = {
     pricingPolicyVersion: PRICING_POLICY_VERSION,
-    cotacao: Number(PRICING_CONFIG.cotacao) || 5.85,
+    cotacao: Number(PRICING_CONFIG.cotacao) || 5.84,
     fretePct: FIXED_FRETE_PCT,
-    taxaCartaoPct: Number(PRICING_CONFIG.taxaCartaoPct ?? 12),
-    activeTier: 'rec', // 'min' | 'rec' | 'max'
+    taxaCartaoPct: Number(PRICING_CONFIG.taxaCartaoPct ?? 12.012),
+    activeTier: PRICING_CONFIG.defaultTier || 'auto', // 'auto' | 'min' | 'rec' | 'max'
     viewMode: 'grid', // 'grid' | 'table'
     clientMode: false,
     mainGroup: 'todas',
@@ -238,10 +263,10 @@
         state.canonVistos = Array.isArray(parsed.canonVistos) ? parsed.canonVistos.map(String) : [];
         state.pricingPolicyVersion = PRICING_POLICY_VERSION;
         if (isCurrentPolicy) {
-          state.cotacao = Number(parsed.cotacao) || Number(PRICING_CONFIG.cotacao) || 5.80;
+          state.cotacao = Number(parsed.cotacao) || Number(PRICING_CONFIG.cotacao) || 5.84;
           state.fretePct = FIXED_FRETE_PCT;
-          state.taxaCartaoPct = parsed.taxaCartaoPct !== undefined ? Number(parsed.taxaCartaoPct) : Number(PRICING_CONFIG.taxaCartaoPct ?? 12);
-          state.activeTier = parsed.activeTier || 'rec';
+          state.taxaCartaoPct = parsed.taxaCartaoPct !== undefined ? Number(parsed.taxaCartaoPct) : Number(PRICING_CONFIG.taxaCartaoPct ?? 12.012);
+          state.activeTier = parsed.activeTier || PRICING_CONFIG.defaultTier || 'auto';
           if (parsed.groupMargins) {
             for (const k of Object.keys(DEFAULT_GROUP_MARGINS)) {
               if (parsed.groupMargins[k]) {
@@ -251,11 +276,11 @@
           }
           state.overrides = parsed.overrides || {};
         } else {
-          // Migração automática da política legada: desconsidera cotação antiga, margens antigas e preços fixos individuais
-          state.cotacao = Number(PRICING_CONFIG.cotacao) || 5.80;
+          // Migração automática da política legada: adota cotação atual, taxa 12x sem perda (12.012%) e modo estratégico
+          state.cotacao = Number(PRICING_CONFIG.cotacao) || 5.84;
           state.fretePct = FIXED_FRETE_PCT;
-          state.taxaCartaoPct = Number(PRICING_CONFIG.taxaCartaoPct ?? 12);
-          state.activeTier = 'rec';
+          state.taxaCartaoPct = Number(PRICING_CONFIG.taxaCartaoPct ?? 12.012);
+          state.activeTier = PRICING_CONFIG.defaultTier || 'auto';
           state.groupMargins = cloneDefaultGroupMargins();
           const cleanedOverrides = {};
           if (parsed.overrides && typeof parsed.overrides === 'object') {
@@ -397,7 +422,7 @@
         if (imp[k] !== undefined && isFinite(Number(imp[k]))) out[k] = Number(imp[k]);
       });
       out.fretePct = FIXED_FRETE_PCT;
-      if (['min', 'rec', 'max'].includes(imp.activeTier)) out.activeTier = imp.activeTier;
+      if (['auto', 'min', 'rec', 'max'].includes(imp.activeTier)) out.activeTier = imp.activeTier;
     }
     if (isObj(imp.meuEstoque)) {
       out.meuEstoque = {};
@@ -1100,6 +1125,37 @@
     return 'outros';
   }
 
+  function resolveStrategicTier(p, custo, gKey) {
+    const strategy = PRICING_CONFIG.tierStrategy || {};
+    const alwaysRec = new Set(strategy.alwaysRecGroups || ['hgh']);
+    const alwaysMax = new Set(strategy.alwaysMaxGroups || ['potencia_suporte']);
+    if (alwaysRec.has(gKey)) return { tier: 'rec', reason: 'Ticket alto / mercado competitivo' };
+    if (alwaysMax.has(gKey)) return { tier: 'max', reason: 'Ticket baixo de conveniência' };
+
+    const txt = `${p.nombre || ''} ${p.composicion || ''}`.toLowerCase();
+    if (gKey === 'emagrecedores') {
+      const emagCfg = strategy.emagrecedores || {};
+      const retaCutoff = Number(emagCfg.retatrutidaMaxCostCutoff ?? 1800);
+      const defCutoff = Number(emagCfg.defaultMaxCostCutoff ?? 350);
+      if (txt.includes('retatrutid') || txt.includes('retratutid')) {
+        if (custo > retaCutoff) return { tier: 'rec', reason: 'Retatrutida ultra-ticket' };
+        return { tier: 'max', reason: 'Retatrutida alta demanda' };
+      }
+      if (custo <= defCutoff) return { tier: 'max', reason: 'Ampola/emagrecedor acessível' };
+      return { tier: 'rec', reason: 'GLP-1 competitivo de giro' };
+    }
+
+    if (gKey === 'peptideo') {
+      const pepCutoff = Number(strategy.peptideoMaxCostCutoff ?? 700);
+      if (custo <= pepCutoff) return { tier: 'max', reason: 'Peptídeo de nicho técnico' };
+      return { tier: 'rec', reason: 'Peptídeo ticket alto' };
+    }
+
+    const defCutoff = Number(strategy.defaultMaxCostCutoff ?? 300);
+    if (custo <= defCutoff) return { tier: 'max', reason: 'Ticket acessível (+lucro)' };
+    return { tier: 'rec', reason: 'Ticket médio/alto competitivo' };
+  }
+
   function computeProduct(p) {
     const ov = state.overrides[p.id] || {};
     const usd = ov.usd !== undefined && ov.usd !== '' ? Number(ov.usd) : Number(p.precio || 0);
@@ -1124,13 +1180,22 @@
     const lucroRec = Math.max(0, precoRec - custo);
     const lucroMax = Math.max(0, precoMax - custo);
 
-    const chosenTier = ov.tier || state.activeTier;
-    let precoFinal = precoRec;
+    const requestedTier = ov.tier || state.activeTier || 'auto';
+    let effectiveTier = requestedTier;
+    let tierReason = '';
+    if (requestedTier === 'auto') {
+      const st = resolveStrategicTier(p, custo, gKey);
+      effectiveTier = st.tier;
+      tierReason = st.reason;
+    }
 
-    if (chosenTier === 'min') {
+    let precoFinal = precoRec;
+    if (effectiveTier === 'min') {
       precoFinal = precoMin;
-    } else if (chosenTier === 'max') {
+    } else if (effectiveTier === 'max') {
       precoFinal = precoMax;
+    } else {
+      effectiveTier = 'rec';
     }
 
     if (ov.customMargin !== undefined && ov.customMargin !== '') {
@@ -1142,10 +1207,12 @@
 
     const margemAplicada = (!hasPriceIssue && custo > 0) ? Math.round(((precoFinal - custo) / custo) * 100) : 0;
     const lucroFinal = hasPriceIssue ? 0 : (precoFinal - custo);
-    const cardPct = Number(state.taxaCartaoPct ?? 12);
+    const cardPct = Number(state.taxaCartaoPct ?? 12.012);
     const precoCartao = (!hasPriceIssue && precoFinal > 0)
       ? roundRetailBRL(precoFinal * (1 + cardPct / 100))
       : 0;
+    const liquidoCartao12x = precoCartao > 0 ? Math.round((precoCartao / (1 + cardPct / 100)) * 100) / 100 : 0;
+    const parcela12x = precoCartao > 0 ? Math.round((precoCartao / 12) * 100) / 100 : 0;
 
     const cde = Number(p.stock_cde || 0);
     const pj = Number(p.stock_pj || 0);
@@ -1171,9 +1238,12 @@
       lucroMin,
       lucroRec,
       lucroMax,
-      chosenTier,
+      chosenTier: effectiveTier,
+      tierReason,
       precoFinal,
       precoCartao,
+      liquidoCartao12x,
+      parcela12x,
       lucroFinal,
       margemAplicada,
       cde,
@@ -1790,6 +1860,19 @@
         renderAll();
       });
     });
+
+    const cardSummary = document.getElementById('cardInstallmentsSummary');
+    if (cardSummary && PRICING_CONFIG.cardInstallments) {
+      const pills = Object.entries(PRICING_CONFIG.cardInstallments).map(([n, info]) =>
+        `<span style="display:inline-block;padding:3px 7px;border-radius:6px;background:#0f172a;border:1px solid ${Number(n) === 12 ? '#38bdf8' : '#1e293b'};font-size:11px;color:${Number(n) === 12 ? '#7dd3fc' : '#cbd5e1'};"><b>${n}x</b>: +${Number(info.markupPct).toFixed(3)}% <span style="color:#64748b;">(MDR ${Number(info.mdrPct).toFixed(2)}%)</span></span>`
+      ).join(' ');
+      cardSummary.innerHTML = `
+        <div style="background:#020617;border:1px solid #1e293b;border-radius:10px;padding:10px 12px;">
+          <div style="font-size:12px;font-weight:800;color:#38bdf8;margin-bottom:6px;">💳 Tabela Padronizada de Cartão (base R$ 1.000,00 líquidos · 12x s/ juros = +12,012% sem perda)</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">${pills}</div>
+        </div>
+      `;
+    }
   }
 
   function populateDropdowns() {
@@ -1931,7 +2014,7 @@
     document.getElementById('kpiAvgPrice').textContent = formatBRL(avgPrice);
     document.getElementById('kpiAvgCost').textContent = `Custo médio: ${formatBRL(avgCost)}`;
     document.getElementById('kpiAvgProfit').textContent = formatBRL(avgProfit);
-    document.getElementById('kpiAvgProfitSub').textContent = `Faixa ativa: ${state.activeTier === 'min' ? 'Mínimo' : state.activeTier === 'rec' ? 'Recomendado' : 'Máximo'}`;
+    document.getElementById('kpiAvgProfitSub').textContent = `Faixa ativa: ${state.activeTier === 'auto' ? 'Estratégico (Rec/Max)' : state.activeTier === 'min' ? 'Mínimo' : state.activeTier === 'rec' ? 'Recomendado' : 'Máximo'}`;
   }
 
   function renderProducts(filtered) {
@@ -2045,8 +2128,8 @@
 
               <div class="p-price-hero">
                 <div>
-                  <div class="final-label">${p.hasPriceIssue ? '⚠️ Preço USD pendente' : `Preço PIX ${p.hasCustom ? '✏️' : ''}`}</div>
-                  <div class="card-val">${p.hasPriceIssue ? 'Aguardando cotação no site' : `Cartão: ${formatBRLInt(p.precoCartao)} <span style="font-size:10px; color:#38bdf8; font-weight:700;">(${isGlpProduct(p) ? 'até 12x s/j' : 'até 6x'})</span>`}</div>
+                  <div class="final-label">${p.hasPriceIssue ? '⚠️ Preço USD pendente' : `Preço PIX ${p.hasCustom ? '✏️' : (state.activeTier === 'auto' ? (p.chosenTier === 'max' ? '🔥 MAX' : '🎯 REC') : '')}`}</div>
+                  <div class="card-val">${p.hasPriceIssue ? 'Aguardando cotação no site' : `Cartão: ${formatBRLInt(p.precoCartao)} <span style="font-size:10px; color:#38bdf8; font-weight:700;">(12x de ${formatBRL(p.parcela12x)} s/j)</span>`}</div>
                 </div>
                 <div style="text-align:right">
                   <div class="final-val">${p.hasPriceIssue ? 'Sob consulta' : formatBRLInt(p.precoFinal)}</div>
@@ -3518,14 +3601,20 @@
           const custo = window.CRM._vrState.isDose && window.CRM._vrState.doseMg > 0
             ? Math.round(((baseUnitCost || 600) / 120) * window.CRM._vrState.doseMg) * qty
             : baseUnitCost * qty;
-          const lucro = subtotal - custo;
-          const margemPct = subtotal > 0 ? Math.round((lucro / subtotal) * 100) : 0;
+          const pay = document.getElementById('vrPagamento')?.value || 'pix';
+          const cardPct = Number(state.taxaCartaoPct ?? 12.012);
+          const liquidoRecebido = pay === 'cartao_parcelado'
+            ? subtotal / (1 + cardPct / 100)
+            : subtotal;
+          const lucro = liquidoRecebido - custo;
+          const margemPct = liquidoRecebido > 0 ? Math.round((lucro / liquidoRecebido) * 100) : 0;
           if (lucro < 0) {
             lucroEl.style.color = '#f87171';
             lucroEl.textContent = `🚨 Prejuízo: ${formatBRL(lucro)} (Custo ${formatBRL(custo)})`;
           } else {
             lucroEl.style.color = '#6ee7b7';
-            lucroEl.textContent = `Lucro: +${formatBRL(lucro)} (${margemPct}%)${frete > 0 ? ` · +Frete ${formatBRL(frete)}` : ''}`;
+            const cardExtra = pay === 'cartao_parcelado' ? ` · Líq. 12x ${formatBRL(liquidoRecebido)}` : '';
+            lucroEl.textContent = `Lucro: +${formatBRL(lucro)} (${margemPct}%)${cardExtra}${frete > 0 ? ` · +Frete ${formatBRL(frete)}` : ''}`;
           }
         }
       }
@@ -3575,10 +3664,9 @@
       const isDose = !!window.CRM._vrState.isDose;
       const doseMg = Number(window.CRM._vrState.doseMg) || 0;
 
-      const isGlp = isGlpProduct(p);
       const payMap = {
         pix: '💠 À vista no PIX',
-        cartao_parcelado: isGlp ? '💳 Cartão de Crédito (até 12x s/ juros)' : '💳 Cartão de Crédito (até 6x s/ juros)',
+        cartao_parcelado: '💳 Cartão de Crédito (até 12x s/ juros)',
         cartao_debito: '💳 Cartão Débito',
         dinheiro: '💵 Dinheiro'
       };
@@ -4642,10 +4730,9 @@
           ];
           inStock.forEach(p => {
             const qtd = (state.meuEstoque || {})[p.id];
-            const parcelasMsg = isGlpProduct(p) ? 'em até 12x s/ juros' : 'em até 6x s/ juros';
             lines.push(`• *${p.nombre}* (${qtd}x un em mãos)`);
             lines.push(`  💠 *À vista no PIX: ${formatBRLInt(p.precoFinal)}*`);
-            lines.push(`  💳 *No Cartão: ${formatBRLInt(p.precoCartao)}* (${parcelasMsg})`);
+            lines.push(`  💳 *No Cartão: ${formatBRLInt(p.precoCartao)}* (em até 12x de ${formatBRL(p.parcela12x)} s/ juros)`);
             lines.push(``);
           });
           lines.push(`🚀 Entrega expressa para Belo Horizonte e região.`);
@@ -4703,7 +4790,7 @@ ${fmtDoseList(reta)}
         const filtered = getFilteredProducts().filter(p => !p.hasPriceIssue && p.precoFinal > 0);
         const lines = [
           `*CATÁLOGO ATUALIZADO — ${state.mainGroup.toUpperCase()} (${filtered.length} produtos)*`,
-          `_Valores à vista no PIX | Cartão em até 6x (GLP-1 até 12x)_`,
+          `_Valores à vista no PIX | Cartão em até 12x s/ juros_`,
           ``
         ];
         // Organiza por Marca mantendo 100% dos produtos com preço válido
@@ -4816,7 +4903,7 @@ ${fmtDoseList(reta)}
       }
       lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━`);
       lines.push(`💰 *TOTAL À VISTA NO PIX: ${formatBRL(totalPixComFrete)}*`);
-      lines.push(`💳 *TOTAL NO CARTÃO: ${formatBRL(totalCartaoComFrete)}* (em até 12x s/ juros em GLP-1)`);
+      lines.push(`💳 *TOTAL NO CARTÃO: ${formatBRL(totalCartaoComFrete)}* (em até 12x s/ juros)`);
       lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━`);
       lines.push(`💠 *Chave PIX (CNPJ):* 64.228.053/0001-47`);
       lines.push(`🏦 *Beneficiário:* BAXTI IMPORTADOS LTDA (Banco Inter)`);
@@ -7327,6 +7414,8 @@ ${fmtDoseList(reta)}
     });
 
     document.querySelectorAll('.tier-btn').forEach(btn => {
+      const t = btn.getAttribute('data-tier');
+      btn.className = 'tier-btn' + (t === state.activeTier ? ` active-${state.activeTier}` : '');
       btn.addEventListener('click', () => {
         state.activeTier = btn.getAttribute('data-tier');
         document.querySelectorAll('.tier-btn').forEach(b => b.className = 'tier-btn');
