@@ -546,9 +546,9 @@ def main():
     except Exception as e:
         print(f"Aviso ao gerar mobile bundle: {e}")
 
-    # Limpeza preventiva de PDFs antigos (inclusive versões 01..05_)
+    # Limpeza preventiva de PDFs antigos dos 5 catálogos (preserva Catalogo_Pronta_Entrega_BH.pdf)
     for d in [BASE_DIR, DOWNLOADS_DIR, DESKTOP_DIR]:
-        for pat in ("Catalogo_*.pdf", "*_Catalogo_*.pdf"):
+        for pat in ("0*_Catalogo_*.pdf", "Catalogo_Completo_*.pdf"):
             for old_f in glob.glob(os.path.join(d, pat)):
                 try:
                     os.remove(old_f)
