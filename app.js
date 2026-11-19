@@ -2,8 +2,8 @@
   // Fonte canônica de precificação compartilhada com pricing_config.json / pricing_engine.py.
   // Dados operacionais (estoque, pedidos em trânsito e clientes) ficam exclusivamente no armazenamento local do aparelho (localStorage/IndexedDB).
   const FALLBACK_PRICING_CONFIG = {
-    version: '2026-11-18-v2',
-    cotacao: 5.84,
+    version: '2026-11-19-v1',
+    cotacao: 5.95,
     fretePct: 30,
     taxaCartaoPct: 12.012,
     defaultTier: 'auto',

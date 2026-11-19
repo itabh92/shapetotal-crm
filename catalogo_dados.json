@@ -78,7 +78,7 @@
       "qty": "",
       "mg": "",
       "precio": 80,
-      "stock_cde": 246,
+      "stock_cde": 243,
       "stock_pj": 0,
       "stock_sg": 11,
       "foto": "/api/foto/producto-2974.jpg?v=1791123891953",
@@ -284,7 +284,7 @@
       "precio": 42,
       "stock_cde": 1455,
       "stock_pj": 4,
-      "stock_sg": 16,
+      "stock_sg": 15,
       "foto": "/api/foto/producto-69.jpg?v=1791123800603",
       "colecao_id": "2_anabolizantes",
       "colecao_nome": "💪 ANABOLIZANTES, SARMS & TPC"
@@ -316,7 +316,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 65,
-      "stock_cde": 1617,
+      "stock_cde": 1616,
       "stock_pj": 25,
       "stock_sg": 11,
       "foto": "/api/foto/producto-71.jpg?v=1789079067347",
@@ -537,7 +537,7 @@
       "qty": "",
       "mg": "",
       "precio": 0,
-      "stock_cde": 1,
+      "stock_cde": 0,
       "stock_pj": 0,
       "stock_sg": 1,
       "foto": "",
@@ -692,7 +692,7 @@
       "precio": 63,
       "stock_cde": 754,
       "stock_pj": 3,
-      "stock_sg": 4,
+      "stock_sg": 0,
       "foto": "/api/foto/producto-96.jpg?v=1791124155929",
       "colecao_id": "2_anabolizantes",
       "colecao_nome": "💪 ANABOLIZANTES, SARMS & TPC"
@@ -1064,7 +1064,7 @@
       "qty": "1",
       "mg": "200 MG",
       "precio": 32,
-      "stock_cde": 466,
+      "stock_cde": 458,
       "stock_pj": 47,
       "stock_sg": 33,
       "foto": "",
@@ -1286,7 +1286,7 @@
       "mg": "250 mg",
       "precio": 16,
       "stock_cde": 745,
-      "stock_pj": 38,
+      "stock_pj": 36,
       "stock_sg": 22,
       "foto": "/api/foto/producto-183.jpg?v=1791126801876",
       "colecao_id": "2_anabolizantes",
@@ -1455,8 +1455,8 @@
       "qty": "10",
       "mg": "50 MG",
       "precio": 46,
-      "stock_cde": 4,
-      "stock_pj": 1,
+      "stock_cde": 0,
+      "stock_pj": 0,
       "stock_sg": 1,
       "foto": "/api/foto/producto-3373.jpg?v=1791315955172",
       "colecao_id": "2_anabolizantes",
@@ -1489,10 +1489,10 @@
       "qty": "",
       "mg": "75 ui",
       "precio": 163,
-      "stock_cde": 71,
+      "stock_cde": 66,
       "stock_pj": 2,
       "stock_sg": 3,
-      "foto": "",
+      "foto": "/api/foto/producto-2598.jpg?v=1795005877401",
       "colecao_id": "3_hgh_peptideos",
       "colecao_nome": "🧬 HGH SOMATROPINA & PEPTÍDEOS BIO-REGENERATIVOS"
     },
@@ -1523,7 +1523,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 33,
-      "stock_cde": 5,
+      "stock_cde": 4,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
@@ -1608,7 +1608,7 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 31,
-      "stock_cde": 1,
+      "stock_cde": 0,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
@@ -1625,7 +1625,7 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 31,
-      "stock_cde": 116,
+      "stock_cde": 115,
       "stock_pj": 10,
       "stock_sg": 0,
       "foto": "",
@@ -1744,10 +1744,10 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 23,
-      "stock_cde": 356,
+      "stock_cde": 353,
       "stock_pj": 6,
       "stock_sg": 0,
-      "foto": "",
+      "foto": "/api/foto/producto-2465.jpg?v=1795005963889",
       "colecao_id": "2_anabolizantes",
       "colecao_nome": "💪 ANABOLIZANTES, SARMS & TPC"
     },
@@ -1898,7 +1898,7 @@
       "mg": "60",
       "precio": 83,
       "stock_cde": 2394,
-      "stock_pj": 99,
+      "stock_pj": 98,
       "stock_sg": 45,
       "foto": "/api/foto/producto-3308.jpg?v=1794396297388",
       "colecao_id": "1_emagrecedores",
@@ -1914,7 +1914,7 @@
       "qty": "",
       "mg": "",
       "precio": 83,
-      "stock_cde": 5,
+      "stock_cde": 2,
       "stock_pj": 0,
       "stock_sg": 1,
       "foto": "/api/foto/producto-3381.jpg?v=1794396304983",
@@ -1948,7 +1948,7 @@
       "qty": "",
       "mg": "",
       "precio": 15,
-      "stock_cde": 764,
+      "stock_cde": 763,
       "stock_pj": 15,
       "stock_sg": 10,
       "foto": "/api/foto/producto-3356.jpg?v=1789392718981",
@@ -1965,8 +1965,8 @@
       "qty": "25 ml",
       "mg": "",
       "precio": 8,
-      "stock_cde": 1088,
-      "stock_pj": 76,
+      "stock_cde": 1087,
+      "stock_pj": 75,
       "stock_sg": 34,
       "foto": "",
       "colecao_id": "1_emagrecedores",
@@ -2033,7 +2033,7 @@
       "qty": "50",
       "mg": "62,5 mcg",
       "precio": 36,
-      "stock_cde": 105,
+      "stock_cde": 104,
       "stock_pj": 0,
       "stock_sg": 2,
       "foto": "/api/foto/producto-3270.jpg?v=1791029869257",
@@ -2084,8 +2084,8 @@
       "qty": "50",
       "mg": "0,04 mg",
       "precio": 17,
-      "stock_cde": 1830,
-      "stock_pj": 12,
+      "stock_cde": 1826,
+      "stock_pj": 9,
       "stock_sg": 8,
       "foto": "/api/foto/producto-227.jpg?v=1794269656949",
       "colecao_id": "1_emagrecedores",
@@ -2135,7 +2135,7 @@
       "qty": "",
       "mg": "5000 ui",
       "precio": 29,
-      "stock_cde": 106,
+      "stock_cde": 105,
       "stock_pj": 0,
       "stock_sg": 3,
       "foto": "/api/foto/producto-2182.jpg?v=1794269718132",
@@ -2152,7 +2152,7 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 30,
-      "stock_cde": 141,
+      "stock_cde": 139,
       "stock_pj": 22,
       "stock_sg": 33,
       "foto": "/api/foto/producto-229.jpg?v=1791290931635",
@@ -2169,7 +2169,7 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 42,
-      "stock_cde": 681,
+      "stock_cde": 680,
       "stock_pj": 13,
       "stock_sg": 19,
       "foto": "/api/foto/producto-230.jpg?v=1791029904697",
@@ -2186,7 +2186,7 @@
       "qty": "50",
       "mg": "10 mg",
       "precio": 16,
-      "stock_cde": 40,
+      "stock_cde": 39,
       "stock_pj": 10,
       "stock_sg": 5,
       "foto": "/api/foto/producto-232.jpg?v=1794269752644",
@@ -2203,8 +2203,8 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 42,
-      "stock_cde": 3140,
-      "stock_pj": 20,
+      "stock_cde": 3097,
+      "stock_pj": 16,
       "stock_sg": 20,
       "foto": "/api/foto/producto-233.jpg?v=1791291763831",
       "colecao_id": "2_anabolizantes",
@@ -2407,7 +2407,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 43,
-      "stock_cde": 973,
+      "stock_cde": 969,
       "stock_pj": 19,
       "stock_sg": 1,
       "foto": "/api/foto/producto-245.jpg?v=1791291229450",
@@ -2424,7 +2424,7 @@
       "qty": "50",
       "mg": "10 mg",
       "precio": 27,
-      "stock_cde": 334,
+      "stock_cde": 333,
       "stock_pj": 11,
       "stock_sg": 8,
       "foto": "/api/foto/producto-247.jpg?v=1791291010599",
@@ -2441,7 +2441,7 @@
       "qty": "50",
       "mg": "50 mg",
       "precio": 31,
-      "stock_cde": 21,
+      "stock_cde": 19,
       "stock_pj": 9,
       "stock_sg": 12,
       "foto": "/api/foto/producto-248.jpg?v=1791291248927",
@@ -2458,8 +2458,8 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 123,
-      "stock_cde": 645,
-      "stock_pj": 29,
+      "stock_cde": 629,
+      "stock_pj": 24,
       "stock_sg": 43,
       "foto": "/api/foto/producto-249.jpg?v=1791291781883",
       "colecao_id": "2_anabolizantes",
@@ -2510,7 +2510,7 @@
       "mg": "25 mg",
       "precio": 32,
       "stock_cde": 242,
-      "stock_pj": 5,
+      "stock_pj": 2,
       "stock_sg": 3,
       "foto": "",
       "colecao_id": "2_anabolizantes",
@@ -2526,7 +2526,7 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 40,
-      "stock_cde": 139,
+      "stock_cde": 128,
       "stock_pj": 23,
       "stock_sg": 24,
       "foto": "",
@@ -2594,7 +2594,7 @@
       "qty": "5 ml",
       "mg": "200 mg",
       "precio": 41,
-      "stock_cde": 45,
+      "stock_cde": 43,
       "stock_pj": 7,
       "stock_sg": 0,
       "foto": "",
@@ -2628,7 +2628,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 45,
-      "stock_cde": 2,
+      "stock_cde": 1,
       "stock_pj": 5,
       "stock_sg": 2,
       "foto": "",
@@ -2815,7 +2815,7 @@
       "qty": "10",
       "mg": "100",
       "precio": 44,
-      "stock_cde": 3289,
+      "stock_cde": 3284,
       "stock_pj": 77,
       "stock_sg": 17,
       "foto": "/api/foto/producto-3362.jpg?v=1789500141857",
@@ -2832,8 +2832,8 @@
       "qty": "10",
       "mg": "250",
       "precio": 32,
-      "stock_cde": 963,
-      "stock_pj": 55,
+      "stock_cde": 960,
+      "stock_pj": 54,
       "stock_sg": 44,
       "foto": "/api/foto/producto-3363.jpg?v=1789500148163",
       "colecao_id": "2_anabolizantes",
@@ -2866,7 +2866,7 @@
       "qty": "10",
       "mg": "250",
       "precio": 30,
-      "stock_cde": 304,
+      "stock_cde": 300,
       "stock_pj": 49,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3358.jpg?v=1789500160590",
@@ -2934,7 +2934,7 @@
       "qty": "2 ml",
       "mg": "",
       "precio": 1.5,
-      "stock_cde": 7941,
+      "stock_cde": 7931,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
@@ -3002,7 +3002,7 @@
       "qty": "60",
       "mg": "",
       "precio": 19,
-      "stock_cde": 27,
+      "stock_cde": 24,
       "stock_pj": 4,
       "stock_sg": 9,
       "foto": "",
@@ -3309,7 +3309,7 @@
       "mg": "",
       "precio": 40,
       "stock_cde": 20,
-      "stock_pj": 16,
+      "stock_pj": 15,
       "stock_sg": 0,
       "foto": "",
       "colecao_id": "4_estetica",
@@ -3325,8 +3325,8 @@
       "qty": "",
       "mg": "500 ui",
       "precio": 35,
-      "stock_cde": 627,
-      "stock_pj": 80,
+      "stock_cde": 622,
+      "stock_pj": 73,
       "stock_sg": 17,
       "foto": "/api/foto/producto-2852.jpg?v=1794396748613",
       "colecao_id": "4_estetica",
@@ -3393,7 +3393,7 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 28,
-      "stock_cde": 832,
+      "stock_cde": 830,
       "stock_pj": 17,
       "stock_sg": 0,
       "foto": "",
@@ -3614,7 +3614,7 @@
       "qty": "30",
       "mg": "",
       "precio": 3.5,
-      "stock_cde": 1223,
+      "stock_cde": 1222,
       "stock_pj": 111,
       "stock_sg": 119,
       "foto": "/api/foto/producto-3016.jpg?v=1789843943223",
@@ -3716,7 +3716,7 @@
       "qty": "30",
       "mg": "",
       "precio": 28,
-      "stock_cde": 42,
+      "stock_cde": 40,
       "stock_pj": 5,
       "stock_sg": 0,
       "foto": "",
@@ -3886,7 +3886,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 50,
-      "stock_cde": 4568,
+      "stock_cde": 4564,
       "stock_pj": 5,
       "stock_sg": 10,
       "foto": "/api/foto/producto-3213.jpg?v=1791291460877",
@@ -3920,7 +3920,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 58,
-      "stock_cde": 4456,
+      "stock_cde": 4453,
       "stock_pj": 4,
       "stock_sg": 5,
       "foto": "/api/foto/producto-3212.jpg?v=1791291483070",
@@ -3971,7 +3971,7 @@
       "qty": "",
       "mg": "",
       "precio": 16,
-      "stock_cde": 29,
+      "stock_cde": 28,
       "stock_pj": 0,
       "stock_sg": 3,
       "foto": "/api/foto/producto-3354.jpg?v=1794242823070",
@@ -4141,8 +4141,8 @@
       "qty": "",
       "mg": "",
       "precio": 110,
-      "stock_cde": 104,
-      "stock_pj": 89,
+      "stock_cde": 102,
+      "stock_pj": 88,
       "stock_sg": 17,
       "foto": "",
       "colecao_id": "1_emagrecedores",
@@ -4159,7 +4159,7 @@
       "mg": "",
       "precio": 230,
       "stock_cde": 275,
-      "stock_pj": 28,
+      "stock_pj": 27,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3370.jpg?v=1794831893437",
       "colecao_id": "1_emagrecedores",
@@ -4174,8 +4174,8 @@
       "presentacion": "liofilizada",
       "qty": "",
       "mg": "",
-      "precio": 260,
-      "stock_cde": 36,
+      "precio": 265,
+      "stock_cde": 34,
       "stock_pj": 24,
       "stock_sg": 6,
       "foto": "/api/foto/producto-3371.jpg?v=1790640420015",
@@ -4209,7 +4209,7 @@
       "qty": "",
       "mg": "",
       "precio": 85,
-      "stock_cde": 406,
+      "stock_cde": 402,
       "stock_pj": 44,
       "stock_sg": 0,
       "foto": "/api/foto/producto-2830.jpg?v=1794831901358",
@@ -4294,7 +4294,7 @@
       "qty": "",
       "mg": "100 mg",
       "precio": 40,
-      "stock_cde": 172,
+      "stock_cde": 170,
       "stock_pj": 16,
       "stock_sg": 0,
       "foto": "",
@@ -4821,7 +4821,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 41,
-      "stock_cde": 1353,
+      "stock_cde": 1350,
       "stock_pj": 8,
       "stock_sg": 10,
       "foto": "/api/foto/producto-3255.jpg?v=1791499105701",
@@ -4923,7 +4923,7 @@
       "qty": "50",
       "mg": "10",
       "precio": 26,
-      "stock_cde": 4,
+      "stock_cde": 3,
       "stock_pj": 1,
       "stock_sg": 1,
       "foto": "/api/foto/producto-3367.jpg?v=1791499121162",
@@ -4940,8 +4940,8 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 72,
-      "stock_cde": 3859,
-      "stock_pj": 7,
+      "stock_cde": 3858,
+      "stock_pj": 6,
       "stock_sg": 29,
       "foto": "/api/foto/producto-3256.jpg?v=1789079888842",
       "colecao_id": "2_anabolizantes",
@@ -5416,7 +5416,7 @@
       "qty": "",
       "mg": "36 ui",
       "precio": 72,
-      "stock_cde": 441,
+      "stock_cde": 440,
       "stock_pj": 0,
       "stock_sg": 2,
       "foto": "",
@@ -5433,7 +5433,7 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 16,
-      "stock_cde": 765,
+      "stock_cde": 759,
       "stock_pj": 72,
       "stock_sg": 186,
       "foto": "/api/foto/producto-658.jpg?v=1791024385804",
@@ -5450,7 +5450,7 @@
       "qty": "50",
       "mg": "0,04 mg",
       "precio": 10,
-      "stock_cde": 2254,
+      "stock_cde": 2251,
       "stock_pj": 87,
       "stock_sg": 25,
       "foto": "/api/foto/producto-2477.jpg?v=1791023835167",
@@ -5467,7 +5467,7 @@
       "qty": "10 ml",
       "mg": "200 mg",
       "precio": 16,
-      "stock_cde": 2444,
+      "stock_cde": 2441,
       "stock_pj": 382,
       "stock_sg": 356,
       "foto": "/api/foto/producto-1943.jpg?v=1790967210272",
@@ -5484,9 +5484,9 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 32,
-      "stock_cde": 6938,
-      "stock_pj": 173,
-      "stock_sg": 544,
+      "stock_cde": 6933,
+      "stock_pj": 172,
+      "stock_sg": 542,
       "foto": "/api/foto/producto-659.jpg?v=1789079019414",
       "colecao_id": "2_anabolizantes",
       "colecao_nome": "💪 ANABOLIZANTES, SARMS & TPC"
@@ -5501,7 +5501,7 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 16.5,
-      "stock_cde": 4220,
+      "stock_cde": 4215,
       "stock_pj": 249,
       "stock_sg": 218,
       "foto": "",
@@ -5518,7 +5518,7 @@
       "qty": "",
       "mg": "5000 ui",
       "precio": 19,
-      "stock_cde": 597,
+      "stock_cde": 592,
       "stock_pj": 52,
       "stock_sg": 35,
       "foto": "/api/foto/producto-2792.jpg?v=1791127237657",
@@ -5535,7 +5535,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 55,
-      "stock_cde": 984,
+      "stock_cde": 974,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
@@ -5552,8 +5552,8 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 15.5,
-      "stock_cde": 1900,
-      "stock_pj": 41,
+      "stock_cde": 1885,
+      "stock_pj": 40,
       "stock_sg": 104,
       "foto": "/api/foto/producto-661.jpg?v=1791127256955",
       "colecao_id": "2_anabolizantes",
@@ -5586,9 +5586,9 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 15.5,
-      "stock_cde": 6537,
-      "stock_pj": 180,
-      "stock_sg": 244,
+      "stock_cde": 6483,
+      "stock_pj": 179,
+      "stock_sg": 241,
       "foto": "/api/foto/producto-663.jpg?v=1790967189270",
       "colecao_id": "2_anabolizantes",
       "colecao_nome": "💪 ANABOLIZANTES, SARMS & TPC"
@@ -5605,7 +5605,7 @@
       "precio": 14,
       "stock_cde": 861,
       "stock_pj": 114,
-      "stock_sg": 133,
+      "stock_sg": 132,
       "foto": "/api/foto/producto-2565.jpg?v=1791024400750",
       "colecao_id": "2_anabolizantes",
       "colecao_nome": "💪 ANABOLIZANTES, SARMS & TPC"
@@ -5620,7 +5620,7 @@
       "qty": "10 ml",
       "mg": "",
       "precio": 13,
-      "stock_cde": 1896,
+      "stock_cde": 1895,
       "stock_pj": 181,
       "stock_sg": 90,
       "foto": "/api/foto/producto-2490.jpg?v=1791127270391",
@@ -5637,9 +5637,9 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 21,
-      "stock_cde": 1604,
+      "stock_cde": 1600,
       "stock_pj": 99,
-      "stock_sg": 96,
+      "stock_sg": 94,
       "foto": "/api/foto/producto-664.jpg?v=1791127585419",
       "colecao_id": "2_anabolizantes",
       "colecao_nome": "💪 ANABOLIZANTES, SARMS & TPC"
@@ -5654,7 +5654,7 @@
       "qty": "10 ml",
       "mg": "",
       "precio": 20,
-      "stock_cde": 713,
+      "stock_cde": 711,
       "stock_pj": 95,
       "stock_sg": 110,
       "foto": "/api/foto/producto-665.jpg?v=1791024407328",
@@ -5722,7 +5722,7 @@
       "qty": "2 ml",
       "mg": "",
       "precio": 1.5,
-      "stock_cde": 16477,
+      "stock_cde": 16440,
       "stock_pj": 579,
       "stock_sg": 0,
       "foto": "",
@@ -5739,9 +5739,9 @@
       "qty": "",
       "mg": "40",
       "precio": 45,
-      "stock_cde": 559,
+      "stock_cde": 554,
       "stock_pj": 0,
-      "stock_sg": 33,
+      "stock_sg": 25,
       "foto": "/api/foto/producto-2831.jpg?v=1794396198110",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)"
@@ -5773,9 +5773,9 @@
       "qty": "",
       "mg": "60",
       "precio": 85,
-      "stock_cde": 9787,
-      "stock_pj": 357,
-      "stock_sg": 474,
+      "stock_cde": 9742,
+      "stock_pj": 355,
+      "stock_sg": 464,
       "foto": "/api/foto/producto-2848.jpg?v=1789074235151",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)"
@@ -5809,7 +5809,7 @@
       "precio": 36,
       "stock_cde": 754,
       "stock_pj": 136,
-      "stock_sg": 99,
+      "stock_sg": 96,
       "foto": "/api/foto/producto-2825.jpg?v=1794396220580",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)"
@@ -5826,7 +5826,7 @@
       "precio": 40,
       "stock_cde": 348,
       "stock_pj": 25,
-      "stock_sg": 61,
+      "stock_sg": 53,
       "foto": "/api/foto/producto-2863.jpg?v=1794396212403",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)"
@@ -6402,7 +6402,7 @@
       "qty": "10 ml",
       "mg": "",
       "precio": 24,
-      "stock_cde": 1269,
+      "stock_cde": 1268,
       "stock_pj": 29,
       "stock_sg": 55,
       "foto": "",
@@ -6504,7 +6504,7 @@
       "qty": "50",
       "mg": "20 mg",
       "precio": 26,
-      "stock_cde": 20,
+      "stock_cde": 16,
       "stock_pj": 10,
       "stock_sg": 9,
       "foto": "",
@@ -6844,10 +6844,10 @@
       "qty": "6",
       "mg": "5%",
       "precio": 40,
-      "stock_cde": 100,
+      "stock_cde": 99,
       "stock_pj": 0,
       "stock_sg": 0,
-      "foto": "",
+      "foto": "/api/foto/producto-3820.jpg?v=1795006046787",
       "colecao_id": "4_estetica",
       "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
     },
@@ -6878,7 +6878,7 @@
       "qty": "1",
       "mg": "100",
       "precio": 58,
-      "stock_cde": 12,
+      "stock_cde": 10,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3412.jpg?v=1794224791756",
@@ -7082,7 +7082,7 @@
       "qty": "100",
       "mg": "10 mg",
       "precio": 9,
-      "stock_cde": 1994,
+      "stock_cde": 1993,
       "stock_pj": 52,
       "stock_sg": 400,
       "foto": "/api/foto/producto-673.jpg?v=1789843994319",
@@ -7133,9 +7133,9 @@
       "qty": "100",
       "mg": "5 mg",
       "precio": 24,
-      "stock_cde": 2491,
+      "stock_cde": 2489,
       "stock_pj": 115,
-      "stock_sg": 137,
+      "stock_sg": 136,
       "foto": "/api/foto/producto-678.jpg?v=1789843973477",
       "colecao_id": "2_anabolizantes",
       "colecao_nome": "💪 ANABOLIZANTES, SARMS & TPC"
@@ -7150,7 +7150,7 @@
       "qty": "20",
       "mg": "50 mg",
       "precio": 8,
-      "stock_cde": 2261,
+      "stock_cde": 2256,
       "stock_pj": 110,
       "stock_sg": 243,
       "foto": "/api/foto/producto-679.jpg?v=1789844014876",
@@ -7167,7 +7167,7 @@
       "qty": "100",
       "mg": "10 mg",
       "precio": 8,
-      "stock_cde": 1424,
+      "stock_cde": 1418,
       "stock_pj": 97,
       "stock_sg": 149,
       "foto": "/api/foto/producto-681.jpg?v=1789844056349",
@@ -7337,7 +7337,7 @@
       "qty": "",
       "mg": "60",
       "precio": 77,
-      "stock_cde": 2193,
+      "stock_cde": 2190,
       "stock_pj": 93,
       "stock_sg": 134,
       "foto": "/api/foto/producto-3039.jpg?v=1794396339703",
@@ -7490,7 +7490,7 @@
       "qty": "100 ml",
       "mg": "",
       "precio": 130,
-      "stock_cde": 325,
+      "stock_cde": 324,
       "stock_pj": 8,
       "stock_sg": 11,
       "foto": "/api/foto/producto-2884.jpg?v=1794831869871",
@@ -7524,7 +7524,7 @@
       "qty": "120",
       "mg": "",
       "precio": 12,
-      "stock_cde": 15,
+      "stock_cde": 14,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
@@ -7575,7 +7575,7 @@
       "qty": "",
       "mg": "60",
       "precio": 70,
-      "stock_cde": 160,
+      "stock_cde": 154,
       "stock_pj": 51,
       "stock_sg": 82,
       "foto": "/api/foto/producto-2988.jpg?v=1794396322776",
@@ -7592,7 +7592,7 @@
       "qty": "",
       "mg": "40",
       "precio": 50,
-      "stock_cde": 397,
+      "stock_cde": 396,
       "stock_pj": 6,
       "stock_sg": 11,
       "foto": "/api/foto/producto-2804.jpg?v=1789385990451",
@@ -7660,7 +7660,7 @@
       "qty": "",
       "mg": "20",
       "precio": 29,
-      "stock_cde": 359,
+      "stock_cde": 358,
       "stock_pj": 22,
       "stock_sg": 74,
       "foto": "/api/foto/producto-3317.jpg?v=1794394107987",
@@ -7728,9 +7728,9 @@
       "qty": "",
       "mg": "60",
       "precio": 77,
-      "stock_cde": 5947,
-      "stock_pj": 564,
-      "stock_sg": 194,
+      "stock_cde": 5924,
+      "stock_pj": 560,
+      "stock_sg": 191,
       "foto": "/api/foto/producto-2997.jpg?v=1789076126553",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)"
@@ -7813,9 +7813,9 @@
       "qty": "",
       "mg": "60",
       "precio": 78,
-      "stock_cde": 3483,
-      "stock_pj": 283,
-      "stock_sg": 110,
+      "stock_cde": 3363,
+      "stock_pj": 270,
+      "stock_sg": 99,
       "foto": "/api/foto/producto-2889.jpg?v=1791498513435",
       "colecao_id": "1_emagrecedores",
       "colecao_nome": "🔥 EMAGRECEDORES & DEFINIÇÃO (GLP-1 & QUEIMADORES)"
@@ -7932,7 +7932,7 @@
       "qty": "50",
       "mg": "25 mg",
       "precio": 30,
-      "stock_cde": 35,
+      "stock_cde": 33,
       "stock_pj": 1,
       "stock_sg": 0,
       "foto": "",
@@ -8034,7 +8034,7 @@
       "qty": "10 ml",
       "mg": "300 mg",
       "precio": 18,
-      "stock_cde": 290,
+      "stock_cde": 289,
       "stock_pj": 10,
       "stock_sg": 2,
       "foto": "",
@@ -8272,7 +8272,7 @@
       "qty": "10 ml",
       "mg": "",
       "precio": 20,
-      "stock_cde": 12,
+      "stock_cde": 11,
       "stock_pj": 0,
       "stock_sg": 12,
       "foto": "",
@@ -8858,6 +8858,23 @@
       "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
     },
     {
+      "id": 3436,
+      "nombre": "MEDICUBE DEEP VITA C CAPSULE CREMA 55GR",
+      "marca": "medicube",
+      "composicion": "",
+      "categoria": "cosmetico",
+      "presentacion": "55 gr.",
+      "qty": "1",
+      "mg": "",
+      "precio": 19,
+      "stock_cde": 39,
+      "stock_pj": 3,
+      "stock_sg": 0,
+      "foto": "/api/foto/producto-3436.jpg?v=1794406784187",
+      "colecao_id": "4_estetica",
+      "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
+    },
+    {
       "id": 3685,
       "nombre": "MEDICUBE DEEP VITA C CAPSULE CREMA 55GR",
       "marca": "medicube",
@@ -8871,23 +8888,6 @@
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
-      "colecao_id": "4_estetica",
-      "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
-    },
-    {
-      "id": 3436,
-      "nombre": "MEDICUBE DEEP VITA C CAPSULE CREMA 55GR",
-      "marca": "medicube",
-      "composicion": "",
-      "categoria": "cosmetico",
-      "presentacion": "55 gr.",
-      "qty": "1",
-      "mg": "",
-      "precio": 19,
-      "stock_cde": 40,
-      "stock_pj": 3,
-      "stock_sg": 0,
-      "foto": "/api/foto/producto-3436.jpg?v=1794406784187",
       "colecao_id": "4_estetica",
       "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
     },
@@ -8918,7 +8918,7 @@
       "qty": "150 gr",
       "mg": "",
       "precio": 18,
-      "stock_cde": 24,
+      "stock_cde": 23,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
@@ -9181,6 +9181,23 @@
       "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
     },
     {
+      "id": 3688,
+      "nombre": "MEDICUBE ONE DAY EXOSOME SHOT 2000 X 30ML",
+      "marca": "medicube",
+      "composicion": "exosomas",
+      "categoria": "cosmetico",
+      "presentacion": "topico",
+      "qty": "30 ml",
+      "mg": "",
+      "precio": 14.5,
+      "stock_cde": 43,
+      "stock_pj": 0,
+      "stock_sg": 0,
+      "foto": "",
+      "colecao_id": "4_estetica",
+      "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
+    },
+    {
       "id": 3439,
       "nombre": "MEDICUBE ONE DAY EXOSOME SHOT 2000 X 30ML",
       "marca": "medicube",
@@ -9198,16 +9215,16 @@
       "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
     },
     {
-      "id": 3688,
-      "nombre": "MEDICUBE ONE DAY EXOSOME SHOT 2000 X 30ML",
+      "id": 3689,
+      "nombre": "MEDICUBE ONE DAY EXOSOME SHOT 7500 X 30ML",
       "marca": "medicube",
       "composicion": "exosomas",
       "categoria": "cosmetico",
       "presentacion": "topico",
       "qty": "30 ml",
       "mg": "",
-      "precio": 14.5,
-      "stock_cde": 43,
+      "precio": 14,
+      "stock_cde": 35,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
@@ -9228,23 +9245,6 @@
       "stock_pj": 1,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3440.jpg?v=1794406629503",
-      "colecao_id": "4_estetica",
-      "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
-    },
-    {
-      "id": 3689,
-      "nombre": "MEDICUBE ONE DAY EXOSOME SHOT 7500 X 30ML",
-      "marca": "medicube",
-      "composicion": "exosomas",
-      "categoria": "cosmetico",
-      "presentacion": "topico",
-      "qty": "30 ml",
-      "mg": "",
-      "precio": 14,
-      "stock_cde": 35,
-      "stock_pj": 0,
-      "stock_sg": 0,
-      "foto": "",
       "colecao_id": "4_estetica",
       "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
     },
@@ -9938,7 +9938,7 @@
       "qty": "10 ml",
       "mg": "100 MG.",
       "precio": 25,
-      "stock_cde": 1067,
+      "stock_cde": 1064,
       "stock_pj": 59,
       "stock_sg": 22,
       "foto": "/api/foto/producto-3375.jpg?v=1791636348850",
@@ -9955,7 +9955,7 @@
       "qty": "1",
       "mg": "100",
       "precio": 35,
-      "stock_cde": 2314,
+      "stock_cde": 2310,
       "stock_pj": 32,
       "stock_sg": 77,
       "foto": "/api/foto/producto-3377.jpg?v=1791636602617",
@@ -9989,7 +9989,7 @@
       "qty": "1",
       "mg": "250",
       "precio": 20,
-      "stock_cde": 1265,
+      "stock_cde": 1264,
       "stock_pj": 26,
       "stock_sg": 88,
       "foto": "/api/foto/producto-3376.jpg?v=1791636470992",
@@ -10040,7 +10040,7 @@
       "qty": "10 ml",
       "mg": "250",
       "precio": 20,
-      "stock_cde": 1839,
+      "stock_cde": 1835,
       "stock_pj": 51,
       "stock_sg": 80,
       "foto": "/api/foto/producto-3374.jpg?v=1791639917535",
@@ -10286,23 +10286,6 @@
       "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
     },
     {
-      "id": 3414,
-      "nombre": "NUMBUZIN NAD + RETINOL + PEPTID X 10 ML.",
-      "marca": "numbuzin",
-      "composicion": "",
-      "categoria": "cosmetico",
-      "presentacion": "",
-      "qty": "",
-      "mg": "",
-      "precio": 16,
-      "stock_cde": 0,
-      "stock_pj": 0,
-      "stock_sg": 0,
-      "foto": "/api/foto/producto-3414.jpg?v=1794242102416",
-      "colecao_id": "4_estetica",
-      "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
-    },
-    {
       "id": 3683,
       "nombre": "NUMBUZIN NAD + RETINOL + PEPTID X 10 ML.",
       "marca": "numbuzin",
@@ -10316,6 +10299,23 @@
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
+      "colecao_id": "4_estetica",
+      "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
+    },
+    {
+      "id": 3414,
+      "nombre": "NUMBUZIN NAD + RETINOL + PEPTID X 10 ML.",
+      "marca": "numbuzin",
+      "composicion": "",
+      "categoria": "cosmetico",
+      "presentacion": "",
+      "qty": "",
+      "mg": "",
+      "precio": 16,
+      "stock_cde": 0,
+      "stock_pj": 0,
+      "stock_sg": 0,
+      "foto": "/api/foto/producto-3414.jpg?v=1794242102416",
       "colecao_id": "4_estetica",
       "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
     },
@@ -10354,23 +10354,6 @@
       "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
     },
     {
-      "id": 3695,
-      "nombre": "OLMAS GHK-CU COPPER PEPTIDE SERUM 30ML",
-      "marca": "olmas",
-      "composicion": "ghk cu",
-      "categoria": "cosmetico",
-      "presentacion": "topico",
-      "qty": "30 ml",
-      "mg": "",
-      "precio": 22,
-      "stock_cde": 48,
-      "stock_pj": 0,
-      "stock_sg": 0,
-      "foto": "",
-      "colecao_id": "4_estetica",
-      "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
-    },
-    {
       "id": 3445,
       "nombre": "OLMAS GHK-CU COPPER PEPTIDE SERUM 30ML",
       "marca": "olmas",
@@ -10388,19 +10371,19 @@
       "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
     },
     {
-      "id": 3443,
-      "nombre": "OLMAS NAD+ CREMA 50GR",
+      "id": 3695,
+      "nombre": "OLMAS GHK-CU COPPER PEPTIDE SERUM 30ML",
       "marca": "olmas",
-      "composicion": "",
+      "composicion": "ghk cu",
       "categoria": "cosmetico",
-      "presentacion": "crema 50gr.",
-      "qty": "1",
+      "presentacion": "topico",
+      "qty": "30 ml",
       "mg": "",
-      "precio": 24,
-      "stock_cde": 20,
-      "stock_pj": 3,
-      "stock_sg": 1,
-      "foto": "/api/foto/producto-3443.jpg?v=1794407114044",
+      "precio": 22,
+      "stock_cde": 48,
+      "stock_pj": 0,
+      "stock_sg": 0,
+      "foto": "",
       "colecao_id": "4_estetica",
       "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
     },
@@ -10418,6 +10401,23 @@
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
+      "colecao_id": "4_estetica",
+      "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
+    },
+    {
+      "id": 3443,
+      "nombre": "OLMAS NAD+ CREMA 50GR",
+      "marca": "olmas",
+      "composicion": "",
+      "categoria": "cosmetico",
+      "presentacion": "crema 50gr.",
+      "qty": "1",
+      "mg": "",
+      "precio": 24,
+      "stock_cde": 20,
+      "stock_pj": 3,
+      "stock_sg": 1,
+      "foto": "/api/foto/producto-3443.jpg?v=1794407114044",
       "colecao_id": "4_estetica",
       "colecao_nome": "✨ ESTÉTICA, HARMONIZAÇÃO & DERMATOLOGIA"
     },
@@ -10465,8 +10465,8 @@
       "qty": "3 ml",
       "mg": "100 mg",
       "precio": 60,
-      "stock_cde": 31,
-      "stock_pj": 14,
+      "stock_cde": 30,
+      "stock_pj": 12,
       "stock_sg": 2,
       "foto": "",
       "colecao_id": "3_hgh_peptideos",
@@ -10652,7 +10652,7 @@
       "qty": "2",
       "mg": "60",
       "precio": 80,
-      "stock_cde": 2,
+      "stock_cde": 1,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3394.jpg?v=1793877372430",
@@ -10737,7 +10737,7 @@
       "qty": "",
       "mg": "10 mg",
       "precio": 50,
-      "stock_cde": 137,
+      "stock_cde": 135,
       "stock_pj": 19,
       "stock_sg": 6,
       "foto": "",
@@ -10788,7 +10788,7 @@
       "qty": "",
       "mg": "80 mg",
       "precio": 65,
-      "stock_cde": 212,
+      "stock_cde": 211,
       "stock_pj": 37,
       "stock_sg": 29,
       "foto": "",
@@ -10925,7 +10925,7 @@
       "mg": "",
       "precio": 45,
       "stock_cde": 161,
-      "stock_pj": 3,
+      "stock_pj": 2,
       "stock_sg": 10,
       "foto": "",
       "colecao_id": "5_saude_mental_suporte",
@@ -11026,7 +11026,7 @@
       "qty": "1",
       "mg": "120",
       "precio": 100,
-      "stock_cde": 34,
+      "stock_cde": 30,
       "stock_pj": 6,
       "stock_sg": 1,
       "foto": "/api/foto/producto-3380.jpg?v=1792158808364",
@@ -11060,7 +11060,7 @@
       "qty": "",
       "mg": "",
       "precio": 85,
-      "stock_cde": 147,
+      "stock_cde": 146,
       "stock_pj": 19,
       "stock_sg": 0,
       "foto": "",
@@ -11128,7 +11128,7 @@
       "qty": "",
       "mg": "10 mg",
       "precio": 63,
-      "stock_cde": 118,
+      "stock_cde": 116,
       "stock_pj": 14,
       "stock_sg": 12,
       "foto": "",
@@ -11265,7 +11265,7 @@
       "mg": "",
       "precio": 75,
       "stock_cde": 32,
-      "stock_pj": 4,
+      "stock_pj": 3,
       "stock_sg": 0,
       "foto": "",
       "colecao_id": "3_hgh_peptideos",
@@ -11332,7 +11332,7 @@
       "qty": "10",
       "mg": "100",
       "precio": 30,
-      "stock_cde": 132,
+      "stock_cde": 131,
       "stock_pj": 5,
       "stock_sg": 5,
       "foto": "/api/foto/producto-3383.jpg?v=1792158746733",
@@ -12284,7 +12284,7 @@
       "qty": "10 ml",
       "mg": "200 mg",
       "precio": 70,
-      "stock_cde": 1459,
+      "stock_cde": 1456,
       "stock_pj": 43,
       "stock_sg": 46,
       "foto": "/api/foto/producto-2146.jpg?v=1791845101640",
@@ -12301,8 +12301,8 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 50,
-      "stock_cde": 705,
-      "stock_pj": 32,
+      "stock_cde": 700,
+      "stock_pj": 31,
       "stock_sg": 15,
       "foto": "/api/foto/producto-996.jpg?v=1791845094009",
       "colecao_id": "2_anabolizantes",
@@ -12539,9 +12539,9 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 32,
-      "stock_cde": 498,
+      "stock_cde": 494,
       "stock_pj": 6,
-      "stock_sg": 19,
+      "stock_sg": 16,
       "foto": "/api/foto/producto-1012.jpg?v=1791842306918",
       "colecao_id": "2_anabolizantes",
       "colecao_nome": "💪 ANABOLIZANTES, SARMS & TPC"
@@ -12573,7 +12573,7 @@
       "qty": "100",
       "mg": "10 mg",
       "precio": 45,
-      "stock_cde": 723,
+      "stock_cde": 721,
       "stock_pj": 10,
       "stock_sg": 3,
       "foto": "/api/foto/producto-1017.jpg?v=1791842142396",
@@ -12777,7 +12777,7 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 32,
-      "stock_cde": 87,
+      "stock_cde": 86,
       "stock_pj": 9,
       "stock_sg": 0,
       "foto": "/api/foto/producto-1031.jpg?v=1791842295284",
@@ -12794,7 +12794,7 @@
       "qty": "10 ml",
       "mg": "300 mg",
       "precio": 35,
-      "stock_cde": 90,
+      "stock_cde": 88,
       "stock_pj": 23,
       "stock_sg": 31,
       "foto": "/api/foto/producto-1032.jpg?v=1791842504687",
@@ -12879,7 +12879,7 @@
       "qty": "10 ml",
       "mg": "300 mg",
       "precio": 37,
-      "stock_cde": 1980,
+      "stock_cde": 1978,
       "stock_pj": 29,
       "stock_sg": 0,
       "foto": "/api/foto/producto-1034.jpg?v=1791844944118",
@@ -12897,7 +12897,7 @@
       "mg": "500 mg",
       "precio": 55,
       "stock_cde": 2539,
-      "stock_pj": 29,
+      "stock_pj": 28,
       "stock_sg": 36,
       "foto": "/api/foto/producto-1038.jpg?v=1791842494139",
       "colecao_id": "2_anabolizantes",
@@ -13185,8 +13185,8 @@
       "qty": "",
       "mg": "",
       "precio": 74,
-      "stock_cde": 1853,
-      "stock_pj": 234,
+      "stock_cde": 1851,
+      "stock_pj": 230,
       "stock_sg": 302,
       "foto": "/api/foto/producto-2996.jpg?v=1794396353874",
       "colecao_id": "1_emagrecedores",
@@ -13474,7 +13474,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 20,
-      "stock_cde": 23,
+      "stock_cde": 21,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
@@ -13678,7 +13678,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 25,
-      "stock_cde": 38,
+      "stock_cde": 36,
       "stock_pj": 6,
       "stock_sg": 9,
       "foto": "",
@@ -14256,7 +14256,7 @@
       "qty": "",
       "mg": "100 mg",
       "precio": 30,
-      "stock_cde": 1054,
+      "stock_cde": 1052,
       "stock_pj": 7,
       "stock_sg": 25,
       "foto": "/api/foto/producto-3120.jpg?v=1791315911606",
@@ -14579,7 +14579,7 @@
       "qty": "",
       "mg": "50 mg",
       "precio": 73,
-      "stock_cde": 50,
+      "stock_cde": 49,
       "stock_pj": 1,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3119.jpg?v=1791315777948",
@@ -14783,7 +14783,7 @@
       "qty": "100 ml",
       "mg": "",
       "precio": 21,
-      "stock_cde": 10,
+      "stock_cde": 9,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
@@ -14868,7 +14868,7 @@
       "qty": "10 ml",
       "mg": "300 mg",
       "precio": 23,
-      "stock_cde": 466,
+      "stock_cde": 463,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "/api/foto/producto-2471.jpg?v=1789067132890",
@@ -14902,7 +14902,7 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 28,
-      "stock_cde": 334,
+      "stock_cde": 331,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "/api/foto/producto-2233.jpg?v=1792610022248",
@@ -14936,7 +14936,7 @@
       "qty": "100",
       "mg": "25 mg",
       "precio": 30,
-      "stock_cde": 820,
+      "stock_cde": 819,
       "stock_pj": 3,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3172.jpg?v=1792412294904",
@@ -15123,8 +15123,8 @@
       "qty": "100",
       "mg": "25 mg",
       "precio": 45,
-      "stock_cde": 372,
-      "stock_pj": 3,
+      "stock_cde": 371,
+      "stock_pj": 2,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3170.jpg?v=1791291698600",
       "colecao_id": "2_anabolizantes",
@@ -15225,7 +15225,7 @@
       "qty": "10 ml",
       "mg": "300 mg",
       "precio": 28.6,
-      "stock_cde": 44,
+      "stock_cde": 42,
       "stock_pj": 6,
       "stock_sg": 0,
       "foto": "",
@@ -15259,7 +15259,7 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 29,
-      "stock_cde": 28,
+      "stock_cde": 27,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3182.jpg?v=1792412242076",
@@ -15430,7 +15430,7 @@
       "mg": "",
       "precio": 90,
       "stock_cde": 1258,
-      "stock_pj": 145,
+      "stock_pj": 143,
       "stock_sg": 118,
       "foto": "",
       "colecao_id": "1_emagrecedores",
@@ -15531,8 +15531,8 @@
       "qty": "",
       "mg": "",
       "precio": 74,
-      "stock_cde": 1916,
-      "stock_pj": 351,
+      "stock_cde": 1906,
+      "stock_pj": 349,
       "stock_sg": 188,
       "foto": "/api/foto/producto-3207.jpg?v=1794396364307",
       "colecao_id": "1_emagrecedores",
@@ -15667,8 +15667,8 @@
       "qty": "",
       "mg": "",
       "precio": 70,
-      "stock_cde": 407,
-      "stock_pj": 42,
+      "stock_cde": 404,
+      "stock_pj": 41,
       "stock_sg": 26,
       "foto": "",
       "colecao_id": "1_emagrecedores",
@@ -15752,7 +15752,7 @@
       "qty": "1",
       "mg": "100 mg",
       "precio": 25,
-      "stock_cde": 4,
+      "stock_cde": 1,
       "stock_pj": 1,
       "stock_sg": 1,
       "foto": "/api/foto/producto-3396.jpg?v=1793989933368",
@@ -15905,8 +15905,8 @@
       "qty": "",
       "mg": "5 mg",
       "precio": 125,
-      "stock_cde": 35,
-      "stock_pj": 6,
+      "stock_cde": 34,
+      "stock_pj": 4,
       "stock_sg": 0,
       "foto": "/api/foto/producto-2971.jpg?v=1791840513019",
       "colecao_id": "1_emagrecedores",
@@ -16007,7 +16007,7 @@
       "qty": "100",
       "mg": "0,04 mg",
       "precio": 25,
-      "stock_cde": 150,
+      "stock_cde": 147,
       "stock_pj": 10,
       "stock_sg": 0,
       "foto": "/api/foto/producto-2836.jpg?v=1791840727642",
@@ -16177,8 +16177,8 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 47,
-      "stock_cde": 4060,
-      "stock_pj": 51,
+      "stock_cde": 4050,
+      "stock_pj": 49,
       "stock_sg": 68,
       "foto": "/api/foto/producto-2159.jpg?v=1791316279704",
       "colecao_id": "2_anabolizantes",
@@ -16313,7 +16313,7 @@
       "qty": "",
       "mg": "60 mg",
       "precio": 70,
-      "stock_cde": 1025,
+      "stock_cde": 1019,
       "stock_pj": 13,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3069.jpg?v=1789081637014",
@@ -16398,7 +16398,7 @@
       "qty": "",
       "mg": "5000 ui",
       "precio": 28,
-      "stock_cde": 468,
+      "stock_cde": 458,
       "stock_pj": 10,
       "stock_sg": 0,
       "foto": "/api/foto/producto-2826.jpg?v=1791841613741",
@@ -16534,7 +16534,7 @@
       "qty": "100",
       "mg": "",
       "precio": 35,
-      "stock_cde": 125,
+      "stock_cde": 109,
       "stock_pj": 7,
       "stock_sg": 10,
       "foto": "/api/foto/producto-2978.jpg?v=1791841731730",
@@ -16636,7 +16636,7 @@
       "qty": "",
       "mg": "10 mg",
       "precio": 30,
-      "stock_cde": 160,
+      "stock_cde": 158,
       "stock_pj": 0,
       "stock_sg": 1,
       "foto": "/api/foto/producto-2909.jpg?v=1791841685447",
@@ -16687,7 +16687,7 @@
       "qty": "10",
       "mg": "25 mg",
       "precio": 27,
-      "stock_cde": 24,
+      "stock_cde": 22,
       "stock_pj": 5,
       "stock_sg": 0,
       "foto": "",
@@ -16704,7 +16704,7 @@
       "qty": "10 ml",
       "mg": "50 mg",
       "precio": 33,
-      "stock_cde": 360,
+      "stock_cde": 357,
       "stock_pj": 4,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3351.jpg?v=1791157644354",
@@ -16859,7 +16859,7 @@
       "precio": 35,
       "stock_cde": 200,
       "stock_pj": 19,
-      "stock_sg": 10,
+      "stock_sg": 9,
       "foto": "",
       "colecao_id": "2_anabolizantes",
       "colecao_nome": "💪 ANABOLIZANTES, SARMS & TPC"
@@ -16874,7 +16874,7 @@
       "qty": "100",
       "mg": "50 mg",
       "precio": 47,
-      "stock_cde": 37,
+      "stock_cde": 36,
       "stock_pj": 5,
       "stock_sg": 1,
       "foto": "",
@@ -16892,7 +16892,7 @@
       "mg": "25 mg",
       "precio": 33,
       "stock_cde": 240,
-      "stock_pj": 6,
+      "stock_pj": 5,
       "stock_sg": 14,
       "foto": "/api/foto/producto-2835.jpg?v=1791030023659",
       "colecao_id": "2_anabolizantes",
@@ -16925,7 +16925,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 120,
-      "stock_cde": 8616,
+      "stock_cde": 8611,
       "stock_pj": 16,
       "stock_sg": 8,
       "foto": "/api/foto/producto-2158.jpg?v=1793877183512",
@@ -17010,8 +17010,8 @@
       "qty": "",
       "mg": "",
       "precio": 190,
-      "stock_cde": 4242,
-      "stock_pj": 22,
+      "stock_cde": 4235,
+      "stock_pj": 21,
       "stock_sg": 16,
       "foto": "/api/foto/producto-2965.jpg?v=1789232512626",
       "colecao_id": "1_emagrecedores",
@@ -17027,7 +17027,7 @@
       "qty": "",
       "mg": "",
       "precio": 235,
-      "stock_cde": 4854,
+      "stock_cde": 4853,
       "stock_pj": 32,
       "stock_sg": 15,
       "foto": "/api/foto/producto-3353.jpg?v=1789232489305",
@@ -17061,7 +17061,7 @@
       "qty": "",
       "mg": "",
       "precio": 320,
-      "stock_cde": 2078,
+      "stock_cde": 2075,
       "stock_pj": 25,
       "stock_sg": 6,
       "foto": "/api/foto/producto-3010.jpg?v=1790770692576",
@@ -17129,7 +17129,7 @@
       "qty": "",
       "mg": "",
       "precio": 220,
-      "stock_cde": 26,
+      "stock_cde": 25,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
@@ -17180,7 +17180,7 @@
       "qty": "100",
       "mg": "",
       "precio": 43,
-      "stock_cde": 3802,
+      "stock_cde": 3799,
       "stock_pj": 20,
       "stock_sg": 23,
       "foto": "/api/foto/producto-3349.jpg?v=1789081978350",
@@ -17198,7 +17198,7 @@
       "mg": "20 mg",
       "precio": 31,
       "stock_cde": 188,
-      "stock_pj": 10,
+      "stock_pj": 9,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3350.jpg?v=1789081771777",
       "colecao_id": "2_anabolizantes",
@@ -17214,7 +17214,7 @@
       "qty": "100",
       "mg": "10 mg",
       "precio": 22,
-      "stock_cde": 19,
+      "stock_cde": 18,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "/api/foto/producto-2247.jpg?v=1791029999921",
@@ -17265,7 +17265,7 @@
       "qty": "",
       "mg": "27,5 mg",
       "precio": 145,
-      "stock_cde": 255,
+      "stock_cde": 253,
       "stock_pj": 3,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3283.jpg?v=1791840916697",
@@ -17367,7 +17367,7 @@
       "qty": "100",
       "mg": "40 MG",
       "precio": 25,
-      "stock_cde": 20,
+      "stock_cde": 19,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
@@ -17384,9 +17384,9 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 38,
-      "stock_cde": 18337,
+      "stock_cde": 18328,
       "stock_pj": 22,
-      "stock_sg": 17,
+      "stock_sg": 15,
       "foto": "/api/foto/producto-2157.jpg?v=1791029942257",
       "colecao_id": "2_anabolizantes",
       "colecao_nome": "💪 ANABOLIZANTES, SARMS & TPC"
@@ -17401,7 +17401,7 @@
       "qty": "10 ml",
       "mg": "400 mg",
       "precio": 47,
-      "stock_cde": 3905,
+      "stock_cde": 3900,
       "stock_pj": 30,
       "stock_sg": 9,
       "foto": "",
@@ -17418,7 +17418,7 @@
       "qty": "10 ml",
       "mg": "250 mg",
       "precio": 32,
-      "stock_cde": 747,
+      "stock_cde": 746,
       "stock_pj": 9,
       "stock_sg": 22,
       "foto": "",
@@ -17690,7 +17690,7 @@
       "qty": "10 ml",
       "mg": "25 mg",
       "precio": 40,
-      "stock_cde": 10,
+      "stock_cde": 6,
       "stock_pj": 3,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3179.jpg?v=1791841932689",
@@ -17724,7 +17724,7 @@
       "qty": "10 ml",
       "mg": "100 mg",
       "precio": 75,
-      "stock_cde": 12,
+      "stock_cde": 5,
       "stock_pj": 0,
       "stock_sg": 0,
       "foto": "",
@@ -17843,7 +17843,7 @@
       "qty": "",
       "mg": "100 ui",
       "precio": 125,
-      "stock_cde": 1482,
+      "stock_cde": 1479,
       "stock_pj": 10,
       "stock_sg": 0,
       "foto": "/api/foto/producto-3345.jpg?v=1789082200759",
@@ -17930,7 +17930,7 @@
       "precio": 110,
       "stock_cde": 3317,
       "stock_pj": 6,
-      "stock_sg": 1,
+      "stock_sg": 0,
       "foto": "/api/foto/producto-3005.jpg?v=1791841405188",
       "colecao_id": "3_hgh_peptideos",
       "colecao_nome": "🧬 HGH SOMATROPINA & PEPTÍDEOS BIO-REGENERATIVOS"
@@ -17981,7 +17981,7 @@
       "precio": 40,
       "stock_cde": 6186,
       "stock_pj": 36,
-      "stock_sg": 15,
+      "stock_sg": 0,
       "foto": "/api/foto/producto-3007.jpg?v=1791841299354",
       "colecao_id": "3_hgh_peptideos",
       "colecao_nome": "🧬 HGH SOMATROPINA & PEPTÍDEOS BIO-REGENERATIVOS"
@@ -18030,7 +18030,7 @@
       "qty": "",
       "mg": "160 ui",
       "precio": 205,
-      "stock_cde": 704,
+      "stock_cde": 699,
       "stock_pj": 6,
       "stock_sg": 12,
       "foto": "/api/foto/producto-3298.jpg?v=1791841341076",
@@ -18047,8 +18047,8 @@
       "qty": "",
       "mg": "200 ui",
       "precio": 265,
-      "stock_cde": 1972,
-      "stock_pj": 6,
+      "stock_cde": 1969,
+      "stock_pj": 5,
       "stock_sg": 13,
       "foto": "/api/foto/producto-3174.jpg?v=1791841377139",
       "colecao_id": "3_hgh_peptideos",
@@ -18115,8 +18115,8 @@
       "qty": "",
       "mg": "60",
       "precio": 72,
-      "stock_cde": 2828,
-      "stock_pj": 199,
+      "stock_cde": 2822,
+      "stock_pj": 198,
       "stock_sg": 98,
       "foto": "/api/foto/producto-3136.jpg?v=1789076473441",
       "colecao_id": "1_emagrecedores",
@@ -18243,44 +18243,44 @@
     }
   ],
   "principales": [
-    3358,
-    2848,
     663,
-    3362,
-    1396,
-    3010,
-    660,
+    2848,
     659,
-    249,
+    3207,
+    660,
     3349,
     2889,
+    3358,
+    3361,
+    249,
     1943,
-    3363,
-    2231,
-    2539
+    3010,
+    233,
+    3136,
+    661
   ],
-  "origenPrincipales": "elegidos",
+  "origenPrincipales": "mas_pedidos",
   "promos": [],
   "masPedidos": [
     {
       "id": 663,
-      "pedidos": 205
+      "pedidos": 220
     },
     {
       "id": 2848,
-      "pedidos": 161
+      "pedidos": 177
     },
     {
       "id": 659,
-      "pedidos": 124
-    },
-    {
-      "id": 660,
-      "pedidos": 114
+      "pedidos": 128
     },
     {
       "id": 3207,
-      "pedidos": 114
+      "pedidos": 119
+    },
+    {
+      "id": 660,
+      "pedidos": 117
     }
   ],
   "novedades": [
@@ -18381,13 +18381,86 @@
       "foto": "/api/foto/producto-3389.jpg?v=1794396265212"
     }
   ],
-  "productosDia": [],
+  "productosDia": [
+    {
+      "id": 2848,
+      "nombre": "INDUFAR T.G. TIRZEPATIDA X 15 MG. X 4 AMP.",
+      "precio": 85,
+      "foto": "/api/foto/producto-2848.jpg?v=1789074235151",
+      "precioAnterior": 85,
+      "precioNuevo": 82.5
+    },
+    {
+      "id": 2997,
+      "nombre": "LIPOLESS MULTI DOSIS X 15 MG. X 1 VIAL. SIN JERINGAS",
+      "precio": 77,
+      "foto": "/api/foto/producto-2997.jpg?v=1789076126553",
+      "precioAnterior": 77,
+      "precioNuevo": 58
+    },
+    {
+      "id": 2889,
+      "nombre": "LIPOLESS X 15 MG. X 4 AMPOLLAS.",
+      "precio": 78,
+      "foto": "/api/foto/producto-2889.jpg?v=1791498513435",
+      "precioAnterior": 78,
+      "precioNuevo": 60
+    },
+    {
+      "id": 3250,
+      "nombre": "GENIQS ENAGENIC 250 MG. X 10 ML.",
+      "precio": 31,
+      "foto": "/api/foto/producto-3250.jpg?v=1789079859899",
+      "precioAnterior": 31,
+      "precioNuevo": 24
+    },
+    {
+      "id": 3254,
+      "nombre": "GENIQS NANGENIC DECA 200 MG. X 10 ML.",
+      "precio": 33,
+      "foto": "/api/foto/producto-3254.jpg?v=1789079882747",
+      "precioAnterior": 33,
+      "precioNuevo": 27
+    },
+    {
+      "id": 3256,
+      "nombre": "GENIQS PRIMOGENIC 100 MG. X 10 ML.",
+      "precio": 72,
+      "foto": "/api/foto/producto-3256.jpg?v=1789079888842",
+      "precioAnterior": 72,
+      "precioNuevo": 63
+    },
+    {
+      "id": 3367,
+      "nombre": "GENIQS OXANGENIC X 10 MG. X 50 COMP.",
+      "precio": 26,
+      "foto": "/api/foto/producto-3367.jpg?v=1791499121162",
+      "precioAnterior": 26,
+      "precioNuevo": 20
+    },
+    {
+      "id": 249,
+      "nombre": "COOPER PRIMOBOL X 100MG/10ML  (METHENOLONE ENANTHATO",
+      "precio": 123,
+      "foto": "/api/foto/producto-249.jpg?v=1791291781883",
+      "precioAnterior": 123,
+      "precioNuevo": 110
+    },
+    {
+      "id": 233,
+      "nombre": "COOPER ENANBOLIC X 250MG/1ML (TESTO-ENANTHATO)",
+      "precio": 42,
+      "foto": "/api/foto/producto-233.jpg?v=1791291763831",
+      "precioAnterior": 42,
+      "precioNuevo": 35
+    }
+  ],
   "recienLlegados": [
     {
       "id": 3820,
       "nombre": "KIRKLAND MINOXIDIL 5% X 6 AMP. ORIGINAL",
       "precio": 40,
-      "foto": ""
+      "foto": "/api/foto/producto-3820.jpg?v=1795006046787"
     },
     {
       "id": 3819,
@@ -18444,9 +18517,15 @@
       "foto": "/api/foto/producto-3440.jpg?v=1794406629503"
     }
   ],
-  "cotizacion": 5.84,
-  "cotizacionActualizada": "2026-11-18T10:12:47.776Z",
+  "cotizacion": 5.95,
+  "cotizacionActualizada": "2026-11-19T12:13:58.614Z",
   "avisos": [
+    {
+      "id": 1795070020663,
+      "titulo": "BLACK FRIDAY 2026",
+      "texto": "A Black Friday chegou e você não pode perder a oportunidade de aproveitar os descontos!",
+      "imagen": "/api/aviso/aviso-1795070020663-1795070020663.jpg"
+    },
     {
       "id": 1794833502570,
       "titulo": "BLACK FRIDAY CDE",
@@ -18458,6 +18537,1016 @@
       "titulo": "Atenção: produto falsificado",
       "texto": "as apresentações de Retatrutida 600 mg e 300 mg da ZPHC que estão circulando no Paraguai são falsificadas. Esses produtos não existem na versão original.",
       "imagen": "/api/aviso/aviso-1791172320243-1791172320244.jpg"
+    }
+  ],
+  "blackFriday": [
+    {
+      "id": 3380,
+      "precio": 95
+    },
+    {
+      "id": 3370,
+      "precio": 210
+    },
+    {
+      "id": 3381,
+      "precio": 80
+    },
+    {
+      "id": 3308,
+      "precio": 80
+    },
+    {
+      "id": 2988,
+      "precio": 68
+    },
+    {
+      "id": 3072,
+      "precio": 68
+    },
+    {
+      "id": 3039,
+      "precio": 71
+    },
+    {
+      "id": 2729,
+      "precio": 265
+    },
+    {
+      "id": 3392,
+      "precio": 55
+    },
+    {
+      "id": 2856,
+      "precio": 65
+    },
+    {
+      "id": 2855,
+      "precio": 52
+    },
+    {
+      "id": 2854,
+      "precio": 46
+    },
+    {
+      "id": 2898,
+      "precio": 69
+    },
+    {
+      "id": 2996,
+      "precio": 71
+    },
+    {
+      "id": 2639,
+      "precio": 68
+    },
+    {
+      "id": 2876,
+      "precio": 45
+    },
+    {
+      "id": 2927,
+      "precio": 50
+    },
+    {
+      "id": 3149,
+      "precio": 120
+    },
+    {
+      "id": 3014,
+      "precio": 80
+    },
+    {
+      "id": 3207,
+      "precio": 72
+    },
+    {
+      "id": 3042,
+      "precio": 105
+    },
+    {
+      "id": 3136,
+      "precio": 69
+    },
+    {
+      "id": 2850,
+      "precio": 36
+    },
+    {
+      "id": 2946,
+      "precio": 71
+    },
+    {
+      "id": 2859,
+      "precio": 53
+    },
+    {
+      "id": 2938,
+      "precio": 50
+    },
+    {
+      "id": 2800,
+      "precio": 70
+    },
+    {
+      "id": 3317,
+      "precio": 25
+    },
+    {
+      "id": 446,
+      "precio": 87
+    },
+    {
+      "id": 445,
+      "precio": 82
+    },
+    {
+      "id": 2804,
+      "precio": 47
+    },
+    {
+      "id": 2863,
+      "precio": 29
+    },
+    {
+      "id": 2825,
+      "precio": 27
+    },
+    {
+      "id": 2810,
+      "precio": 25
+    },
+    {
+      "id": 2848,
+      "precio": 82.5
+    },
+    {
+      "id": 2883,
+      "precio": 58
+    },
+    {
+      "id": 2831,
+      "precio": 35
+    },
+    {
+      "id": 3213,
+      "precio": 42
+    },
+    {
+      "id": 3211,
+      "precio": 32
+    },
+    {
+      "id": 3212,
+      "precio": 50
+    },
+    {
+      "id": 3210,
+      "precio": 22
+    },
+    {
+      "id": 993,
+      "precio": 37
+    },
+    {
+      "id": 2146,
+      "precio": 67
+    },
+    {
+      "id": 996,
+      "precio": 45
+    },
+    {
+      "id": 3206,
+      "precio": 58
+    },
+    {
+      "id": 1013,
+      "precio": 34
+    },
+    {
+      "id": 1012,
+      "precio": 30
+    },
+    {
+      "id": 1017,
+      "precio": 40
+    },
+    {
+      "id": 1021,
+      "precio": 195
+    },
+    {
+      "id": 1031,
+      "precio": 26
+    },
+    {
+      "id": 1032,
+      "precio": 32
+    },
+    {
+      "id": 1036,
+      "precio": 26
+    },
+    {
+      "id": 1919,
+      "precio": 27
+    },
+    {
+      "id": 1034,
+      "precio": 34
+    },
+    {
+      "id": 1038,
+      "precio": 48
+    },
+    {
+      "id": 1037,
+      "precio": 20
+    },
+    {
+      "id": 1040,
+      "precio": 50
+    },
+    {
+      "id": 3060,
+      "precio": 35
+    },
+    {
+      "id": 2972,
+      "precio": 83
+    },
+    {
+      "id": 2971,
+      "precio": 115
+    },
+    {
+      "id": 2169,
+      "precio": 25
+    },
+    {
+      "id": 3066,
+      "precio": 60
+    },
+    {
+      "id": 2973,
+      "precio": 70
+    },
+    {
+      "id": 2836,
+      "precio": 20
+    },
+    {
+      "id": 2845,
+      "precio": 25
+    },
+    {
+      "id": 3285,
+      "precio": 120
+    },
+    {
+      "id": 3292,
+      "precio": 80
+    },
+    {
+      "id": 3074,
+      "precio": 50
+    },
+    {
+      "id": 3057,
+      "precio": 90
+    },
+    {
+      "id": 3069,
+      "precio": 60
+    },
+    {
+      "id": 3282,
+      "precio": 120
+    },
+    {
+      "id": 3176,
+      "precio": 54
+    },
+    {
+      "id": 3175,
+      "precio": 50
+    },
+    {
+      "id": 3067,
+      "precio": 100
+    },
+    {
+      "id": 2826,
+      "precio": 23
+    },
+    {
+      "id": 3059,
+      "precio": 28
+    },
+    {
+      "id": 3068,
+      "precio": 48
+    },
+    {
+      "id": 2913,
+      "precio": 85
+    },
+    {
+      "id": 2914,
+      "precio": 110
+    },
+    {
+      "id": 2977,
+      "precio": 160
+    },
+    {
+      "id": 2978,
+      "precio": 30
+    },
+    {
+      "id": 3281,
+      "precio": 60
+    },
+    {
+      "id": 3075,
+      "precio": 162
+    },
+    {
+      "id": 3294,
+      "precio": 95
+    },
+    {
+      "id": 2588,
+      "precio": 38
+    },
+    {
+      "id": 2909,
+      "precio": 25
+    },
+    {
+      "id": 3058,
+      "precio": 60
+    },
+    {
+      "id": 3351,
+      "precio": 25
+    },
+    {
+      "id": 3070,
+      "precio": 95
+    },
+    {
+      "id": 3071,
+      "precio": 110
+    },
+    {
+      "id": 3056,
+      "precio": 48
+    },
+    {
+      "id": 3290,
+      "precio": 65
+    },
+    {
+      "id": 2217,
+      "precio": 34
+    },
+    {
+      "id": 3348,
+      "precio": 125
+    },
+    {
+      "id": 2250,
+      "precio": 32
+    },
+    {
+      "id": 2835,
+      "precio": 30
+    },
+    {
+      "id": 3352,
+      "precio": 42
+    },
+    {
+      "id": 2158,
+      "precio": 105
+    },
+    {
+      "id": 2965,
+      "precio": 180
+    },
+    {
+      "id": 3010,
+      "precio": 315
+    },
+    {
+      "id": 3349,
+      "precio": 37
+    },
+    {
+      "id": 2247,
+      "precio": 20
+    },
+    {
+      "id": 3350,
+      "precio": 26
+    },
+    {
+      "id": 3283,
+      "precio": 130
+    },
+    {
+      "id": 3284,
+      "precio": 210
+    },
+    {
+      "id": 2908,
+      "precio": 30
+    },
+    {
+      "id": 2916,
+      "precio": 98
+    },
+    {
+      "id": 2157,
+      "precio": 30
+    },
+    {
+      "id": 2828,
+      "precio": 40
+    },
+    {
+      "id": 2216,
+      "precio": 29
+    },
+    {
+      "id": 2309,
+      "precio": 22
+    },
+    {
+      "id": 3178,
+      "precio": 20
+    },
+    {
+      "id": 2918,
+      "precio": 90
+    },
+    {
+      "id": 3148,
+      "precio": 128
+    },
+    {
+      "id": 2834,
+      "precio": 60
+    },
+    {
+      "id": 2822,
+      "precio": 85
+    },
+    {
+      "id": 2601,
+      "precio": 40
+    },
+    {
+      "id": 2167,
+      "precio": 32
+    },
+    {
+      "id": 3061,
+      "precio": 83
+    },
+    {
+      "id": 3076,
+      "precio": 115
+    },
+    {
+      "id": 2917,
+      "precio": 70
+    },
+    {
+      "id": 3345,
+      "precio": 118
+    },
+    {
+      "id": 3280,
+      "precio": 170
+    },
+    {
+      "id": 2980,
+      "precio": 190
+    },
+    {
+      "id": 3005,
+      "precio": 93
+    },
+    {
+      "id": 3055,
+      "precio": 120
+    },
+    {
+      "id": 2467,
+      "precio": 110
+    },
+    {
+      "id": 3298,
+      "precio": 195
+    },
+    {
+      "id": 3174,
+      "precio": 230
+    },
+    {
+      "id": 799,
+      "precio": 86
+    },
+    {
+      "id": 672,
+      "precio": 195
+    },
+    {
+      "id": 2598,
+      "precio": 145
+    },
+    {
+      "id": 3065,
+      "precio": 120
+    },
+    {
+      "id": 3214,
+      "precio": 195
+    },
+    {
+      "id": 971,
+      "precio": 70
+    },
+    {
+      "id": 2821,
+      "precio": 170
+    },
+    {
+      "id": 2997,
+      "precio": 58
+    },
+    {
+      "id": 2889,
+      "precio": 60
+    },
+    {
+      "id": 222,
+      "precio": 34
+    },
+    {
+      "id": 3270,
+      "precio": 30
+    },
+    {
+      "id": 227,
+      "precio": 13
+    },
+    {
+      "id": 228,
+      "precio": 16
+    },
+    {
+      "id": 2182,
+      "precio": 27
+    },
+    {
+      "id": 229,
+      "precio": 27
+    },
+    {
+      "id": 230,
+      "precio": 36
+    },
+    {
+      "id": 232,
+      "precio": 14
+    },
+    {
+      "id": 233,
+      "precio": 35
+    },
+    {
+      "id": 2181,
+      "precio": 34
+    },
+    {
+      "id": 235,
+      "precio": 35
+    },
+    {
+      "id": 241,
+      "precio": 24
+    },
+    {
+      "id": 3347,
+      "precio": 17
+    },
+    {
+      "id": 245,
+      "precio": 37
+    },
+    {
+      "id": 1765,
+      "precio": 15
+    },
+    {
+      "id": 247,
+      "precio": 24
+    },
+    {
+      "id": 248,
+      "precio": 27
+    },
+    {
+      "id": 249,
+      "precio": 110
+    },
+    {
+      "id": 252,
+      "precio": 25
+    },
+    {
+      "id": 253,
+      "precio": 26
+    },
+    {
+      "id": 1931,
+      "precio": 34
+    },
+    {
+      "id": 2163,
+      "precio": 34
+    },
+    {
+      "id": 1933,
+      "precio": 58
+    },
+    {
+      "id": 255,
+      "precio": 34
+    },
+    {
+      "id": 256,
+      "precio": 24
+    },
+    {
+      "id": 260,
+      "precio": 35
+    },
+    {
+      "id": 3237,
+      "precio": 42
+    },
+    {
+      "id": 266,
+      "precio": 14
+    },
+    {
+      "id": 267,
+      "precio": 24
+    },
+    {
+      "id": 265,
+      "precio": 34
+    },
+    {
+      "id": 259,
+      "precio": 35
+    },
+    {
+      "id": 3253,
+      "precio": 31
+    },
+    {
+      "id": 3257,
+      "precio": 25
+    },
+    {
+      "id": 3323,
+      "precio": 12
+    },
+    {
+      "id": 3251,
+      "precio": 21
+    },
+    {
+      "id": 3331,
+      "precio": 9
+    },
+    {
+      "id": 3327,
+      "precio": 19
+    },
+    {
+      "id": 3255,
+      "precio": 32
+    },
+    {
+      "id": 3250,
+      "precio": 24
+    },
+    {
+      "id": 3330,
+      "precio": 27
+    },
+    {
+      "id": 3254,
+      "precio": 27
+    },
+    {
+      "id": 3256,
+      "precio": 63
+    },
+    {
+      "id": 3252,
+      "precio": 20
+    },
+    {
+      "id": 3249,
+      "precio": 24
+    },
+    {
+      "id": 3258,
+      "precio": 12
+    },
+    {
+      "id": 3332,
+      "precio": 20
+    },
+    {
+      "id": 3329,
+      "precio": 44
+    },
+    {
+      "id": 3328,
+      "precio": 12
+    },
+    {
+      "id": 2974,
+      "precio": 50
+    },
+    {
+      "id": 2819,
+      "precio": 105
+    },
+    {
+      "id": 2871,
+      "precio": 60
+    },
+    {
+      "id": 2830,
+      "precio": 75
+    },
+    {
+      "id": 3333,
+      "precio": 63
+    },
+    {
+      "id": 3302,
+      "precio": 75
+    },
+    {
+      "id": 3263,
+      "precio": 90
+    },
+    {
+      "id": 3318,
+      "precio": 105
+    },
+    {
+      "id": 3340,
+      "precio": 80
+    },
+    {
+      "id": 3196,
+      "precio": 70
+    },
+    {
+      "id": 3198,
+      "precio": 70
+    },
+    {
+      "id": 3262,
+      "precio": 80
+    },
+    {
+      "id": 3336,
+      "precio": 65
+    },
+    {
+      "id": 2947,
+      "precio": 78
+    },
+    {
+      "id": 2880,
+      "precio": 43
+    },
+    {
+      "id": 3150,
+      "precio": 115
+    },
+    {
+      "id": 3319,
+      "precio": 90
+    },
+    {
+      "id": 3048,
+      "precio": 55
+    },
+    {
+      "id": 3046,
+      "precio": 125
+    },
+    {
+      "id": 3045,
+      "precio": 50
+    },
+    {
+      "id": 3320,
+      "precio": 40
+    },
+    {
+      "id": 3220,
+      "precio": 45
+    },
+    {
+      "id": 3156,
+      "precio": 70
+    },
+    {
+      "id": 3157,
+      "precio": 40
+    },
+    {
+      "id": 363,
+      "precio": 50
+    },
+    {
+      "id": 378,
+      "precio": 30
+    },
+    {
+      "id": 1973,
+      "precio": 38
+    },
+    {
+      "id": 2154,
+      "precio": 65
+    },
+    {
+      "id": 2882,
+      "precio": 42
+    },
+    {
+      "id": 397,
+      "precio": 55
+    },
+    {
+      "id": 1749,
+      "precio": 225
+    },
+    {
+      "id": 2696,
+      "precio": 110
+    },
+    {
+      "id": 2884,
+      "precio": 125
+    },
+    {
+      "id": 365,
+      "precio": 35
+    },
+    {
+      "id": 3321,
+      "precio": 50
+    },
+    {
+      "id": 3227,
+      "precio": 50
+    },
+    {
+      "id": 3274,
+      "precio": 50
+    },
+    {
+      "id": 3208,
+      "precio": 80
+    },
+    {
+      "id": 3162,
+      "precio": 80
+    },
+    {
+      "id": 3238,
+      "precio": 80
+    },
+    {
+      "id": 3310,
+      "precio": 50
+    },
+    {
+      "id": 3266,
+      "precio": 50
+    },
+    {
+      "id": 3230,
+      "precio": 50
+    },
+    {
+      "id": 3264,
+      "precio": 50
+    },
+    {
+      "id": 3242,
+      "precio": 50
+    },
+    {
+      "id": 3273,
+      "precio": 35
+    },
+    {
+      "id": 3160,
+      "precio": 50
+    },
+    {
+      "id": 3202,
+      "precio": 60
+    },
+    {
+      "id": 3301,
+      "precio": 50
+    },
+    {
+      "id": 3155,
+      "precio": 35
+    },
+    {
+      "id": 3225,
+      "precio": 50
+    },
+    {
+      "id": 3245,
+      "precio": 50
+    },
+    {
+      "id": 3313,
+      "precio": 24
+    },
+    {
+      "id": 3343,
+      "precio": 35
+    },
+    {
+      "id": 3344,
+      "precio": 35
+    },
+    {
+      "id": 3154,
+      "precio": 40
+    },
+    {
+      "id": 3221,
+      "precio": 50
+    },
+    {
+      "id": 3247,
+      "precio": 55
+    },
+    {
+      "id": 3226,
+      "precio": 50
+    },
+    {
+      "id": 3215,
+      "precio": 50
+    },
+    {
+      "id": 3275,
+      "precio": 50
+    },
+    {
+      "id": 3240,
+      "precio": 50
+    },
+    {
+      "id": 3246,
+      "precio": 50
+    },
+    {
+      "id": 3161,
+      "precio": 50
+    },
+    {
+      "id": 3314,
+      "precio": 24
+    },
+    {
+      "id": 3271,
+      "precio": 60
     }
   ],
   "actualizado": "2026-11-18T10:19:44.122Z"
