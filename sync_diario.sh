@@ -28,8 +28,29 @@ trap 'on_error $LINENO' ERR
 echo "==================================================" >> "$LOG_FILE"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Iniciando rotina diária 07h00 ShapeTotal CRM..." >> "$LOG_FILE"
 
-# 1. Sincronizar API shapetotal.com (produtos, dólar, promoções e fotos)
-/usr/bin/python3 "$CRM_DIR/atualizar_site.py" >> "$LOG_FILE" 2>&1
+# 1. Sincronizar API shapetotal.com (produtos, dólar, promoções e atualização de fotos)
+/usr/bin/python3 "$CRM_DIR/atualizar_site.py" --refresh-fotos >> "$LOG_FILE" 2>&1
+
+# 1.1 Sincronizar cotação live da API para pricing_config.json e pricing_config.js
+/usr/bin/python3 - << 'PYEOF' >> "$LOG_FILE" 2>&1
+import json
+from datetime import datetime
+from pricing_engine import load_pricing_config, write_pricing_config_js, CONFIG_JSON_PATH
+
+with open('/Users/italosouza/Medicamentos/ShapeTotalCRM/catalogo_dados.json', encoding='utf-8') as f:
+    cat = json.load(f)
+cot_api = float(cat.get('cotizacion') or 0)
+if cot_api > 0:
+    cfg = load_pricing_config()
+    if abs(float(cfg.get('cotacao', 0)) - cot_api) > 1e-4:
+        cfg['cotacao'] = round(cot_api, 4)
+        cfg['updatedAt'] = datetime.now().strftime('%Y-%m-%d')
+        with open(CONFIG_JSON_PATH, 'w', encoding='utf-8') as fc:
+            json.dump(cfg, fc, ensure_ascii=False, indent=2)
+            fc.write('\n')
+        write_pricing_config_js(cfg)
+        print(f"pricing_config sincronizado para dólar R$ {cfg['cotacao']:.2f}")
+PYEOF
 
 # 2. Regenerar os 5 catálogos oficiais + Tabela Fechada Tirzepatidas (CRM, Downloads e Desktop)
 /usr/bin/python3 "$CRM_DIR/gerar_todos_catalogos_oficiais.py" >> "$LOG_FILE" 2>&1
