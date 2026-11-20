@@ -132,6 +132,8 @@ def resolve_strategic_tier(product, custo, gkey=None, cfg=None):
             return 'max', 'Retatrutida alta demanda'
         if custo <= def_cutoff:
             return 'max', 'Ampola/emagrecedor ticket acessível'
+        if custo >= reta_cutoff:
+            return 'min', 'Concorrência farmácia BH (melhor preço c/ lucro)'
         return 'rec', 'GLP-1 competitivo de giro'
 
     if gkey == 'peptideo':

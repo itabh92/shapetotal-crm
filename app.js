@@ -1142,6 +1142,7 @@
         return { tier: 'max', reason: 'Retatrutida alta demanda' };
       }
       if (custo <= defCutoff) return { tier: 'max', reason: 'Ampola/emagrecedor acessível' };
+      if (custo >= retaCutoff) return { tier: 'min', reason: 'Concorrência farmácia BH (melhor preço c/ lucro)' };
       return { tier: 'rec', reason: 'GLP-1 competitivo de giro' };
     }
 
