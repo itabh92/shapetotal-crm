@@ -28,8 +28,8 @@ git pull --rebase --autostash origin main >> "$LOG" 2>&1
 
 /usr/bin/python3 "$REPO/atualizar_site.py" >> "$LOG" 2>&1
 
-if [ -n "$(git status --porcelain -- catalogo_dados.json dados_catalogo.js pricing_config.js fotos/)" ]; then
-  git add catalogo_dados.json dados_catalogo.js pricing_config.js fotos/ >> "$LOG" 2>&1
+if [ -n "$(git status --porcelain -- catalogo_dados.json dados_catalogo.js pricing_config.json pricing_config.js fotos/)" ]; then
+  git add catalogo_dados.json dados_catalogo.js pricing_config.json pricing_config.js fotos/ >> "$LOG" 2>&1
   git commit -m "chore(catalogo): sync semanal automatico shapetotal.com ($(date +%Y-%m-%d))" >> "$LOG" 2>&1
   git push origin main >> "$LOG" 2>&1
   echo "[$(ts)] OK — catalogo atualizado e enviado para origin/main" >> "$LOG"
