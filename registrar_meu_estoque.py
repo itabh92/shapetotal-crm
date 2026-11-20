@@ -29,7 +29,7 @@ DOWNLOADS_DIR = '/Users/italosouza/Downloads'
 DESKTOP_DIR = '/Users/italosouza/Desktop'
 
 # ITENS FÍSICOS EM MÃOS — preços calculados automaticamente pelo motor pricing_engine.py (Dólar + 30% frete + % grupo)
-CUSTO_TOTAL_PAGO_LOTE = 3175.00
+CUSTO_TOTAL_PAGO_LOTE = 7548.55
 
 ESTOQUE_LOCAL = [
     {
@@ -37,8 +37,8 @@ ESTOQUE_LOCAL = [
         'nome': 'TG 60 mg — Indufar (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 0,
-        'obs': 'Caixa lacrada original Indufar'
+        'qtd': 5,
+        'obs': 'Caixa lacrada original Indufar (+5 caixas recebidas em 20/11)'
     },
     {
         'id_catalogo': 2996,
@@ -53,8 +53,8 @@ ESTOQUE_LOCAL = [
         'nome': 'Tirzec 60 mg — Quimfa (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 3,
-        'obs': 'Caixa lacrada original Quimfa (4x15 mg)'
+        'qtd': 8,
+        'obs': 'Caixa lacrada original Quimfa (4x15 mg, +5 caixas recebidas em 20/11)'
     },
     {
         'id_catalogo': 2988,
