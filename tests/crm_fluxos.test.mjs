@@ -421,10 +421,13 @@ test('precificacao padronizada: dolar 5.95 + 30% frete (7.735), cartao 12x s/j (
   assert.equal(genReta60.precoCartao, roundStep(genReta60.precoFinal * 1.12012));
   assert.ok(genReta60.liquidoCartao12x >= genReta60.precoFinal);
 
-  // Retatrutida Gen-Health 240mg Kit (3370, USD 230): MAX (65%)
+  // Retatrutida Gen-Health 240mg Kit (3370, USD 230): MAX (65%) se custo <= cutoff (1800), senão REC (48%)
+  const retaCutoff = Number(pricingJson.tierStrategy?.emagrecedores?.retatrutidaMaxCostCutoff ?? 1800);
   const genReta240 = CRM.computeProduct(byId(3370));
-  assert.equal(genReta240.chosenTier, 'max');
-  assert.equal(genReta240.precoFinal, expected(230, 65));
+  const expectedTier240 = genReta240.custo > retaCutoff ? 'rec' : 'max';
+  const expectedPct240 = expectedTier240 === 'rec' ? 48 : 65;
+  assert.equal(genReta240.chosenTier, expectedTier240);
+  assert.equal(genReta240.precoFinal, expected(230, expectedPct240));
   assert.equal(genReta240.precoCartao, roundStep(genReta240.precoFinal * 1.12012));
   assert.ok(genReta240.liquidoCartao12x >= genReta240.precoFinal);
 
