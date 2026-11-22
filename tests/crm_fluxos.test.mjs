@@ -11,7 +11,7 @@ const pricingJson = JSON.parse(fs.readFileSync(path.join(ROOT, 'pricing_config.j
 const pricingJs = fs.readFileSync(path.join(ROOT, 'pricing_config.js'), 'utf8');
 const cat = fs.readFileSync(path.join(ROOT, 'dados_catalogo.js'), 'utf8');
 
-function createHarness({ confirmAnswer = true, promptAnswer = '0', initialState = null } = {}) {
+function createHarness({ confirmAnswer = true, promptAnswer = '0', initialState = null, now = null } = {}) {
   const elements = {};
   const alerts = [];
   const confirms = [];
@@ -43,7 +43,17 @@ function createHarness({ confirmAnswer = true, promptAnswer = '0', initialState 
     storageData.SHAPETOTAL_CRM_STATE_V1 = JSON.stringify(initialState);
   }
 
+  const RealDate = Date;
+  const FakeDate = now != null ? class extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) super(now);
+      else super(...args);
+    }
+    static now() { return now; }
+  } : RealDate;
+
   const sandbox = {
+    Date: FakeDate,
     window: {
       innerWidth: 1280,
       location: { hash: '', origin: 'http://localhost:8765', pathname: '/', search: '', href: '' },
@@ -104,14 +114,18 @@ test('consistencia: todos os handlers window.CRM no HTML e JS existem e sao func
   assert.deepEqual(faltantes, []);
 });
 
-test('parseDateTs e calcularAlertas: datas brasileiras dd/MM/yyyy (06/11, 09/11, 10/11) nao geram falso atraso', () => {
+test('parseDateTs e calcularAlertas: datas brasileiras dd/MM/yyyy recentes nao geram falso atraso', () => {
+  const fmtBr = (daysAgo) => {
+    const d = new Date(Date.now() - daysAgo * 86400000);
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+  };
   const { CRM } = createHarness({
     initialState: {
       meuEstoque: { 3378: 5 },
       pedidosTransito: [
-        { id: 'TR-06', data_compra: '06/11/2026', status: 'em_transito', custo_total_reais: 1000, itens: [{ id_catalogo: 3378, qtd: 2 }] },
-        { id: 'TR-09', data_compra: '09/11/2026', status: 'em_transito', custo_total_reais: 1000, itens: [{ id_catalogo: 3378, qtd: 2 }] },
-        { id: 'TR-10', data_compra: '10/11/2026', status: 'em_transito', custo_total_reais: 1000, itens: [{ id_catalogo: 3378, qtd: 2 }] }
+        { id: 'TR-02', data_compra: fmtBr(2), status: 'em_transito', custo_total_reais: 1000, itens: [{ id_catalogo: 3378, qtd: 2 }] },
+        { id: 'TR-05', data_compra: fmtBr(5), status: 'em_transito', custo_total_reais: 1000, itens: [{ id_catalogo: 3378, qtd: 2 }] },
+        { id: 'TR-10', data_compra: fmtBr(10), status: 'em_transito', custo_total_reais: 1000, itens: [{ id_catalogo: 3378, qtd: 2 }] }
       ],
       encomendas: [],
       vendas: []
@@ -122,6 +136,10 @@ test('parseDateTs e calcularAlertas: datas brasileiras dd/MM/yyyy (06/11, 09/11,
   assert.equal(new Date(ts06).getFullYear(), 2026);
   assert.equal(new Date(ts06).getMonth(), 10); // Novembro = 10
   assert.equal(new Date(ts06).getDate(), 6);
+
+  const ts09 = CRM.parseDateTs('09/11/2026');
+  assert.equal(new Date(ts09).getMonth(), 10);
+  assert.equal(new Date(ts09).getDate(), 9);
 
   const alertas = CRM.calcularAlertas(true);
   const atrasados = alertas.filter(a => a.tipo === 'transito_atrasado');

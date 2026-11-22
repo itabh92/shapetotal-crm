@@ -1,8 +1,8 @@
 {
   "version": "2026-11-19-v1",
-  "updatedAt": "2026-11-21",
+  "updatedAt": "2026-11-22",
   "currencyNote": "Custo fixo = USD site * cotacao * (1 + fretePct / 100). Frete fixo 30%; cartao 12x s/ juros usa 12.012% (simulacao R$ 1.000 -> R$ 1.120,12 = 12x R$ 93,34) garantindo liquido >= PIX.",
-  "cotacao": 6.05,
+  "cotacao": 6.1,
   "fretePct": 30,
   "taxaCartaoPct": 12.012,
   "defaultTier": "auto",
