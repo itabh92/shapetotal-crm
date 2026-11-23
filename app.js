@@ -124,8 +124,24 @@
     minMarginFilter: null,
     movimentacoes: [], // [{ id, produtoId, tipo, qtd, referenciaId, motivo, custoUnitReal, data, usuario }]
     custosReais: {}, // { [produtoId]: custoUnitRealBrl }
+    despesas: [], // [{ id, data, categoria, descricao, valor, status, obs }]
     estoqueAtualizadoEm: new Date().toISOString(),
     ultimaVerificacaoAlertas: null
+  };
+
+  let biUiState = {
+    filters: {
+      periodo: 'todos',
+      ano: 'todos',
+      mes: 'todos',
+      canal: 'todos',
+      categoria: 'todos',
+      produtoId: 'todos',
+      cliente: 'todos',
+      pagamento: 'todos'
+    },
+    prodSort: 'lucro', // 'lucro' | 'receita' | 'qtd' | 'margem'
+    cliSort: 'lucro'   // 'lucro' | 'receita' | 'pedidos'
   };
 
   const AUDIT_LOG_KEY = 'ST_AUDIT_LOG_v1';
@@ -305,6 +321,7 @@
         state.savedFilters = Array.isArray(parsed.savedFilters) ? parsed.savedFilters : [];
         state.movimentacoes = Array.isArray(parsed.movimentacoes) ? parsed.movimentacoes : [];
         state.custosReais = (parsed.custosReais && typeof parsed.custosReais === 'object') ? parsed.custosReais : {};
+        state.despesas = Array.isArray(parsed.despesas) ? parsed.despesas : [];
         state.estoqueAtualizadoEm = parsed.estoqueAtualizadoEm || '';
         state.ultimaVerificacaoAlertas = parsed.ultimaVerificacaoAlertas || null;
         state.pedidoFornecedorItens = Array.isArray(parsed.pedidoFornecedorItens) ? parsed.pedidoFornecedorItens : [];
@@ -343,6 +360,7 @@
 
     if (!Array.isArray(state.pedidosTransito)) state.pedidosTransito = [];
     if (!Array.isArray(state.canonVistos)) state.canonVistos = [];
+    if (!Array.isArray(state.despesas)) state.despesas = [];
     if (!state.meuEstoque || typeof state.meuEstoque !== 'object') {
       state.meuEstoque = {};
     }
@@ -381,6 +399,7 @@
       canonVistos: state.canonVistos || [],
       movimentacoes: state.movimentacoes || [],
       custosReais: state.custosReais || {},
+      despesas: state.despesas || [],
       pedidoFornecedorItens: state.pedidoFornecedorItens || [],
       telefoneFornecedor: state.telefoneFornecedor || '',
       estoqueAtualizadoEm: state.estoqueAtualizadoEm || new Date().toISOString()
@@ -407,6 +426,7 @@
       savedFilters: state.savedFilters || [],
       movimentacoes: (state.movimentacoes || []).slice(0, 80),
       custosReais: state.custosReais || {},
+      despesas: (state.despesas || []).slice(0, 60),
       canonVistos: state.canonVistos || []
     };
   }
@@ -510,6 +530,17 @@
     if (Array.isArray(imp.clientes)) out.clientes = imp.clientes.filter(c => isObj(c) && c.nome);
     if (Array.isArray(imp.savedFilters)) out.savedFilters = imp.savedFilters.filter(isObj);
     if (Array.isArray(imp.customProducts)) out.customProducts = imp.customProducts.filter(isObj);
+    if (Array.isArray(imp.despesas)) {
+      out.despesas = imp.despesas.filter(isObj).map(d => ({
+        id: String(d.id || ''),
+        data: String(d.data || ''),
+        categoria: String(d.categoria || 'outros'),
+        descricao: String(d.descricao || 'Despesa'),
+        valor: Math.max(0, Number(d.valor) || 0),
+        status: d.status === 'pendente' ? 'pendente' : 'pago',
+        obs: String(d.obs || '')
+      })).filter(d => d.id && d.valor > 0);
+    }
     return out;
   }
 
@@ -628,6 +659,13 @@
       .sort((a, b) => new Date(b.data || 0).getTime() - new Date(a.data || 0).getTime())
       .slice(0, 1000);
 
+    // Merge append-only de despesas por ID
+    const despMap = new Map();
+    [...(cur.despesas || []), ...(imp.despesas || [])].forEach(d => {
+      if (d && d.id) despMap.set(String(d.id), { ...d });
+    });
+    const mergedDespesas = Array.from(despMap.values()).sort((a, b) => String(b.data || '').localeCompare(String(a.data || '')));
+
     const nextState = {
       ...cur,
       ...imp,
@@ -639,6 +677,7 @@
       encomendas: mergedEncomendas,
       pedidosTransito: mergedPedidos,
       movimentacoes: mergedMovs,
+      despesas: mergedDespesas,
       custosReais: { ...(cur.custosReais || {}), ...(imp.custosReais || {}) },
       customProducts: Array.isArray(imp.customProducts) ? imp.customProducts : (cur.customProducts || []),
       savedFilters: Array.isArray(imp.savedFilters) ? imp.savedFilters : (cur.savedFilters || []),
@@ -692,6 +731,7 @@
       canonVistos: state.canonVistos || [],
       movimentacoes: state.movimentacoes || [],
       custosReais: state.custosReais || {},
+      despesas: state.despesas || [],
       pedidoFornecedorItens: state.pedidoFornecedorItens || [],
       telefoneFornecedor: state.telefoneFornecedor || '',
       estoqueAtualizadoEm: state.estoqueAtualizadoEm || new Date().toISOString(),
@@ -2629,8 +2669,777 @@
     `;
   }
 
+  function buildBiReportFromState(overrideFilters) {
+    const biApi = (typeof window !== 'undefined' && window.SHAPETOTAL_BI) || (typeof globalThis !== 'undefined' && globalThis.SHAPETOTAL_BI);
+    if (!biApi || typeof biApi.computeBiReport !== 'function') return null;
+
+    const catalogById = new Map();
+    rawCatalog.forEach(raw => {
+      const comp = computeProduct(raw);
+      catalogById.set(Number(comp.id), comp);
+    });
+
+    const divergenciasEstoque = [];
+    Object.keys(state.meuEstoque || {}).forEach(pidStr => {
+      const pid = Number(pidStr);
+      if (!pid) return;
+      try {
+        const s = typeof getSaldo === 'function' ? getSaldo(pid) : null;
+        if (s && s.divergencia && Math.abs(s.divergencia) > 0) {
+          divergenciasEstoque.push({ produtoId: pid, divergencia: s.divergencia });
+        }
+      } catch (_) {}
+    });
+
+    return biApi.computeBiReport({
+      vendas: state.vendas || [],
+      encomendas: state.encomendas || [],
+      pedidosTransito: state.pedidosTransito || [],
+      despesas: state.despesas || [],
+      meuEstoque: state.meuEstoque || {},
+      custosReais: state.custosReais || {},
+      frascosDoses: state.frascosDoses || {},
+      catalogById,
+      divergenciasEstoque,
+      pricingConfig: PRICING_CONFIG,
+      filters: overrideFilters || biUiState.filters
+    });
+  }
+
+  function formatCompactBRL(n) {
+    const v = Number(n) || 0;
+    const abs = Math.abs(v);
+    const sign = v < 0 ? '-' : '';
+    if (abs >= 1000000) return `${sign}R$ ${(abs / 1000000).toFixed(1).replace('.', ',')}M`;
+    if (abs >= 1000) return `${sign}R$ ${(abs / 1000).toFixed(1).replace('.', ',')}k`;
+    return `${sign}R$ ${Math.round(abs)}`;
+  }
+
+  function renderSemaforoPill(sem, compact = false) {
+    if (!sem) return '';
+    const txt = compact ? `${sem.icone} ${escapeHtml(sem.label)}` : `${sem.icone} ${escapeHtml(sem.texto)}`;
+    return `<span class="bi-semaforo-pill" style="background:${sem.bg}; color:${sem.cor}; border-color:${sem.border};" title="${escapeHtml(sem.detalhe || sem.texto)}">${txt}</span>`;
+  }
+
+  function renderDeltaBadge(pct, suffix = '%', invertGood = false) {
+    if (pct === null || pct === undefined || !Number.isFinite(Number(pct))) return '';
+    const v = Number(pct);
+    const cls = v === 0 ? 'flat' : ((invertGood ? v < 0 : v > 0) ? 'up' : 'down');
+    const arrow = v > 0 ? '▲' : (v < 0 ? '▼' : '•');
+    const sign = v > 0 ? '+' : '';
+    return `<span class="bi-delta ${cls}">${arrow} ${sign}${v.toFixed(1)}${suffix}</span>`;
+  }
+
+  function renderBiMonthlySvgChart(series) {
+    if (!series || !series.length) {
+      return '<div style="padding:26px;text-align:center;color:#94a3b8;font-size:12px;">Sem movimentação mensal registrada para o filtro atual.</div>';
+    }
+    const items = series.slice(-12);
+    const W = Math.max(520, items.length * 76 + 80);
+    const H = 220;
+    const padL = 56, padR = 20, padT = 20, padB = 34;
+    const chartW = W - padL - padR;
+    const chartH = H - padT - padB;
+    const maxVal = Math.max(
+      100,
+      ...items.map(m => Math.max(m.receitaBruta, m.custos + m.despesas, Math.abs(m.lucroLiquido)))
+    );
+    const scaleY = (v) => padT + chartH - (Math.max(0, v) / maxVal) * chartH;
+
+    const gridLines = [0, 0.25, 0.5, 0.75, 1].map(f => {
+      const y = padT + chartH - f * chartH;
+      const val = maxVal * f;
+      return `
+        <line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="#1e293b" stroke-dasharray="3,3" />
+        <text x="${padL - 6}" y="${(y + 3).toFixed(1)}" text-anchor="end" fill="#64748b" font-size="10">${escapeHtml(formatCompactBRL(val))}</text>
+      `;
+    }).join('');
+
+    const step = chartW / items.length;
+    const barW = Math.min(20, Math.max(10, step * 0.26));
+    const linePts = [];
+
+    const bars = items.map((m, idx) => {
+      const cx = padL + idx * step + step / 2;
+      const hRec = (Math.max(0, m.receitaBruta) / maxVal) * chartH;
+      const yRec = padT + chartH - hRec;
+      const custoDesp = m.custos + m.despesas;
+      const hCD = (Math.max(0, custoDesp) / maxVal) * chartH;
+      const yCD = padT + chartH - hCD;
+      const yLuc = scaleY(Math.max(0, m.lucroLiquido));
+      linePts.push({ x: cx, y: yLuc, m });
+
+      return `
+        <g>
+          <rect x="${(cx - barW - 2).toFixed(1)}" y="${yRec.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1, hRec).toFixed(1)}" rx="3" fill="#38bdf8" opacity="0.88">
+            <title>${escapeHtml(m.label)} · Receita Bruta: ${escapeHtml(formatBRL(m.receitaBruta))}</title>
+          </rect>
+          <rect x="${(cx + 2).toFixed(1)}" y="${yCD.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1, hCD).toFixed(1)}" rx="3" fill="#f59e0b" opacity="0.82">
+            <title>${escapeHtml(m.label)} · Custos + Despesas: ${escapeHtml(formatBRL(custoDesp))}</title>
+          </rect>
+          <text x="${cx.toFixed(1)}" y="${H - 12}" text-anchor="middle" fill="#94a3b8" font-size="10.5" font-weight="700">${escapeHtml(m.label)}</text>
+        </g>
+      `;
+    }).join('');
+
+    const pathD = linePts.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`).join(' ');
+    const dots = linePts.map(pt => `
+      <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="4.5" fill="${pt.m.lucroLiquido >= 0 ? '#10b981' : '#ef4444'}" stroke="#0b1120" stroke-width="1.5">
+        <title>${escapeHtml(pt.m.label)} · Lucro Líquido: ${escapeHtml(formatBRL(pt.m.lucroLiquido))} (${pt.m.margemPct.toFixed(1)}%)</title>
+      </circle>
+      <text x="${pt.x.toFixed(1)}" y="${Math.max(12, pt.y - 8).toFixed(1)}" text-anchor="middle" fill="${pt.m.lucroLiquido >= 0 ? '#34d399' : '#f87171'}" font-size="9.5" font-weight="800">${escapeHtml(formatCompactBRL(pt.m.lucroLiquido))}</text>
+    `).join('');
+
+    return `
+      <div class="bi-chart-legend">
+        <span><span class="bi-legend-dot" style="background:#38bdf8;"></span>Receita Bruta</span>
+        <span><span class="bi-legend-dot" style="background:#f59e0b;"></span>Custos (CMV) + Despesas</span>
+        <span><span class="bi-legend-dot" style="background:#10b981;"></span>Lucro Líquido (linha)</span>
+      </div>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%; min-width:${Math.min(W, 460)}px; height:auto; display:block;">
+        ${gridLines}
+        ${bars}
+        ${linePts.length > 1 ? `<path d="${pathD}" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linejoin="round" />` : ''}
+        ${dots}
+      </svg>
+    `;
+  }
+
+  function renderBiCashflowSvgChart(series) {
+    if (!series || !series.length) {
+      return '<div style="padding:26px;text-align:center;color:#94a3b8;font-size:12px;">Sem movimentação de caixa registrada para o filtro atual.</div>';
+    }
+    const items = series.slice(-12);
+    const W = Math.max(520, items.length * 76 + 80);
+    const H = 220;
+    const padL = 56, padR = 20, padT = 20, padB = 34;
+    const chartW = W - padL - padR;
+    const chartH = H - padT - padB;
+    const maxVal = Math.max(
+      100,
+      ...items.map(m => Math.max(m.entradasCaixa, m.saidasCaixa, Math.abs(m.fluxoCaixa)))
+    );
+
+    const gridLines = [0, 0.25, 0.5, 0.75, 1].map(f => {
+      const y = padT + chartH - f * chartH;
+      return `
+        <line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="#1e293b" stroke-dasharray="3,3" />
+        <text x="${padL - 6}" y="${(y + 3).toFixed(1)}" text-anchor="end" fill="#64748b" font-size="10">${escapeHtml(formatCompactBRL(maxVal * f))}</text>
+      `;
+    }).join('');
+
+    const step = chartW / items.length;
+    const barW = Math.min(20, Math.max(10, step * 0.26));
+
+    const bars = items.map((m, idx) => {
+      const cx = padL + idx * step + step / 2;
+      const hIn = (Math.max(0, m.entradasCaixa) / maxVal) * chartH;
+      const yIn = padT + chartH - hIn;
+      const hOut = (Math.max(0, m.saidasCaixa) / maxVal) * chartH;
+      const yOut = padT + chartH - hOut;
+      const saldoCor = m.fluxoCaixa >= 0 ? '#34d399' : '#f87171';
+
+      return `
+        <g>
+          <rect x="${(cx - barW - 2).toFixed(1)}" y="${yIn.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1, hIn).toFixed(1)}" rx="3" fill="#10b981" opacity="0.88">
+            <title>${escapeHtml(m.label)} · Entradas Pagas: ${escapeHtml(formatBRL(m.entradasCaixa))}</title>
+          </rect>
+          <rect x="${(cx + 2).toFixed(1)}" y="${yOut.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1, hOut).toFixed(1)}" rx="3" fill="#ef4444" opacity="0.82">
+            <title>${escapeHtml(m.label)} · Saídas Pagas (Compras + Despesas): ${escapeHtml(formatBRL(m.saidasCaixa))}</title>
+          </rect>
+          <text x="${cx.toFixed(1)}" y="${Math.max(12, Math.min(yIn, yOut) - 6).toFixed(1)}" text-anchor="middle" fill="${saldoCor}" font-size="9.5" font-weight="800">${escapeHtml(formatCompactBRL(m.fluxoCaixa))}</text>
+          <text x="${cx.toFixed(1)}" y="${H - 12}" text-anchor="middle" fill="#94a3b8" font-size="10.5" font-weight="700">${escapeHtml(m.label)}</text>
+        </g>
+      `;
+    }).join('');
+
+    return `
+      <div class="bi-chart-legend">
+        <span><span class="bi-legend-dot" style="background:#10b981;"></span>Entradas Recebidas (PIX/Cartão)</span>
+        <span><span class="bi-legend-dot" style="background:#ef4444;"></span>Saídas Pagas (Lotes + Despesas)</span>
+        <span style="color:#94a3b8;">Rótulo no topo = Saldo Líquido do Mês</span>
+      </div>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%; min-width:${Math.min(W, 460)}px; height:auto; display:block;">
+        ${gridLines}
+        ${bars}
+      </svg>
+    `;
+  }
+
+  function renderBiFinanceiro() {
+    const cont = document.getElementById('biFinanceiroContainer');
+    if (!cont) return;
+
+    const report = buildBiReportFromState();
+    if (!report) {
+      cont.innerHTML = `<div class="bi-panel" style="color:#f87171;">⚠️ Motor BI (bi_engine.js) não carregado. Recarregue a página.</div>`;
+      return;
+    }
+
+    const k = report.kpis;
+    const s = report.semaforos;
+    const cmp = report.comparativo;
+    const f = report.filters;
+    const fo = report.filterOptions;
+
+    const badgeBi = document.getElementById('countBiFinanceiro');
+    if (badgeBi) badgeBi.textContent = s.geral.icone;
+
+    // Ordenação dos rankings conforme escolha interativa do usuário
+    const prodsSorted = [...report.rankings.porProduto];
+    if (biUiState.prodSort === 'receita') prodsSorted.sort((a, b) => b.receita - a.receita);
+    else if (biUiState.prodSort === 'qtd') prodsSorted.sort((a, b) => b.qtd - a.qtd);
+    else if (biUiState.prodSort === 'margem') prodsSorted.sort((a, b) => b.margemPct - a.margemPct);
+    else prodsSorted.sort((a, b) => b.lucro - a.lucro);
+
+    const clisSorted = [...report.rankings.porCliente];
+    if (biUiState.cliSort === 'receita') clisSorted.sort((a, b) => b.receita - a.receita);
+    else if (biUiState.cliSort === 'pedidos') clisSorted.sort((a, b) => b.qtdVendas - a.qtdVendas);
+    else clisSorted.sort((a, b) => b.lucro - a.lucro);
+
+    const despCatLabel = (key) => {
+      const biApi = (typeof window !== 'undefined' && window.SHAPETOTAL_BI) || {};
+      const found = (biApi.DESPESA_CATEGORIAS || []).find(c => c.key === key);
+      return found ? found.label : key;
+    };
+
+    const periodPills = [
+      { key: 'mes_atual', label: 'Mês Atual' },
+      { key: 'mes_anterior', label: 'Mês Anterior' },
+      { key: '7d', label: '7 dias' },
+      { key: '30d', label: '30 dias' },
+      { key: '90d', label: '90 dias' },
+      { key: 'todos', label: 'Todo Histórico' }
+    ];
+
+    const hasActiveFilter = (
+      f.periodo !== 'todos' || f.ano !== 'todos' || f.mes !== 'todos' ||
+      f.canal !== 'todos' || f.categoria !== 'todos' || f.produtoId !== 'todos' ||
+      f.cliente !== 'todos' || f.pagamento !== 'todos'
+    );
+
+    const compLabel = cmp && cmp.temBaseAnterior ? `vs ${escapeHtml(cmp.labelAnterior)}` : '';
+
+    cont.innerHTML = `
+      <div class="bi-root">
+        <!-- Cabeçalho Executivo -->
+        <div class="bi-header">
+          <div>
+            <div class="bi-header-title">
+              📈 Dashboard Executivo · BI &amp; FP&amp;A
+              ${renderSemaforoPill(s.geral)}
+            </div>
+            <div class="bi-header-sub">
+              Período: <b>${escapeHtml(report.periodoLabel)}</b> · ${k.qtdVendas} venda(s) ativa(s) · ${k.qtdUnidades} unidade(s) · Dólar CRM: R$ ${Number(state.cotacao || 0).toFixed(2)}
+            </div>
+          </div>
+          <div class="bi-header-actions">
+            <button class="btn" style="background:#991b1b; border-color:#ef4444; color:#fff; font-weight:800;" onclick="window.CRM.openDespesaModal()">💸 + Lançar Despesa</button>
+            <button class="btn btn-green" style="font-weight:800;" onclick="window.CRM.copyBiExecutiveWhatsApp()">📲 Resumo WhatsApp</button>
+            <button class="btn btn-blue" style="font-weight:700;" onclick="window.CRM.exportBiCSV()">📥 Exportar DRE (CSV)</button>
+            <button class="btn" style="background:#1e1b4b; border-color:#6366f1; color:#c7d2fe; font-weight:700;" onclick="window.CRM.openPaineisComerciaisModal()">🧊 Parados &amp; Críticos</button>
+          </div>
+        </div>
+
+        <!-- Filtros Interativos FP&A -->
+        <div class="bi-filters-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div class="bi-period-pills">
+              <span style="font-size:11px; font-weight:800; color:#94a3b8; margin-right:2px;">📅 Período:</span>
+              ${periodPills.map(p => `
+                <button type="button" class="bi-period-btn ${f.periodo === p.key && f.mes === 'todos' ? 'active' : ''}" onclick="window.CRM.setBiFilter('periodo', '${p.key}')">${p.label}</button>
+              `).join('')}
+            </div>
+            ${hasActiveFilter ? `<button type="button" class="btn btn-xs" style="color:#f87171; border-color:rgba(239,68,68,0.4);" onclick="window.CRM.resetBiFilters()">✖ Limpar Filtros</button>` : ''}
+          </div>
+          <div class="bi-filters-grid">
+            <div class="bi-filter-field">
+              <label for="biFilterAno">Ano</label>
+              <select id="biFilterAno" onchange="window.CRM.setBiFilter('ano', this.value)">
+                <option value="todos">Todos os anos</option>
+                ${fo.anos.map(y => `<option value="${esc(y)}" ${f.ano === y ? 'selected' : ''}>${esc(y)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="bi-filter-field">
+              <label for="biFilterMes">Mês Específico</label>
+              <select id="biFilterMes" onchange="window.CRM.setBiFilter('mes', this.value)">
+                <option value="todos">Todos os meses</option>
+                ${fo.meses.map(m => `<option value="${esc(m.key)}" ${f.mes === m.key ? 'selected' : ''}>${esc(m.label)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="bi-filter-field">
+              <label for="biFilterCanal">Canal / Operação</label>
+              <select id="biFilterCanal" onchange="window.CRM.setBiFilter('canal', this.value)">
+                <option value="todos">Todos os canais</option>
+                ${fo.canais.map(c => `<option value="${esc(c.key)}" ${f.canal === c.key ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="bi-filter-field">
+              <label for="biFilterCategoria">Categoria</label>
+              <select id="biFilterCategoria" onchange="window.CRM.setBiFilter('categoria', this.value)">
+                <option value="todos">Todas as categorias</option>
+                ${fo.categorias.map(c => `<option value="${esc(c.key)}" ${f.categoria === c.key ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="bi-filter-field">
+              <label for="biFilterProduto">Produto</label>
+              <select id="biFilterProduto" onchange="window.CRM.setBiFilter('produtoId', this.value)">
+                <option value="todos">Todos os produtos</option>
+                ${fo.produtos.map(p => `<option value="${esc(String(p.id))}" ${String(f.produtoId) === String(p.id) ? 'selected' : ''}>${escapeHtml(p.nome)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="bi-filter-field">
+              <label for="biFilterCliente">Cliente</label>
+              <select id="biFilterCliente" onchange="window.CRM.setBiFilter('cliente', this.value)">
+                <option value="todos">Todos os clientes</option>
+                ${fo.clientes.map(c => `<option value="${esc(c)}" ${f.cliente === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="bi-filter-field">
+              <label for="biFilterPagamento">Pagamento</label>
+              <select id="biFilterPagamento" onchange="window.CRM.setBiFilter('pagamento', this.value)">
+                <option value="todos">Todas as formas</option>
+                ${fo.pagamentos.map(p => `<option value="${esc(p.key)}" ${f.pagamento === p.key ? 'selected' : ''}>${escapeHtml(p.label)}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPIs Executivos com Semáforos -->
+        <div class="bi-kpi-grid">
+          <div class="bi-kpi-card" style="--kpi-accent:#38bdf8;">
+            <div class="bi-kpi-top">
+              <span class="bi-kpi-label">Receita Bruta</span>
+              ${cmp && cmp.temBaseAnterior ? renderDeltaBadge(cmp.deltaReceitaPct) : ''}
+            </div>
+            <div class="bi-kpi-val" style="color:#38bdf8;">${formatBRL(k.receitaBruta)}</div>
+            <div class="bi-kpi-sub">
+              <span>Líquida: <b>${formatBRL(k.receitaLiquida)}</b></span>
+              <span>· Ticket: ${formatBRL(k.ticketMedio)}</span>
+            </div>
+          </div>
+
+          <div class="bi-kpi-card" style="--kpi-accent:#f59e0b;">
+            <div class="bi-kpi-top">
+              <span class="bi-kpi-label">Custos Totais (CMV)</span>
+              <span style="font-size:11px; color:#fbbf24; font-weight:800;">${k.receitaBruta > 0 ? ((k.custosTotais / k.receitaBruta) * 100).toFixed(1) : '0.0'}% rec.</span>
+            </div>
+            <div class="bi-kpi-val" style="color:#fbbf24;">${formatBRL(k.custosTotais)}</div>
+            <div class="bi-kpi-sub">
+              <span>Lucro Bruto: <b style="color:#cbd5e1;">${formatBRL(k.lucroBruto)}</b> (${k.margemBrutaPct.toFixed(1)}%)</span>
+            </div>
+          </div>
+
+          <div class="bi-kpi-card" style="--kpi-accent:#ef4444;">
+            <div class="bi-kpi-top">
+              <span class="bi-kpi-label">Despesas &amp; Taxas</span>
+              <button type="button" class="btn btn-xs" style="padding:2px 6px; font-size:10px;" onclick="window.CRM.openDespesaModal()">+ Lançar</button>
+            </div>
+            <div class="bi-kpi-val" style="color:#f87171;">${formatBRL(k.despesasTotaisComTaxas)}</div>
+            <div class="bi-kpi-sub">
+              <span>Operac.: <b>${formatBRL(k.despesasOperacionais)}</b></span>
+              <span>· Cartão: ${formatBRL(k.taxasCartao)}</span>
+            </div>
+          </div>
+
+          <div class="bi-kpi-card" style="--kpi-accent:${s.lucroLiquido.cor};">
+            <div class="bi-kpi-top">
+              <span class="bi-kpi-label">Lucro Líquido (Result. Op.)</span>
+              ${renderSemaforoPill(s.lucroLiquido, true)}
+            </div>
+            <div class="bi-kpi-val" style="color:${k.lucroLiquido >= 0 ? '#34d399' : '#f87171'};">${formatBRL(k.lucroLiquido)}</div>
+            <div class="bi-kpi-sub">
+              ${cmp && cmp.temBaseAnterior ? `${renderDeltaBadge(cmp.deltaLucroPct)} <span>${compLabel}</span>` : `<span>ROI s/ CMV: <b>${k.roiSobreCmvPct.toFixed(1)}%</b></span>`}
+            </div>
+          </div>
+
+          <div class="bi-kpi-card" style="--kpi-accent:${s.margemLiquida.cor};">
+            <div class="bi-kpi-top">
+              <span class="bi-kpi-label">Margem Líquida</span>
+              ${renderSemaforoPill(s.margemLiquida, true)}
+            </div>
+            <div class="bi-kpi-val" style="color:${s.margemLiquida.cor};">${k.margemLiquidaPct.toFixed(1)}%</div>
+            <div class="bi-kpi-sub">
+              <span>Bruta: <b>${k.margemBrutaPct.toFixed(1)}%</b></span>
+              <span>· Meta: ≥ 32%</span>
+            </div>
+          </div>
+
+          <div class="bi-kpi-card" style="--kpi-accent:${s.geracaoCaixa.cor};">
+            <div class="bi-kpi-top">
+              <span class="bi-kpi-label">Geração de Caixa Real</span>
+              ${renderSemaforoPill(s.geracaoCaixa, true)}
+            </div>
+            <div class="bi-kpi-val" style="color:${k.geracaoCaixa >= 0 ? '#34d399' : '#fbbf24'};">${formatBRL(k.geracaoCaixa)}</div>
+            <div class="bi-kpi-sub">
+              <span>Ent: <b style="color:#34d399;">${formatCompactBRL(k.entradasCaixa)}</b></span>
+              <span>· Saí: <b style="color:#f87171;">${formatCompactBRL(k.saidasCaixa)}</b></span>
+            </div>
+          </div>
+
+          <div class="bi-kpi-card" style="--kpi-accent:${s.aReceber.cor};">
+            <div class="bi-kpi-top">
+              <span class="bi-kpi-label">A Receber (Em Aberto)</span>
+              ${renderSemaforoPill(s.aReceber, true)}
+            </div>
+            <div class="bi-kpi-val" style="color:${k.aReceberTotal > 0 ? '#fbbf24' : '#34d399'};">${formatBRL(k.aReceberTotal)}</div>
+            <div class="bi-kpi-sub">
+              <span>Vendas pend.: ${formatBRL(k.vendasPendentesValor)}</span>
+              ${k.saldoEncomendasChegadas > 0 ? `<span>· Encom.: ${formatBRL(k.saldoEncomendasChegadas)}</span>` : ''}
+            </div>
+          </div>
+
+          <div class="bi-kpi-card" style="--kpi-accent:#8b5cf6;">
+            <div class="bi-kpi-top">
+              <span class="bi-kpi-label">Capital Alocado (Hoje)</span>
+              <span style="font-size:11px; color:#c4b5fd; font-weight:800;">${k.estoqueUnidades} un BH</span>
+            </div>
+            <div class="bi-kpi-val" style="color:#c4b5fd;">${formatBRL(k.capitalAlocadoTotal)}</div>
+            <div class="bi-kpi-sub">
+              <span>Est.: ${formatCompactBRL(k.estoqueCusto)} · Trâns.: ${formatCompactBRL(k.transitoInvestido)}</span>
+              <span>· Pot. PIX: <b style="color:#34d399;">${formatCompactBRL(k.estoquePotencialPix)}</b></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DRE Gerencial + Semáforos Gerenciais -->
+        <div class="bi-two-col">
+          <div class="bi-panel">
+            <div class="bi-panel-head">
+              <div>
+                <div class="bi-panel-title">🧾 DRE Gerencial Simplificado</div>
+                <div class="bi-panel-sub">Regime de competência · ${escapeHtml(report.periodoLabel)}</div>
+              </div>
+              <span style="font-size:11px; color:#94a3b8;">${k.qtdVendas} vendas · ${k.qtdUnidades} un</span>
+            </div>
+            <table class="bi-dre-table">
+              <thead>
+                <tr>
+                  <th>Linha</th>
+                  <th style="text-align:right;">Valor</th>
+                  <th style="text-align:right;">% Rec.</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${report.dre.map(row => {
+                  const rowCls = row.destaque ? 'is-total' : (row.tipo === 'subtotal' ? 'is-subtotal' : '');
+                  const valCor = row.destaque
+                    ? (row.valor >= 0 ? '#34d399' : '#f87171')
+                    : (row.valor < 0 ? '#fca5a5' : '#f1f5f9');
+                  return `
+                    <tr class="${rowCls}">
+                      <td>${escapeHtml(row.label)}</td>
+                      <td style="text-align:right; color:${valCor}; white-space:nowrap;">${formatBRL(row.valor)}</td>
+                      <td style="text-align:right; color:#94a3b8; white-space:nowrap;">${row.pct.toFixed(1)}%</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+            <div style="font-size:11px; color:#94a3b8; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; padding-top:4px;">
+              <span>💡 Frete cobrado de clientes incluso na receita: <b>${formatBRL(k.freteCobrado)}</b></span>
+              ${k.despesasLotesExtras > 0 ? `<span>📦 Extras rateados no CMV de lotes: <b>${formatBRL(k.despesasLotesExtras)}</b></span>` : ''}
+            </div>
+          </div>
+
+          <div class="bi-panel">
+            <div class="bi-panel-head">
+              <div>
+                <div class="bi-panel-title">🚦 Semáforos Gerenciais Automáticos</div>
+                <div class="bi-panel-sub">🟢 Positivo · 🟡 Atenção · 🔴 Abaixo do esperado</div>
+              </div>
+            </div>
+            <div class="bi-semaforo-grid">
+              ${[
+                { nome: 'Margem Líquida', sem: s.margemLiquida },
+                { nome: 'Resultado / Lucro', sem: s.lucroLiquido },
+                { nome: 'Geração de Caixa', sem: s.geracaoCaixa },
+                { nome: 'Contas a Receber', sem: s.aReceber },
+                { nome: 'Concentração Clientes', sem: s.concentracaoCliente },
+                { nome: 'Qualidade dos Dados', sem: s.qualidadeDados }
+              ].map(item => `
+                <div class="bi-semaforo-card" style="border-color:${item.sem.border};">
+                  <div style="font-size:11px; font-weight:800; color:#94a3b8;">${item.nome}</div>
+                  <div>${renderSemaforoPill(item.sem)}</div>
+                  <div style="font-size:11px; color:#cbd5e1;">${escapeHtml(item.sem.detalhe || 'Monitoramento automático')}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráficos Profissionais (Evolução Mensal DRE + Fluxo de Caixa Mensal) -->
+        <div class="bi-two-col">
+          <div class="bi-panel">
+            <div class="bi-panel-head">
+              <div>
+                <div class="bi-panel-title">📊 Evolução Mensal — Receita × Custos+Despesas × Lucro</div>
+                <div class="bi-panel-sub">Acompanhamento mensal de faturamento, desembolso operacional e lucro líquido</div>
+              </div>
+            </div>
+            <div class="bi-chart-wrap">${renderBiMonthlySvgChart(report.seriesMensais)}</div>
+          </div>
+
+          <div class="bi-panel">
+            <div class="bi-panel-head">
+              <div>
+                <div class="bi-panel-title">💵 Fluxo de Caixa Mensal — Entradas × Saídas</div>
+                <div class="bi-panel-sub">Regime de caixa: vendas pagas vs compras de lotes e despesas pagas</div>
+              </div>
+            </div>
+            <div class="bi-chart-wrap">${renderBiCashflowSvgChart(report.seriesMensais)}</div>
+          </div>
+        </div>
+
+        <!-- Resultado por Canal, Categoria e Forma de Pagamento -->
+        <div class="bi-two-col">
+          <div class="bi-panel">
+            <div class="bi-panel-head">
+              <div>
+                <div class="bi-panel-title">🧭 Resultado por Canal &amp; Forma de Pagamento</div>
+                <div class="bi-panel-sub">Pronta Entrega BH · Encomenda · Doses 120 mg</div>
+              </div>
+            </div>
+            <div class="bi-bar-list">
+              ${report.rankings.porCanal.length ? report.rankings.porCanal.map(c => `
+                <div class="bi-bar-row">
+                  <div class="bi-bar-head">
+                    <b>${escapeHtml(c.label)} <span style="color:#94a3b8; font-weight:600;">(${c.qtdVendas} ped.)</span></b>
+                    <span><b style="color:#38bdf8;">${formatBRL(c.receita)}</b> · <b style="color:#34d399;">+${formatBRL(c.lucro)}</b> (${c.margemPct.toFixed(1)}%)</span>
+                  </div>
+                  <div class="bi-bar-track"><div class="bi-bar-fill" style="width:${Math.min(100, c.sharePct)}%; background:linear-gradient(90deg,#38bdf8,#10b981);"></div></div>
+                </div>
+              `).join('') : '<div style="color:#94a3b8; font-size:12px;">Sem vendas no período.</div>'}
+            </div>
+            ${report.rankings.porPagamento.length ? `
+              <div style="margin-top:6px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.06);">
+                <div style="font-size:11.5px; font-weight:800; color:#94a3b8; margin-bottom:6px;">Meios de Pagamento</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                  ${report.rankings.porPagamento.map(p => `
+                    <span style="background:#0b1120; border:1px solid #1e293b; border-radius:8px; padding:5px 9px; font-size:11.5px;">
+                      ${escapeHtml(p.label)}: <b>${formatBRL(p.receita)}</b> (${p.sharePct.toFixed(0)}%)${p.taxas > 0 ? ` <span style="color:#f87171;">· MDR ${formatBRL(p.taxas)}</span>` : ''}
+                    </span>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="bi-panel">
+            <div class="bi-panel-head">
+              <div>
+                <div class="bi-panel-title">🏷️ Resultado por Categoria de Produto</div>
+                <div class="bi-panel-sub">Participação de receita, lucro líquido e margem por linha</div>
+              </div>
+            </div>
+            <div class="bi-bar-list">
+              ${report.rankings.porCategoria.length ? report.rankings.porCategoria.map(c => `
+                <div class="bi-bar-row">
+                  <div class="bi-bar-head">
+                    <b>${escapeHtml(c.label)} <span style="color:#94a3b8; font-weight:600;">(${c.qtdUnidades} un)</span></b>
+                    <span><b style="color:#38bdf8;">${formatBRL(c.receita)}</b> · <b style="color:#34d399;">+${formatBRL(c.lucro)}</b> (${c.margemPct.toFixed(1)}%)</span>
+                  </div>
+                  <div class="bi-bar-track"><div class="bi-bar-fill" style="width:${Math.min(100, c.sharePct)}%; background:linear-gradient(90deg,#8b5cf6,#38bdf8);"></div></div>
+                </div>
+              `).join('') : '<div style="color:#94a3b8; font-size:12px;">Sem vendas no período.</div>'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Rankings Interativos: Produtos & Clientes -->
+        <div class="bi-two-col">
+          <div class="bi-panel">
+            <div class="bi-panel-head">
+              <div>
+                <div class="bi-panel-title">🏆 Ranking de Produtos</div>
+                <div class="bi-panel-sub">Clique no produto para filtrar ou acionar venda/reposição</div>
+              </div>
+              <div class="bi-rank-controls">
+                ${[
+                  { k: 'lucro', l: 'Lucro' },
+                  { k: 'receita', l: 'Receita' },
+                  { k: 'qtd', l: 'Qtd' },
+                  { k: 'margem', l: 'Margem %' }
+                ].map(b => `<button type="button" class="bi-rank-btn ${biUiState.prodSort === b.k ? 'active' : ''}" onclick="window.CRM.setBiRankingSort('prod', '${b.k}')">${b.l}</button>`).join('')}
+              </div>
+            </div>
+            <div class="bi-rank-list">
+              ${prodsSorted.length ? prodsSorted.slice(0, 12).map((p, idx) => `
+                <div class="bi-rank-item">
+                  <div style="min-width:0;">
+                    <div style="font-size:12px; font-weight:800; color:#f8fafc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">#${idx + 1} ${escapeHtml(p.nome)}</div>
+                    <div style="font-size:11px; color:#94a3b8;">
+                      Rec: <b style="color:#38bdf8;">${formatBRL(p.receita)}</b> · Lucro: <b style="color:#34d399;">+${formatBRL(p.lucro)}</b> (${p.margemPct.toFixed(1)}%) · ${p.qtd} un · Est BH: ${p.estoqueAtual}
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:4px; flex-shrink:0;">
+                    ${p.produtoId ? `<button type="button" class="btn btn-xs" title="Filtrar dashboard por este produto" onclick="window.CRM.setBiFilter('produtoId', '${esc(String(p.produtoId))}')">🔍</button>` : ''}
+                    ${p.produtoId && p.estoqueAtual > 0
+                      ? `<button type="button" class="btn btn-xs btn-green" onclick="window.CRM.openVendaRapidaModal(${Number(p.produtoId)})">⚡</button>`
+                      : (p.produtoId ? `<button type="button" class="btn btn-xs" style="background:#064e3b;color:#a7f3d0;" onclick="window.CRM.adicionarAoPedidoFornecedor(${Number(p.produtoId)})">🇵🇾</button>` : '')}
+                  </div>
+                </div>
+              `).join('') : '<div style="color:#94a3b8; font-size:12px;">Nenhum produto vendido neste filtro.</div>'}
+            </div>
+          </div>
+
+          <div class="bi-panel">
+            <div class="bi-panel-head">
+              <div>
+                <div class="bi-panel-title">👥 Ranking de Clientes</div>
+                <div class="bi-panel-sub">Receita, lucro líquido, ticket médio e pendências por cliente</div>
+              </div>
+              <div class="bi-rank-controls">
+                ${[
+                  { k: 'lucro', l: 'Lucro' },
+                  { k: 'receita', l: 'Receita' },
+                  { k: 'pedidos', l: 'Pedidos' }
+                ].map(b => `<button type="button" class="bi-rank-btn ${biUiState.cliSort === b.k ? 'active' : ''}" onclick="window.CRM.setBiRankingSort('cli', '${b.k}')">${b.l}</button>`).join('')}
+              </div>
+            </div>
+            <div class="bi-rank-list">
+              ${clisSorted.length ? clisSorted.slice(0, 12).map((c, idx) => `
+                <div class="bi-rank-item">
+                  <div style="min-width:0;">
+                    <div style="font-size:12px; font-weight:800; color:#f8fafc;">
+                      #${idx + 1} ${escapeHtml(c.cliente)}
+                      <span style="font-size:10.5px; color:#94a3b8; font-weight:600;">(${c.sharePct.toFixed(0)}%)</span>
+                      ${c.pendente > 0 ? `<span style="font-size:10px; color:#fbbf24; font-weight:800;"> · ⏳ ${formatBRL(c.pendente)}</span>` : ''}
+                    </div>
+                    <div style="font-size:11px; color:#94a3b8;">
+                      Rec: <b style="color:#38bdf8;">${formatBRL(c.receita)}</b> · Lucro: <b style="color:#34d399;">+${formatBRL(c.lucro)}</b> (${c.margemPct.toFixed(1)}%) · ${c.qtdVendas} ped. · Ticket ${formatBRL(c.ticketMedio)}
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:4px; flex-shrink:0;">
+                    <button type="button" class="btn btn-xs" title="Filtrar dashboard por este cliente" data-cliente="${esc(c.cliente)}" onclick="window.CRM.setBiFilter('cliente', this.getAttribute('data-cliente'))">🔍</button>
+                  </div>
+                </div>
+              `).join('') : '<div style="color:#94a3b8; font-size:12px;">Nenhum cliente com venda neste filtro.</div>'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Despesas Operacionais Lançadas no Período -->
+        <div class="bi-panel">
+          <div class="bi-panel-head">
+            <div>
+              <div class="bi-panel-title">💸 Despesas Operacionais do Período (${report.despesasFiltradas.length})</div>
+              <div class="bi-panel-sub">Motoboy, embalagem/gelox, frete SP→BH, taxas extras, tráfego e avarias · Total: <b style="color:#f87171;">${formatBRL(k.despesasOperacionais)}</b>${k.despesasPendentes > 0 ? ` (⏳ ${formatBRL(k.despesasPendentes)} a pagar)` : ''}</div>
+            </div>
+            <button type="button" class="btn btn-xs" style="background:#991b1b; border-color:#ef4444; color:#fff; font-weight:800;" onclick="window.CRM.openDespesaModal()">+ Nova Despesa</button>
+          </div>
+          ${report.despesasFiltradas.length ? `
+            <div style="overflow-x:auto;">
+              <table class="bi-dre-table">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Categoria</th>
+                    <th>Descrição</th>
+                    <th style="text-align:right;">Valor</th>
+                    <th style="text-align:center;">Status</th>
+                    <th style="text-align:center;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${report.despesasFiltradas.map(d => `
+                    <tr>
+                      <td style="white-space:nowrap; color:#94a3b8;">${escapeHtml(d.data)}</td>
+                      <td style="white-space:nowrap;">${escapeHtml(despCatLabel(d.categoria))}</td>
+                      <td><b>${escapeHtml(d.descricao)}</b>${d.obs ? `<div style="font-size:10.5px; color:#94a3b8;">${escapeHtml(d.obs)}</div>` : ''}</td>
+                      <td style="text-align:right; font-weight:800; color:#f87171; white-space:nowrap;">${formatBRL(d.valor)}</td>
+                      <td style="text-align:center;">
+                        <button type="button" class="btn btn-xs" style="padding:2px 7px; font-size:10.5px; ${d.status === 'pendente' ? 'background:#422006;color:#fde68a;border-color:#f59e0b;' : 'background:#064e3b;color:#a7f3d0;border-color:#10b981;'}" onclick="window.CRM.toggleDespesaStatus('${esc(d.id)}')">${d.status === 'pendente' ? '⏳ Pendente' : '✅ Pago'}</button>
+                      </td>
+                      <td style="text-align:center;">
+                        <button type="button" class="btn btn-xs" style="color:#f87171; padding:2px 7px;" title="Excluir despesa" onclick="window.CRM.deleteDespesa('${esc(d.id)}')">🗑️</button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : `<div style="font-size:12px; color:#94a3b8; padding:6px 0;">Nenhuma despesa operacional lançada neste período. Clique em <b>"+ Nova Despesa"</b> para registrar motoboy, embalagem térmica, frete nacional ou anúncios.</div>`}
+        </div>
+
+        <!-- Insights Executivos & Recomendações Práticas -->
+        <div class="bi-panel">
+          <div class="bi-panel-head">
+            <div>
+              <div class="bi-panel-title">🧠 Insights Executivos &amp; Recomendações Práticas</div>
+              <div class="bi-panel-sub">Diagnóstico automático gerado a partir das suas vendas, custos, despesas e estoque</div>
+            </div>
+          </div>
+          <div class="bi-insights-grid">
+            <div class="bi-insight-box" style="border-color:rgba(56,189,248,0.35);">
+              <h4 style="color:#38bdf8;">📌 Principais Conclusões</h4>
+              <ul class="bi-insight-list">
+                ${report.insights.conclusoes.map(txt => `<li>${escapeHtml(txt)}</li>`).join('')}
+              </ul>
+            </div>
+
+            <div class="bi-insight-box" style="border-color:rgba(239,68,68,0.35);">
+              <h4 style="color:#f87171;">⚠️ Riscos Identificados</h4>
+              <ul class="bi-insight-list">
+                ${report.insights.riscos.map(r => `
+                  <li>
+                    <span>${r.nivel === 'vermelho' ? '🔴' : r.nivel === 'amarelo' ? '🟡' : '🟢'} ${escapeHtml(r.texto)}</span>
+                    ${r.acao ? `<div style="margin-top:5px;"><button type="button" class="btn btn-xs" onclick="window.CRM.runBiRecommendationAction('${esc(r.acao.handler)}')">${escapeHtml(r.acao.label)} →</button></div>` : ''}
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+
+            <div class="bi-insight-box" style="border-color:rgba(16,185,129,0.35);">
+              <h4 style="color:#34d399;">🚀 Oportunidades de Lucro</h4>
+              <ul class="bi-insight-list">
+                ${report.insights.oportunidades.map(txt => `<li>💡 ${escapeHtml(txt)}</li>`).join('')}
+              </ul>
+            </div>
+
+            <div class="bi-insight-box" style="border-color:rgba(139,92,246,0.35);">
+              <h4 style="color:#c4b5fd;">🎯 Recomendações Práticas</h4>
+              <ul class="bi-insight-list">
+                ${report.insights.recomendacoes.map(rec => `
+                  <li>
+                    <div>${escapeHtml(rec.texto)}</div>
+                    ${rec.handler ? `<div style="margin-top:5px;"><button type="button" class="btn btn-xs btn-primary" onclick="window.CRM.runBiRecommendationAction('${esc(rec.handler)}')">${escapeHtml(rec.acaoLabel || 'Executar')} →</button></div>` : ''}
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Auditoria de Qualidade & Consistência de Dados -->
+        <div class="bi-panel">
+          <div class="bi-panel-head">
+            <div>
+              <div class="bi-panel-title">🔍 Auditoria de Qualidade &amp; Inconsistências da Base</div>
+              <div class="bi-panel-sub">Destaca automaticamente dados faltantes, anomalias de margem ou divergências que podem distorcer o DRE</div>
+            </div>
+            ${renderSemaforoPill(s.qualidadeDados)}
+          </div>
+          ${report.qualidadeDados.itens.length ? `
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              ${report.qualidadeDados.itens.map(q => `
+                <div class="bi-quality-item ${esc(q.severidade)}">
+                  <div style="font-weight:800; color:#f8fafc;">
+                    ${q.severidade === 'critico' ? '🔴' : q.severidade === 'aviso' ? '🟡' : 'ℹ️'} ${escapeHtml(q.titulo)}
+                  </div>
+                  <div style="color:#cbd5e1; margin-top:2px;">${escapeHtml(q.detalhe)}</div>
+                  <div style="color:#38bdf8; font-size:11px; margin-top:3px;"><b>Como aprimorar:</b> ${escapeHtml(q.comoCorrigir)}</div>
+                </div>
+              `).join('')}
+            </div>
+          ` : `<div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.35); border-radius:8px; padding:10px 12px; color:#34d399; font-size:12px; font-weight:700;">✅ Base 100% consistente — nenhuma anomalia crítica ou dado faltante identificado.</div>`}
+        </div>
+      </div>
+    `;
+  }
+
   function renderSearchResultsOnly() {
-    if (state.mainGroup === 'operacao_dia') return renderAll();
+    if (state.mainGroup === 'operacao_dia' || state.mainGroup === 'bi_financeiro') return renderAll();
     _dispCache = buildDisponibilidadeSnapshot();
     try {
       const filtered = getFilteredProducts();
@@ -2655,10 +3464,31 @@
       if (listaDiaBadge) listaDiaBadge.textContent = String(getListaDoDiaItems().length);
 
       const opCont = document.getElementById('operacaoDiaContainer');
+      const biCont = document.getElementById('biFinanceiroContainer');
       const prodCont = document.getElementById('productsContainer');
+      const filterBarEl = document.querySelector('.filter-bar');
+      const savedFiltersEl = document.getElementById('savedFiltersBar');
+      const bhPanelEl = document.getElementById('bhExecutivePanel');
+
+      if (state.mainGroup === 'bi_financeiro') {
+        if (opCont) opCont.style.display = 'none';
+        if (prodCont) prodCont.style.display = 'none';
+        if (filterBarEl) filterBarEl.style.display = 'none';
+        if (savedFiltersEl) savedFiltersEl.style.display = 'none';
+        if (bhPanelEl) bhPanelEl.style.display = 'none';
+        if (biCont) biCont.style.display = 'block';
+        renderBiFinanceiro();
+        return;
+      }
+
+      if (biCont) biCont.style.display = 'none';
+      if (filterBarEl) filterBarEl.style.display = '';
+      if (savedFiltersEl) savedFiltersEl.style.display = 'flex';
+
       if (state.mainGroup === 'operacao_dia') {
         if (opCont) opCont.style.display = 'block';
         if (prodCont) prodCont.style.display = 'none';
+        if (bhPanelEl) bhPanelEl.style.display = 'none';
         renderOperacaoDia();
         return;
       }
@@ -2676,6 +3506,180 @@
 
   // Public actions
   window.CRM = {
+
+    // =========================================================================
+    // DASHBOARD EXECUTIVO BI & ANÁLISE FINANCEIRA (FP&A) + DESPESAS
+    // =========================================================================
+    openBiFinanceiro() {
+      if (state.clientMode) {
+        showToast('Desative o Modo Cliente para acessar o BI Financeiro.');
+        return;
+      }
+      state.mainGroup = 'bi_financeiro';
+      document.querySelectorAll('.group-tab').forEach(t => {
+        t.classList.toggle('active', t.getAttribute('data-group') === 'bi_financeiro');
+      });
+      renderAll();
+    },
+
+    getBiReport(overrideFilters) {
+      return buildBiReportFromState(overrideFilters);
+    },
+
+    setBiFilter(key, val) {
+      if (!key || !Object.prototype.hasOwnProperty.call(biUiState.filters, key)) return;
+      biUiState.filters[key] = val || 'todos';
+      if (key === 'periodo' && val !== 'custom_ym') {
+        biUiState.filters.mes = 'todos';
+      }
+      if (key === 'mes') {
+        biUiState.filters.periodo = (val && val !== 'todos') ? 'custom_ym' : 'todos';
+      }
+      if (key === 'ano' && val !== 'todos') {
+        biUiState.filters.mes = 'todos';
+        biUiState.filters.periodo = 'todos';
+      }
+      renderBiFinanceiro();
+    },
+
+    resetBiFilters() {
+      biUiState.filters = {
+        periodo: 'todos',
+        ano: 'todos',
+        mes: 'todos',
+        canal: 'todos',
+        categoria: 'todos',
+        produtoId: 'todos',
+        cliente: 'todos',
+        pagamento: 'todos'
+      };
+      renderBiFinanceiro();
+    },
+
+    setBiRankingSort(kind, sortKey) {
+      if (kind === 'prod') biUiState.prodSort = sortKey || 'lucro';
+      if (kind === 'cli') biUiState.cliSort = sortKey || 'lucro';
+      renderBiFinanceiro();
+    },
+
+    openDespesaModal() {
+      const modal = document.getElementById('despesaModal');
+      if (!modal) return;
+      const todayIso = new Date().toISOString().slice(0, 10);
+      const dataEl = document.getElementById('despData');
+      const valEl = document.getElementById('despValor');
+      const catEl = document.getElementById('despCategoria');
+      const statusEl = document.getElementById('despStatus');
+      const descEl = document.getElementById('despDescricao');
+      const obsEl = document.getElementById('despObs');
+      if (dataEl) dataEl.value = todayIso;
+      if (valEl) valEl.value = '';
+      if (catEl) catEl.value = 'frete_motoboy';
+      if (statusEl) statusEl.value = 'pago';
+      if (descEl) descEl.value = '';
+      if (obsEl) obsEl.value = '';
+      modal.classList.add('open');
+      if (valEl) valEl.focus();
+    },
+
+    saveDespesa() {
+      const dataVal = (document.getElementById('despData')?.value || '').trim() || new Date().toISOString().slice(0, 10);
+      const valorRaw = String(document.getElementById('despValor')?.value || '').replace(',', '.');
+      const valor = Math.round((parseFloat(valorRaw) || 0) * 100) / 100;
+      const categoria = (document.getElementById('despCategoria')?.value || 'outros').trim();
+      const status = (document.getElementById('despStatus')?.value === 'pendente') ? 'pendente' : 'pago';
+      const descricao = (document.getElementById('despDescricao')?.value || '').trim();
+      const obs = (document.getElementById('despObs')?.value || '').trim();
+
+      if (!Number.isFinite(valor) || valor <= 0) {
+        alert('Informe um valor válido maior que R$ 0,00 para a despesa.');
+        return;
+      }
+      if (!descricao) {
+        alert('Informe uma descrição curta para a despesa (ex: Motoboy entrega, gelox/isopor).');
+        return;
+      }
+
+      const nova = {
+        id: 'desp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        data: dataVal,
+        categoria,
+        descricao,
+        valor,
+        status,
+        obs
+      };
+      state.despesas = Array.isArray(state.despesas) ? state.despesas : [];
+      state.despesas.unshift(nova);
+      logAuditoria('despesa_lancada', `${categoria}: ${descricao} (${formatBRL(valor)}) [${status}]`);
+      saveState();
+      const modal = document.getElementById('despesaModal');
+      if (modal) modal.classList.remove('open');
+      renderAll();
+      showToast(`💸 Despesa registrada: ${formatBRL(valor)}`);
+    },
+
+    toggleDespesaStatus(id) {
+      const item = (state.despesas || []).find(d => String(d.id) === String(id));
+      if (!item) return;
+      item.status = item.status === 'pendente' ? 'pago' : 'pendente';
+      logAuditoria('despesa_status', `${item.descricao} -> ${item.status}`);
+      saveState();
+      renderAll();
+      showToast(item.status === 'pago' ? '✅ Despesa marcada como paga!' : '⏳ Despesa marcada como pendente.');
+    },
+
+    deleteDespesa(id) {
+      const idx = (state.despesas || []).findIndex(d => String(d.id) === String(id));
+      if (idx === -1) return;
+      const item = state.despesas[idx];
+      if (!confirm(`Excluir a despesa "${item.descricao}" (${formatBRL(item.valor)})?`)) return;
+      state.despesas.splice(idx, 1);
+      logAuditoria('despesa_excluida', `${item.descricao} (${formatBRL(item.valor)})`);
+      saveState();
+      renderAll();
+      showToast('🗑️ Despesa excluída.');
+    },
+
+    copyBiExecutiveWhatsApp() {
+      const biApi = (typeof window !== 'undefined' && window.SHAPETOTAL_BI) || (typeof globalThis !== 'undefined' && globalThis.SHAPETOTAL_BI);
+      const report = buildBiReportFromState();
+      if (!biApi || !report) return;
+      const txt = biApi.buildExecutiveWhatsAppSummary(report);
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(txt).catch(() => {});
+      }
+      const waModal = document.getElementById('waCatalogModal');
+      const waText = document.getElementById('waCatalogText');
+      if (waText) waText.value = txt;
+      if (waModal) waModal.classList.add('open');
+      showToast('📲 Resumo Executivo copiado para o WhatsApp!');
+    },
+
+    exportBiCSV() {
+      const biApi = (typeof window !== 'undefined' && window.SHAPETOTAL_BI) || (typeof globalThis !== 'undefined' && globalThis.SHAPETOTAL_BI);
+      const report = buildBiReportFromState();
+      if (!biApi || !report) return;
+      const csv = '\uFEFF' + biApi.buildExecutiveCSV(report);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `shapetotal_bi_dre_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('📥 DRE e Rankings exportados em CSV!');
+    },
+
+    runBiRecommendationAction(handler) {
+      if (handler === 'openProntaEntregaWa') {
+        window.CRM.openWhatsAppCatalogModal('meu_estoque');
+        return;
+      }
+      if (handler && typeof window.CRM[handler] === 'function') {
+        window.CRM[handler]();
+      }
+    },
 
     async checkPassword() {
       const input = document.getElementById('authInput');
@@ -7500,6 +8504,13 @@ ${fmtDoseList(reta)}
       state.clientMode = !state.clientMode;
       document.body.classList.toggle('client-mode', state.clientMode);
       e.currentTarget.textContent = state.clientMode ? '🔓 Modo Admin' : '👁️ Modo Cliente';
+      if (state.clientMode && (state.mainGroup === 'bi_financeiro' || state.mainGroup === 'operacao_dia')) {
+        state.mainGroup = 'todas';
+        document.querySelectorAll('.group-tab').forEach(t => {
+          t.classList.toggle('active', t.getAttribute('data-group') === 'todas');
+        });
+        renderAll();
+      }
     });
 
     document.getElementById('btnCopyWaModal').addEventListener('click', () => {

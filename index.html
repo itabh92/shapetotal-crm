@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="icon" type="image/png" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=20261119_0955" />
+  <link rel="stylesheet" href="styles.css?v=20261122_1700" />
 </head>
 <body>
   <!-- Local Device PIN Overlay (somente quando o usuário configurar PIN local) -->
@@ -197,6 +197,7 @@
       <button class="group-tab" data-group="saude_mental">🧠 Saúde <span class="tab-count">50</span></button>
       <button class="group-tab tab-meu-estoque" data-group="meu_estoque" style="background:#064e3b; color:#34d399; font-weight:800; border:1px solid #10b981;">📍 Estoque BH <span class="tab-count" id="countMeuEstoque">0</span></button>
       <button class="group-tab internal-only" data-group="operacao_dia" style="background:#0c4a6e; color:#38bdf8; font-weight:800; border:1px solid #0284c7;">⚡ Operação do Dia <span class="tab-count" id="countOperacaoDia">0</span></button>
+      <button class="group-tab internal-only" data-group="bi_financeiro" style="background:linear-gradient(135deg,#1e1b4b,#312e81); color:#c7d2fe; font-weight:800; border:1px solid #6366f1;">📈 BI &amp; Financeiro <span class="tab-count" id="countBiFinanceiro">FP&amp;A</span></button>
     </nav>
 
     <!-- Painel Executivo Exclusivo da Operação BH (visível na aba Meu Estoque BH) -->
@@ -302,6 +303,7 @@
 
     <!-- Products Grid / Table Container -->
     <section id="operacaoDiaContainer" class="internal-only" style="display:none;"></section>
+    <section id="biFinanceiroContainer" class="internal-only" style="display:none;"></section>
     <section id="productsContainer" class="product-grid"></section>
 
   </main>
@@ -1097,7 +1099,8 @@
 
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; flex-wrap:wrap; gap:8px;">
         <button class="btn" style="color:#f87171;" onclick="window.CRM.clearSalesHistory()">🗑️ Limpar Histórico</button>
-        <div style="display:flex; gap:8px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" style="background:#4f46e5; color:#fff; border-color:#818cf8; font-weight:800;" onclick="document.getElementById('salesHistoryModal').classList.remove('open'); window.CRM.openBiFinanceiro();">📈 Abrir BI &amp; DRE</button>
           <button class="btn btn-blue" onclick="window.CRM.exportSalesCSV()">📥 Exportar Vendas (Excel/CSV)</button>
           <button class="btn btn-green" onclick="document.getElementById('salesHistoryModal').classList.remove('open'); window.CRM.openVendaRapidaModal();">⚡ Nova Venda / Doses</button>
         </div>
@@ -1278,7 +1281,10 @@
           <h3 style="font-size:17px; font-weight:800; color:#818cf8;">📊 Painéis de Decisão Comercial</h3>
           <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">Top 10 por lucro/quantidade (30d), produtos parados (30/60d) e estoque crítico com ação rápida</p>
         </div>
-        <button class="btn" onclick="document.getElementById('paineisComerciaisModal').classList.remove('open')">✖ Fechar</button>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="btn" style="background:#4f46e5; color:#fff; border-color:#818cf8; font-weight:800;" onclick="document.getElementById('paineisComerciaisModal').classList.remove('open'); window.CRM.openBiFinanceiro();">📈 Dashboard BI &amp; FP&amp;A</button>
+          <button class="btn" onclick="document.getElementById('paineisComerciaisModal').classList.remove('open')">✖ Fechar</button>
+        </div>
       </div>
       <div id="paineisComerciaisBody" class="op-dia-grid" style="max-height:72vh; overflow-y:auto;"></div>
     </div>
@@ -1422,14 +1428,73 @@
     </div>
   </div>
 
+  <!-- Modal: Lançamento de Despesa Operacional (FP&A) -->
+  <div id="despesaModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:480px; width:95%;">
+      <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:10px; margin-bottom:12px;">
+        <div>
+          <h3 style="font-size:16px; font-weight:800; color:#f87171;">💸 Lançar Despesa Operacional</h3>
+          <p style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">Entra automaticamente no DRE, Fluxo de Caixa e Margem Líquida do BI</p>
+        </div>
+        <button class="btn" onclick="document.getElementById('despesaModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div>
+            <label for="despData" style="font-size:11px; color:#94a3b8; font-weight:700; display:block; margin-bottom:3px;">Data</label>
+            <input id="despData" type="date" style="width:100%; background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:8px; font-size:12.5px;" />
+          </div>
+          <div>
+            <label for="despValor" style="font-size:11px; color:#94a3b8; font-weight:700; display:block; margin-bottom:3px;">Valor (R$)</label>
+            <input id="despValor" type="number" step="0.01" min="0.01" inputmode="decimal" placeholder="Ex: 35.00" style="width:100%; background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:8px; font-size:12.5px; font-weight:700;" />
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div>
+            <label for="despCategoria" style="font-size:11px; color:#94a3b8; font-weight:700; display:block; margin-bottom:3px;">Categoria</label>
+            <select id="despCategoria" style="width:100%; background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:8px; font-size:12.5px;">
+              <option value="frete_motoboy">🏍️ Frete / Motoboy BH</option>
+              <option value="embalagem_frio">🧊 Embalagem / Gelox / Isopor</option>
+              <option value="frete_nacional">🚚 Frete SP/CWB → BH</option>
+              <option value="taxa_financeira">💳 Taxa Extra / Banco</option>
+              <option value="marketing">📣 Marketing / Tráfego</option>
+              <option value="perda_avaria">⚠️ Perda / Avaria / Validade</option>
+              <option value="outros">🧾 Outras Despesas</option>
+            </select>
+          </div>
+          <div>
+            <label for="despStatus" style="font-size:11px; color:#94a3b8; font-weight:700; display:block; margin-bottom:3px;">Situação no Caixa</label>
+            <select id="despStatus" style="width:100%; background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:8px; font-size:12.5px;">
+              <option value="pago">✅ Pago</option>
+              <option value="pendente">⏳ Pendente (A Pagar)</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label for="despDescricao" style="font-size:11px; color:#94a3b8; font-weight:700; display:block; margin-bottom:3px;">Descrição</label>
+          <input id="despDescricao" type="text" placeholder="Ex: Motoboy entrega Savassi, caixa térmica + gelox..." style="width:100%; background:#0f172a; border:1px solid #334155; color:#fff; padding:8px 10px; border-radius:8px; font-size:12.5px;" />
+        </div>
+        <div>
+          <label for="despObs" style="font-size:11px; color:#94a3b8; font-weight:700; display:block; margin-bottom:3px;">Observação (opcional)</label>
+          <input id="despObs" type="text" placeholder="Comprovante ou nota..." style="width:100%; background:#0f172a; border:1px solid #334155; color:#fff; padding:8px 10px; border-radius:8px; font-size:12px;" />
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px;">
+          <button class="btn" onclick="document.getElementById('despesaModal').classList.remove('open')">Cancelar</button>
+          <button class="btn btn-green" style="font-weight:800;" onclick="window.CRM.saveDespesa()">💾 Salvar Despesa</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script type="module" src="dominio/index.js?v=20261119_0955"></script>
-  <script src="pricing_config.js?v=20261119_0955"></script>
-  <script src="dados_catalogo.js?v=20261119_0955"></script>
-  <script src="app.js?v=20261119_0955"></script>
-  <script type="module" src="store/index.js?v=20261119_0955"></script>
+  <script type="module" src="dominio/index.js?v=20261122_1700"></script>
+  <script src="pricing_config.js?v=20261122_1700"></script>
+  <script src="dados_catalogo.js?v=20261122_1700"></script>
+  <script src="bi_engine.js?v=20261122_1700"></script>
+  <script src="app.js?v=20261122_1700"></script>
+  <script type="module" src="store/index.js?v=20261122_1700"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

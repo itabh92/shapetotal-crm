@@ -10,6 +10,7 @@ const js = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
 const pricingJson = JSON.parse(fs.readFileSync(path.join(ROOT, 'pricing_config.json'), 'utf8'));
 const pricingJs = fs.readFileSync(path.join(ROOT, 'pricing_config.js'), 'utf8');
 const cat = fs.readFileSync(path.join(ROOT, 'dados_catalogo.js'), 'utf8');
+const biJs = fs.readFileSync(path.join(ROOT, 'bi_engine.js'), 'utf8');
 
 function createHarness({ confirmAnswer = true, promptAnswer = '0', initialState = null, now = null } = {}) {
   const elements = {};
@@ -97,6 +98,7 @@ function createHarness({ confirmAnswer = true, promptAnswer = '0', initialState 
   vm.createContext(sandbox);
   vm.runInContext(pricingJs, sandbox);
   vm.runInContext(cat, sandbox);
+  vm.runInContext(biJs, sandbox);
   vm.runInContext(js, sandbox);
   sandbox.document._onReady();
 
