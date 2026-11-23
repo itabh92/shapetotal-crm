@@ -191,7 +191,9 @@ def main():
         json.dump({
             'meuEstoque': qtd_map,
             'custosReais': custos_reais_seed,
-            'pedidosTransito': pedidos_transito
+            'pedidosTransito': pedidos_transito,
+            'estoqueAtualizadoEm': datetime.now().isoformat(),
+            'substituirTransito': True
         }, fs_seed, ensure_ascii=False, indent=2)
 
     # 4. Mantém shapetotal_mobile.html como redirecionador seguro para index.html

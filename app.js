@@ -589,19 +589,24 @@
       return db - da;
     });
 
-    // 2. Merge de pedidos em trânsito (status 'entregue' prevalece entre aparelhos)
+    // 2. Merge de pedidos em trânsito (status 'entregue' prevalece entre aparelhos, exceto quando o backup pede substituição explícita)
     const curPedidos = Array.isArray(cur.pedidosTransito) ? cur.pedidosTransito : [];
     const impPedidos = Array.isArray(imp.pedidosTransito) ? imp.pedidosTransito : [];
-    const pedidosMap = new Map();
-    curPedidos.forEach(p => { if (p && p.id) pedidosMap.set(String(p.id), p); });
-    impPedidos.forEach(p => {
-      if (!p || !p.id) return;
-      const pid = String(p.id);
-      const local = pedidosMap.get(pid);
-      if (local && local.status === 'entregue' && p.status !== 'entregue') return;
-      pedidosMap.set(pid, p);
-    });
-    const mergedPedidos = Array.from(pedidosMap.values());
+    let mergedPedidos;
+    if (rawImported && rawImported.substituirTransito === true && Array.isArray(imp.pedidosTransito)) {
+      mergedPedidos = [...impPedidos];
+    } else {
+      const pedidosMap = new Map();
+      curPedidos.forEach(p => { if (p && p.id) pedidosMap.set(String(p.id), p); });
+      impPedidos.forEach(p => {
+        if (!p || !p.id) return;
+        const pid = String(p.id);
+        const local = pedidosMap.get(pid);
+        if (local && local.status === 'entregue' && p.status !== 'entregue') return;
+        pedidosMap.set(pid, p);
+      });
+      mergedPedidos = Array.from(pedidosMap.values());
+    }
 
     // 3. Merge de encomendas de clientes
     const curEncomendas = Array.isArray(cur.encomendas) ? cur.encomendas : [];
