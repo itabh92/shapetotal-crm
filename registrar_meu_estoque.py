@@ -37,8 +37,8 @@ ESTOQUE_LOCAL = [
         'nome': 'TG 60 mg — Indufar (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 8,
-        'obs': 'Caixa lacrada original Indufar (+5 em 20/11, +3 em 23/11)'
+        'qtd': 5,
+        'obs': 'Inventário físico conferido em 23/11/2026'
     },
     {
         'id_catalogo': 2996,
@@ -53,8 +53,8 @@ ESTOQUE_LOCAL = [
         'nome': 'Tirzec 60 mg — Quimfa (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 10,
-        'obs': 'Caixa lacrada original Quimfa (4x15 mg, +5 em 20/11, +2 em 23/11)'
+        'qtd': 7,
+        'obs': 'Inventário físico conferido em 23/11/2026'
     },
     {
         'id_catalogo': 2988,
@@ -69,8 +69,8 @@ ESTOQUE_LOCAL = [
         'nome': 'Lipoless 60 mg — Eticos (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 2,
-        'obs': 'Caixa lacrada original Eticos Labs (4x15 mg)'
+        'qtd': 1,
+        'obs': 'Inventário físico conferido em 23/11/2026'
     },
     {
         'id_catalogo': 3136,
@@ -85,8 +85,8 @@ ESTOQUE_LOCAL = [
         'nome': 'Retatrutida Gen-Health 240 mg (Kit 4x60 mg)',
         'tipo': 'kit_fechado',
         'apresentacao': 'Kit fechado com 4 frascos de 60 mg + 1 Água Bacteriostática',
-        'qtd': 1,
-        'obs': 'Caixa fechada 240 mg (4x60 mg) Gen-Health'
+        'qtd': 0,
+        'obs': 'Kit fechado zerado no inventário físico de 23/11/2026'
     },
     {
         'id_catalogo': 2830,
@@ -141,8 +141,8 @@ ESTOQUE_LOCAL = [
         'nome': 'Retatrutida Gen-Health 120 mg (Frasco para Doses)',
         'tipo': 'frasco_doses',
         'apresentacao': 'Frasco de 120 mg aberto reservado para aplicação fracionada',
-        'qtd': 0,
-        'obs': 'Frasco aberto exclusivo para doses locais'
+        'qtd': 1,
+        'obs': 'Frasco em uso para doses locais (inventário 23/11/2026)'
     },
     {
         'id_catalogo': 9006,
@@ -150,7 +150,7 @@ ESTOQUE_LOCAL = [
         'tipo': 'frasco_doses',
         'apresentacao': 'Frasco de 120 mg aberto reservado para aplicação fracionada',
         'qtd': 0,
-        'obs': 'Frasco aberto exclusivo para doses locais'
+        'obs': 'Frasco de doses de Tirzepatida encerrado (23/11/2026)'
     }
 ]
 
