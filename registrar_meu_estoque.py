@@ -41,28 +41,12 @@ ESTOQUE_LOCAL = [
         'obs': 'Inventário físico conferido em 23/11/2026'
     },
     {
-        'id_catalogo': 2996,
-        'nome': 'Tirzec 60 mg Ampola Única — Quimfa (1x2 mL)',
-        'tipo': 'caixa_fechada',
-        'apresentacao': 'Frasco ampola única multi-dosis de 2 mL (60 mg total / 15 mg por 0,5 mL)',
-        'qtd': 0,
-        'obs': 'Ampola única multi-dosis lacrada original Quimfa'
-    },
-    {
         'id_catalogo': 3207,
         'nome': 'Tirzec 60 mg — Quimfa (4x15 mg)',
         'tipo': 'caixa_fechada',
         'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
         'qtd': 7,
         'obs': 'Inventário físico conferido em 23/11/2026'
-    },
-    {
-        'id_catalogo': 2988,
-        'nome': 'Lipoland 60 mg — Landerlan (4x15 mg)',
-        'tipo': 'caixa_fechada',
-        'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 0,
-        'obs': 'Caixa lacrada original Landerlan'
     },
     {
         'id_catalogo': 2889,
@@ -73,20 +57,12 @@ ESTOQUE_LOCAL = [
         'obs': 'Inventário físico conferido em 23/11/2026'
     },
     {
-        'id_catalogo': 3136,
-        'nome': 'Tirzedral 60 mg — Catedral (4x15 mg)',
-        'tipo': 'caixa_fechada',
-        'apresentacao': 'Caixa com 4 ampolas de 15 mg (60 mg total)',
-        'qtd': 0,
-        'obs': 'Caixa aberta para venda em ampolas avulsas'
-    },
-    {
-        'id_catalogo': 3370,
-        'nome': 'Retatrutida Gen-Health 240 mg (Kit 4x60 mg)',
-        'tipo': 'kit_fechado',
-        'apresentacao': 'Kit fechado com 4 frascos de 60 mg + 1 Água Bacteriostática',
-        'qtd': 0,
-        'obs': 'Kit fechado zerado no inventário físico de 23/11/2026'
+        'id_catalogo': 9003,
+        'nome': 'TG 15 mg (Ampola Avulsa)',
+        'tipo': 'ampola_avulsa',
+        'apresentacao': '1 ampola liofilizada de 15 mg (Indufar)',
+        'qtd': 3,
+        'obs': '3 ampolas avulsas de TG 15 mg Indufar'
     },
     {
         'id_catalogo': 2830,
@@ -97,60 +73,12 @@ ESTOQUE_LOCAL = [
         'obs': '3 ampolas avulsas de 60 mg Gen-Health'
     },
     {
-        'id_catalogo': 9001,
-        'nome': 'Lipoland 15 mg (Ampola Avulsa)',
-        'tipo': 'ampola_avulsa',
-        'apresentacao': '1 ampola liofilizada de 15 mg (Landerlan)',
-        'qtd': 0,
-        'obs': 'Ampola avulsa oficial Landerlan'
-    },
-    {
-        'id_catalogo': 9002,
-        'nome': 'Tirzec 15 mg (Ampola Avulsa)',
-        'tipo': 'ampola_avulsa',
-        'apresentacao': '1 ampola liofilizada de 15 mg (Quimfa)',
-        'qtd': 0,
-        'obs': 'Ampola avulsa oficial Quimfa (sai da caixa 4x15 mg ao vender)'
-    },
-    {
-        'id_catalogo': 9003,
-        'nome': 'TG 15 mg (Ampola Avulsa)',
-        'tipo': 'ampola_avulsa',
-        'apresentacao': '1 ampola liofilizada de 15 mg (Indufar)',
-        'qtd': 3,
-        'obs': '3 ampolas avulsas de TG 15 mg Indufar'
-    },
-    {
-        'id_catalogo': 9004,
-        'nome': 'Lipoless 15 mg (Ampola Avulsa)',
-        'tipo': 'ampola_avulsa',
-        'apresentacao': '1 ampola liofilizada de 15 mg (Eticos)',
-        'qtd': 0,
-        'obs': 'Ampola avulsa oficial Eticos Labs (sai da caixa 4x15 mg ao vender)'
-    },
-    {
-        'id_catalogo': 9007,
-        'nome': 'Catedral Tirzedral 15 mg (Ampola Avulsa)',
-        'tipo': 'ampola_avulsa',
-        'apresentacao': '1 ampola liofilizada de 15 mg (Catedral)',
-        'qtd': 0,
-        'obs': 'Ampola avulsa oficial Catedral'
-    },
-    {
         'id_catalogo': 9005,
         'nome': 'Retatrutida Gen-Health 120 mg (Frasco para Doses)',
         'tipo': 'frasco_doses',
         'apresentacao': 'Frasco de 120 mg aberto reservado para aplicação fracionada',
         'qtd': 1,
         'obs': 'Frasco em uso para doses locais (inventário 23/11/2026)'
-    },
-    {
-        'id_catalogo': 9006,
-        'nome': 'Tirzepatida Gen-Tirz 120 mg (Frasco para Doses)',
-        'tipo': 'frasco_doses',
-        'apresentacao': 'Frasco de 120 mg aberto reservado para aplicação fracionada',
-        'qtd': 0,
-        'obs': 'Frasco de doses de Tirzepatida encerrado (23/11/2026)'
     }
 ]
 
