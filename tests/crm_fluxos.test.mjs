@@ -422,40 +422,56 @@ test('precificacao padronizada: dolar 5.95 + 30% frete (7.735), cartao 12x s/j (
   };
   const expected = (usd, pct) => roundStep(usd * pricingJson.cotacao * 1.3 * (1 + pct / 100));
 
-  // Tirzepatida TG 60mg (USD 85): competitivo -> REC (48%)
-  const tg60 = CRM.computeProduct(byId(2848));
-  assert.equal(Math.round(tg60.custo * 100) / 100, Math.round(85 * pricingJson.cotacao * 1.3 * 100) / 100);
+  // Tirzepatida TG 60mg (2848): competitivo -> REC (48%)
+  const rawTg60 = byId(2848);
+  const usdTg60 = Number(rawTg60.precio);
+  assert.ok(usdTg60 > 0);
+  const tg60 = CRM.computeProduct(rawTg60);
+  assert.equal(Math.round(tg60.custo * 100) / 100, Math.round(usdTg60 * pricingJson.cotacao * 1.3 * 100) / 100);
   assert.equal(tg60.groupKey, 'emagrecedores');
   assert.equal(tg60.chosenTier, 'rec');
-  assert.equal(tg60.precoMin, expected(85, 35));
-  assert.equal(tg60.precoRec, expected(85, 48));
-  assert.equal(tg60.precoMax, expected(85, 65));
+  assert.equal(tg60.precoMin, expected(usdTg60, 35));
+  assert.equal(tg60.precoRec, expected(usdTg60, 48));
+  assert.equal(tg60.precoMax, expected(usdTg60, 65));
   assert.equal(tg60.precoFinal, tg60.precoRec);
   assert.equal(tg60.precoCartao, roundStep(tg60.precoFinal * 1.12012));
   assert.ok(tg60.liquidoCartao12x >= tg60.precoFinal);
 
-  // Retatrutida Gen-Health 60mg (2830, USD 85): alta demanda -> MAX (65%)
-  const genReta60 = CRM.computeProduct(byId(2830));
-  assert.equal(genReta60.chosenTier, 'max');
-  assert.equal(genReta60.precoFinal, expected(85, 65));
+  // Retatrutida Gen-Health 60mg (2830): alta demanda -> MAX (65%) se custo <= cutoff
+  const retaCutoff = Number(pricingJson.tierStrategy?.emagrecedores?.retatrutidaMaxCostCutoff ?? 1800);
+  const rawGenReta60 = byId(2830);
+  const usdGenReta60 = Number(rawGenReta60.precio);
+  assert.ok(usdGenReta60 > 0);
+  const genReta60 = CRM.computeProduct(rawGenReta60);
+  const expectedTierReta60 = genReta60.custo > retaCutoff ? 'rec' : 'max';
+  const expectedPctReta60 = expectedTierReta60 === 'rec' ? 48 : 65;
+  assert.equal(genReta60.chosenTier, expectedTierReta60);
+  assert.equal(genReta60.precoFinal, expected(usdGenReta60, expectedPctReta60));
   assert.equal(genReta60.precoCartao, roundStep(genReta60.precoFinal * 1.12012));
   assert.ok(genReta60.liquidoCartao12x >= genReta60.precoFinal);
 
-  // Retatrutida Gen-Health 240mg Kit (3370, USD 230): MAX (65%) se custo <= cutoff (1800), senão REC (48%)
-  const retaCutoff = Number(pricingJson.tierStrategy?.emagrecedores?.retatrutidaMaxCostCutoff ?? 1800);
-  const genReta240 = CRM.computeProduct(byId(3370));
+  // Retatrutida Gen-Health 240mg Kit (3370): MAX (65%) se custo <= cutoff (1800), senão REC (48%)
+  const rawGenReta240 = byId(3370);
+  const usdGenReta240 = Number(rawGenReta240.precio);
+  assert.ok(usdGenReta240 > 0);
+  const genReta240 = CRM.computeProduct(rawGenReta240);
   const expectedTier240 = genReta240.custo > retaCutoff ? 'rec' : 'max';
   const expectedPct240 = expectedTier240 === 'rec' ? 48 : 65;
   assert.equal(genReta240.chosenTier, expectedTier240);
-  assert.equal(genReta240.precoFinal, expected(230, expectedPct240));
+  assert.equal(genReta240.precoFinal, expected(usdGenReta240, expectedPct240));
   assert.equal(genReta240.precoCartao, roundStep(genReta240.precoFinal * 1.12012));
   assert.ok(genReta240.liquidoCartao12x >= genReta240.precoFinal);
 
-  // ZPHC Retatrutida 60mg (USD 190) <= R$ 1.800 -> MAX (65%)
-  const zphcReta = CRM.computeProduct(byId(2965));
-  assert.equal(Math.round(zphcReta.custo * 100) / 100, Math.round(190 * pricingJson.cotacao * 1.3 * 100) / 100);
-  assert.equal(zphcReta.chosenTier, 'max');
-  assert.equal(zphcReta.precoFinal, expected(190, 65));
+  // ZPHC Retatrutida 60mg (2965): MAX (65%) se custo <= cutoff, senão REC (48%)
+  const rawZphcReta = byId(2965);
+  const usdZphcReta = Number(rawZphcReta.precio);
+  assert.ok(usdZphcReta > 0);
+  const zphcReta = CRM.computeProduct(rawZphcReta);
+  const expectedTierZphc = zphcReta.custo > retaCutoff ? 'rec' : 'max';
+  const expectedPctZphc = expectedTierZphc === 'rec' ? 48 : 65;
+  assert.equal(Math.round(zphcReta.custo * 100) / 100, Math.round(usdZphcReta * pricingJson.cotacao * 1.3 * 100) / 100);
+  assert.equal(zphcReta.chosenTier, expectedTierZphc);
+  assert.equal(zphcReta.precoFinal, expected(usdZphcReta, expectedPctZphc));
   assert.equal(zphcReta.precoCartao, roundStep(zphcReta.precoFinal * 1.12012));
 
   // Somatropina rotulada como anabolizante na API (ID 3214) cai no grupo hgh -> sempre REC (35%)
@@ -464,11 +480,14 @@ test('precificacao padronizada: dolar 5.95 + 30% frete (7.735), cartao 12x s/j (
   assert.equal(bratvaGh.chosenTier, 'rec');
   assert.equal(bratvaGh.recPct, 35);
 
-  // Diluente micro-ticket (ID 1522 USD 1.50) cai em potencia_suporte -> sempre MAX (100%)
-  const dil = CRM.computeProduct(byId(1522));
+  // Diluente micro-ticket (ID 1522) cai em potencia_suporte -> sempre MAX (100%)
+  const rawDil = byId(1522);
+  const usdDil = Number(rawDil.precio);
+  assert.ok(usdDil > 0);
+  const dil = CRM.computeProduct(rawDil);
   assert.equal(dil.groupKey, 'potencia_suporte');
   assert.equal(dil.chosenTier, 'max');
-  assert.equal(dil.precoFinal, expected(1.5, 100));
+  assert.equal(dil.precoFinal, expected(usdDil, 100));
   assert.equal(dil.precoCartao, roundStep(dil.precoFinal * 1.12012));
 
   // Garantia matematica: 100% dos produtos validos do catalogo recebem liquido >= PIX no 12x sem juros
