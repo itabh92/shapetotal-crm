@@ -613,3 +613,18 @@ test('venda de ampola avulsa abre caixa fechada automaticamente (4x15mg e 4x60mg
   assert.equal(st.meuEstoque[3370] || 0, 0);
   assert.equal(st.meuEstoque[2830], 3);
 });
+
+test('heurísticas de Nielsen: ajuda, limpar filtros, status dinâmico sem SKUs hardcoded e modal com backdrop', () => {
+  const { CRM, doc } = createHarness();
+  assert.equal(html.includes('938 SKUs'), false);
+  assert.match(html, /id="ajudaModal"/);
+  assert.match(html, /id="networkStatusBadge"/);
+
+  CRM.openAjudaModal();
+  assert.equal(doc.getElementById('ajudaModal').classList.contains('open'), true);
+
+  CRM.applySavedFilter('glp_estoque');
+  assert.match(doc.getElementById('savedFiltersBar').innerHTML, /Limpar Filtros/);
+  CRM.clearCatalogFilters();
+  assert.equal(doc.getElementById('searchInput').value, '');
+});

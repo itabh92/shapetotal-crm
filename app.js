@@ -744,6 +744,7 @@
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+      if (typeof updateLastSavedIndicator === 'function') updateLastSavedIndicator();
       if (typeof window !== 'undefined' && window.CRM_STORE && typeof window.CRM_STORE.salvarSnapshotEstado === 'function') {
         clearTimeout(_idbSnapshotTimer);
         _idbSnapshotTimer = setTimeout(() => {
@@ -752,7 +753,7 @@
       }
     } catch (e) {
       console.error('Erro ao salvar estado:', e);
-      alert('⚠️ Não foi possível salvar os dados neste aparelho. Exporte um backup agora.');
+      alert('⚠️ Não foi possível salvar os dados neste aparelho (armazenamento cheio ou bloqueado). Exporte um backup em ☁️ Sincronizar ou 💾 Backup Local agora.');
     }
   }
 
@@ -2535,11 +2536,22 @@
       <button type="button" class="btn" style="padding:4px 10px;font-size:11px;border-radius:99px;background:#0f172a;border:1px solid #334155;color:#cbd5e1;" onclick="window.CRM.applySavedFilter('${f.id}')">${f.nome}</button>
     `).join('');
 
+    const hasCatalogFilter = Boolean(
+      (state.search && state.search.trim()) ||
+      state.mainGroup !== 'todas' ||
+      state.subCat !== 'todas' ||
+      state.brand !== 'todas' ||
+      state.stockFilter !== 'com_estoque' ||
+      state.branchFilter !== 'todas' ||
+      state.minMarginFilter !== null
+    );
+
     bar.innerHTML = `
       <span style="font-size:11px;color:#94a3b8;font-weight:700;margin-right:2px;">Filtros:</span>
       ${presetChips}
       ${customChips}
       <button type="button" class="btn" style="padding:4px 10px;font-size:11px;border-radius:99px;background:#1e1b4b;border:1px solid #4f46e5;color:#c7d2fe;" onclick="window.CRM.saveCurrentFilter()">⭐ Salvar Atual</button>
+      ${hasCatalogFilter ? `<button type="button" class="btn" style="padding:4px 10px;font-size:11px;border-radius:99px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.45);color:#fca5a5;" onclick="window.CRM.clearCatalogFilters()">✖ Limpar Filtros</button>` : ''}
     `;
   }
 
@@ -3588,40 +3600,81 @@
     },
 
     saveDespesa() {
-      const dataVal = (document.getElementById('despData')?.value || '').trim() || new Date().toISOString().slice(0, 10);
-      const valorRaw = String(document.getElementById('despValor')?.value || '').replace(',', '.');
-      const valor = Math.round((parseFloat(valorRaw) || 0) * 100) / 100;
-      const categoria = (document.getElementById('despCategoria')?.value || 'outros').trim();
-      const status = (document.getElementById('despStatus')?.value === 'pendente') ? 'pendente' : 'pago';
-      const descricao = (document.getElementById('despDescricao')?.value || '').trim();
-      const obs = (document.getElementById('despObs')?.value || '').trim();
+      if (window.CRM._despSubmitting) return;
+      window.CRM._despSubmitting = true;
+      try {
+        const dataVal = (document.getElementById('despData')?.value || '').trim() || new Date().toISOString().slice(0, 10);
+        const valorRaw = String(document.getElementById('despValor')?.value || '').replace(',', '.');
+        const valor = Math.round((parseFloat(valorRaw) || 0) * 100) / 100;
+        const categoria = (document.getElementById('despCategoria')?.value || 'outros').trim();
+        const status = (document.getElementById('despStatus')?.value === 'pendente') ? 'pendente' : 'pago';
+        const descricao = (document.getElementById('despDescricao')?.value || '').trim();
+        const obs = (document.getElementById('despObs')?.value || '').trim();
 
-      if (!Number.isFinite(valor) || valor <= 0) {
-        alert('Informe um valor válido maior que R$ 0,00 para a despesa.');
-        return;
-      }
-      if (!descricao) {
-        alert('Informe uma descrição curta para a despesa (ex: Motoboy entrega, gelox/isopor).');
-        return;
-      }
+        if (!Number.isFinite(valor) || valor <= 0) {
+          alert('Informe um valor válido maior que R$ 0,00 para a despesa (ex: 35.00).');
+          document.getElementById('despValor')?.focus();
+          return;
+        }
+        if (!descricao) {
+          alert('Informe uma descrição curta para identificar a despesa (ex: Motoboy entrega, gelox/isopor).');
+          document.getElementById('despDescricao')?.focus();
+          return;
+        }
 
-      const nova = {
-        id: 'desp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-        data: dataVal,
-        categoria,
-        descricao,
-        valor,
-        status,
-        obs
-      };
-      state.despesas = Array.isArray(state.despesas) ? state.despesas : [];
-      state.despesas.unshift(nova);
-      logAuditoria('despesa_lancada', `${categoria}: ${descricao} (${formatBRL(valor)}) [${status}]`);
-      saveState();
-      const modal = document.getElementById('despesaModal');
-      if (modal) modal.classList.remove('open');
+        const nova = {
+          id: 'desp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          data: dataVal,
+          categoria,
+          descricao,
+          valor,
+          status,
+          obs
+        };
+        state.despesas = Array.isArray(state.despesas) ? state.despesas : [];
+        state.despesas.unshift(nova);
+        logAuditoria('despesa_lancada', `${categoria}: ${descricao} (${formatBRL(valor)}) [${status}]`);
+        saveState();
+        const modal = document.getElementById('despesaModal');
+        if (modal) modal.classList.remove('open');
+        renderAll();
+        showToast(`💸 Despesa registrada: ${formatBRL(valor)}`);
+      } finally {
+        window.CRM._despSubmitting = false;
+      }
+    },
+
+    openAjudaModal() {
+      const modal = document.getElementById('ajudaModal');
+      if (modal) modal.classList.add('open');
+    },
+
+    clearCatalogFilters() {
+      state.mainGroup = 'todas';
+      state.subCat = 'todas';
+      state.brand = 'todas';
+      state.stockFilter = 'com_estoque';
+      state.branchFilter = 'todas';
+      state.minMarginFilter = null;
+      state.search = '';
+      const sInp = document.getElementById('searchInput');
+      if (sInp) sInp.value = '';
+      const sClr = document.getElementById('btnClearSearch');
+      if (sClr) sClr.style.display = 'none';
+      const subSel = document.getElementById('subCatSelect');
+      if (subSel) subSel.value = 'todas';
+      const brSel = document.getElementById('brandSelect');
+      if (brSel) brSel.value = 'todas';
+      const stSel = document.getElementById('stockSelect');
+      if (stSel) stSel.value = 'com_estoque';
+      const bhSel = document.getElementById('branchSelect');
+      if (bhSel) bhSel.value = 'todas';
+      document.querySelectorAll('.group-tab').forEach(t => {
+        t.classList.toggle('active', t.getAttribute('data-group') === 'todas');
+      });
+      renderLimit = 60;
       renderAll();
-      showToast(`💸 Despesa registrada: ${formatBRL(valor)}`);
+      showToast('Filtros restaurados para o padrão.');
     },
 
     toggleDespesaStatus(id) {
@@ -8376,11 +8429,42 @@ ${fmtDoseList(reta)}
     ].join('\n');
   }
 
-  function showToast(msg) {
+  let _toastTimer = null;
+  function showToast(msg, variant = 'ok') {
     const t = document.getElementById('toastBox');
+    if (!t) return;
+    const palette = {
+      ok: { bg: '#10b981', fg: '#052e16', ms: 2200 },
+      warn: { bg: '#f59e0b', fg: '#1c1917', ms: 3000 },
+      error: { bg: '#ef4444', fg: '#ffffff', ms: 3400 }
+    };
+    const p = palette[variant] || palette.ok;
+    t.style.background = p.bg;
+    t.style.color = p.fg;
     t.textContent = msg;
     t.style.opacity = '1';
-    setTimeout(() => { t.style.opacity = '0'; }, 2200);
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => { t.style.opacity = '0'; }, p.ms);
+  }
+
+  function updateNetworkStatusBadge() {
+    const el = document.getElementById('networkStatusBadge');
+    if (!el || typeof navigator === 'undefined') return;
+    const online = navigator.onLine !== false;
+    el.className = `status-pill ${online ? 'online' : 'offline'}`;
+    el.textContent = online ? '🟢 Online' : '🟠 Offline (PWA)';
+    el.title = online
+      ? 'Conectado: sincronização e Service Worker disponíveis'
+      : 'Sem internet: operando 100% offline no armazenamento local';
+  }
+
+  function updateLastSavedIndicator() {
+    const el = document.getElementById('lastSavedBadge');
+    if (!el) return;
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    el.textContent = `· Salvo às ${hh}:${mm}`;
   }
 
   function initEvents() {
@@ -8405,6 +8489,7 @@ ${fmtDoseList(reta)}
       const parsed = parseFloat(String(e.target.value || '').replace(',', '.'));
       if (!Number.isFinite(parsed) || parsed <= 0) {
         e.target.value = Number(state.cotacao || DEFAULT_COTACAO).toFixed(2);
+        showToast('Cotação inválida — mantido o valor anterior.', 'warn');
         return;
       }
       state.cotacao = Math.round(parsed * 10000) / 10000;
@@ -8412,6 +8497,7 @@ ${fmtDoseList(reta)}
       state.cotacaoAtualizadaEm = new Date().toISOString();
       saveState();
       renderAll();
+      showToast(`💵 Dólar atualizado para R$ ${state.cotacao.toFixed(2)}`);
     });
     freteInput.addEventListener('input', () => {
       freteInput.value = FIXED_FRETE_PCT;
@@ -8535,7 +8621,7 @@ ${fmtDoseList(reta)}
       }
     } catch (e) {
       console.error('Erro na sincronização via URL:', e);
-      alert('Link de sincronização inválido ou incompleto.');
+      alert('Link de sincronização inválido ou cortado.\n\nComo resolver: abra ☁️ Sincronizar no outro aparelho, copie o link completo novamente e abra neste navegador.');
     }
     history.replaceState(null, null, window.location.pathname + window.location.search);
   }
@@ -8548,6 +8634,23 @@ ${fmtDoseList(reta)}
     initEvents();
     renderAll();
 
+    const skuEl = document.getElementById('brandSkuCount');
+    if (skuEl) skuEl.textContent = `${rawCatalog.length.toLocaleString('pt-BR')} SKUs`;
+    updateNetworkStatusBadge();
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('online', () => { updateNetworkStatusBadge(); showToast('🟢 Conexão restabelecida.'); });
+      window.addEventListener('offline', () => { updateNetworkStatusBadge(); showToast('🟠 Sem internet — modo offline ativo.', 'warn'); });
+    }
+
+    // Heurísticas 3 & 4 de Nielsen: semântica ARIA e fechamento ao clicar fora do modal
+    document.querySelectorAll('.modal-backdrop').forEach(modal => {
+      modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-modal', 'true');
+      modal.addEventListener('click', e => {
+        if (e.target === modal) modal.classList.remove('open');
+      });
+    });
+
     // Em telas mobile/tablet (<= 900px), inicia a gaveta de ferramentas recolhida sem apagar o badge de alertas
     if (window.innerWidth <= 900) {
       const drawer = document.getElementById('topbarToolsDrawer');
@@ -8556,8 +8659,10 @@ ${fmtDoseList(reta)}
       }
     }
 
-    // Atalhos rápidos no teclado (Ctrl+K busca, Ctrl+N Venda Rápida, Esc fecha modais)
+    // Atalhos rápidos no teclado (Ctrl+K busca, Ctrl+N Venda Rápida, ? Ajuda, Esc fecha modais)
     document.addEventListener('keydown', e => {
+      const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
+      const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         const s = document.getElementById('searchInput');
@@ -8567,6 +8672,9 @@ ${fmtDoseList(reta)}
         if (!state.clientMode && window.CRM && window.CRM.openVendaRapidaModal) {
           window.CRM.openVendaRapidaModal();
         }
+      } else if (!isTyping && (e.key === '?' || e.key === 'F1')) {
+        e.preventDefault();
+        if (window.CRM && window.CRM.openAjudaModal) window.CRM.openAjudaModal();
       } else if (e.key === 'Escape') {
         document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
       }

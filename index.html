@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="icon" type="image/png" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=20261122_1700" />
+  <link rel="stylesheet" href="styles.css?v=20261127_2005" />
 </head>
 <body>
   <!-- Local Device PIN Overlay (somente quando o usuário configurar PIN local) -->
@@ -36,8 +36,11 @@
         <div class="brand">
           <div class="brand-logo">ST</div>
           <div>
-            <div class="brand-title">SHAPE TOTAL · CRM</div>
-            <div class="brand-sub">938 SKUs · Estoque BH, Encomendas & Vendas</div>
+            <div class="brand-title" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <span>SHAPE TOTAL · CRM</span>
+              <span id="networkStatusBadge" class="status-pill online" title="Status de conexão do PWA">🟢 Online</span>
+            </div>
+            <div class="brand-sub"><span id="brandSkuCount">Catálogo</span> · Estoque BH, Encomendas &amp; Vendas <span id="lastSavedBadge" class="internal-only" style="color:#64748b;"></span></div>
           </div>
         </div>
 
@@ -92,14 +95,15 @@
           <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
             <button class="btn btn-xs internal-only" style="background:#0c4a6e; border:1px solid #0284c7; color:#bae6fd; font-weight:800;" onclick="window.CRM.openListaDoDiaModal()" title="Ações vencidas, para hoje, reservas e avisos">📋 Lista do Dia (<span id="countListaDiaBadge">0</span>)</button>
             <button class="btn btn-xs internal-only" style="background:#047857; color:#ffffff; font-weight:800; border:1px solid #10b981;" onclick="window.CRM.gerarPedidoFornecedorDasEncomendas()" title="Gerar pedido consolidado ao fornecedor a partir das encomendas pendentes">🇵🇾 Pedido Fornecedor</button>
-            <button class="btn btn-xs internal-only" style="background:#1e1b4b; border:1px solid #6366f1; color:#c7d2fe; font-weight:800;" onclick="window.CRM.openPaineisComerciaisModal()" title="Top 10 mais vendidos, produtos parados e estoque crítico">📊 Painéis</button>
+            <button class="btn btn-xs internal-only" style="background:#1e1b4b; border:1px solid #6366f1; color:#c7d2fe; font-weight:800;" onclick="window.CRM.openPaineisComerciaisModal()" title="Top 10 mais vendidos, produtos parados e estoque crítico">📊 Painéis Comerciais</button>
             <button class="btn btn-xs internal-only" style="background:#7c3aed; color:#ffffff; font-weight:800;" onclick="window.CRM.openNewProductModal()" title="Cadastrar produto local">➕ Produto</button>
             <button class="btn btn-xs internal-only" style="background:#0284c7; color:#ffffff; font-weight:800; border:1px solid #38bdf8;" onclick="window.CRM.openSyncModal()" title="Sincronizar ou exportar backup entre celular e computador">☁️ Sincronizar</button>
-            <button id="btnViewMode" class="btn btn-xs">📊 Planilha</button>
+            <button id="btnViewMode" class="btn btn-xs" title="Alternar entre cards da loja e tabela executiva">📊 Ver Planilha</button>
             <button class="btn btn-xs internal-only" onclick="window.CRM.exportCSV()" title="Exportar planilha CSV">📥 CSV</button>
             <button class="btn btn-xs internal-only" onclick="window.CRM.verLogAuditoria()" title="Ver log das últimas ações críticas">📜 Auditoria</button>
-            <button class="btn btn-xs internal-only" style="background:#1e293b; color:#38bdf8;" title="Exportar cópia de backup pré-migração IndexedDB" onclick="window.CRM.exportarBackupMigracaoSeguro()">💾 Backup IDB</button>
+            <button class="btn btn-xs internal-only" style="background:#1e293b; color:#38bdf8;" title="Exportar cópia completa de backup deste aparelho" onclick="window.CRM.exportarBackupMigracaoSeguro()">💾 Backup Local</button>
             <button class="btn btn-xs internal-only" onclick="window.CRM.alterarSenhaAcesso()" title="Configurar ou remover PIN de bloqueio local neste aparelho">🔑 PIN Local</button>
+            <button class="btn btn-xs" style="background:#0f172a; border-color:#475569; color:#e2e8f0;" onclick="window.CRM.openAjudaModal()" title="Guia rápido, legenda de cores e atalhos (?)">❓ Ajuda</button>
             <button class="btn btn-xs" onclick="window.CRM.lockApp()" title="Bloquear tela (se PIN local estiver ativo)">🔒 Bloquear</button>
           </div>
         </div>
@@ -153,13 +157,13 @@
       <div class="kpi-inline-row">
         <div class="kpi-inline-item">
           <span id="kpiLabel1" class="kpi-label">Filtro</span>
-          <span id="kpiCount" class="kpi-value">938 SKUs</span>
-          <span id="kpiCountSub" class="kpi-sub">Carregando...</span>
+          <span id="kpiCount" class="kpi-value">— SKUs</span>
+          <span id="kpiCountSub" class="kpi-sub">Carregando catálogo...</span>
         </div>
         <div class="kpi-inline-item">
           <span id="kpiLabel2" class="kpi-label">Mult.</span>
-          <span id="kpiMult" class="kpi-value" style="color:#38bdf8;">R$ 7,54</span>
-          <span id="kpiMultSub" class="kpi-sub">Dólar R$ 5,80 + 30% frete fixo</span>
+          <span id="kpiMult" class="kpi-value" style="color:#38bdf8;">R$ —</span>
+          <span id="kpiMultSub" class="kpi-sub">Dólar + 30% frete fixo</span>
         </div>
         <div class="kpi-inline-item">
           <span id="kpiLabel3" class="kpi-label">Ticket</span>
@@ -263,7 +267,7 @@
     <section class="filter-bar">
       <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input id="searchInput" type="text" placeholder="Pesquisar por produto, apelido (ex: dura, trembo, deca, enan, mounjaro), marca..." />
+        <input id="searchInput" type="text" placeholder="Pesquisar por produto, apelido (ex: dura, trembo, mounjaro), marca (Ctrl+K)..." aria-label="Pesquisar produtos" />
         <button id="btnClearSearch" class="search-clear-btn" title="Limpar busca" style="display:none;" onclick="window.CRM.clearSearch()">✕</button>
       </div>
 
@@ -1486,15 +1490,62 @@
     </div>
   </div>
 
+  <!-- Modal: Ajuda, Legenda & Atalhos (Heurística 10 de Nielsen) -->
+  <div id="ajudaModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:640px; width:95%;">
+      <div class="modal-header" style="border-bottom:1px solid #1e293b; padding-bottom:10px; margin-bottom:12px;">
+        <div>
+          <h3 style="font-size:17px; font-weight:800; color:#38bdf8;">❓ Guia Rápido, Legenda &amp; Atalhos</h3>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">Resumo operacional do ShapeTotal CRM para uso diário</p>
+        </div>
+        <button class="btn" onclick="document.getElementById('ajudaModal').classList.remove('open')">✖ Fechar</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; font-size:12.5px; color:#cbd5e1; max-height:70vh; overflow-y:auto;">
+        <div style="background:#0b1120; border:1px solid #1e293b; border-radius:10px; padding:11px 13px;">
+          <div style="font-weight:800; color:#34d399; margin-bottom:6px;">🔄 Fluxo Operacional (5 passos)</div>
+          <ol style="padding-left:18px; display:flex; flex-direction:column; gap:4px;">
+            <li><b>Estoque BH:</b> itens físicos em mãos prontos para entrega imediata.</li>
+            <li><b>Encomendas:</b> pedidos de clientes com sinal e reserva automática.</li>
+            <li><b>Pedido Fornecedor &amp; Trânsito:</b> gera lista consolidada e dá entrada em 1 clique ao chegar.</li>
+            <li><b>⚡ Vender (Ctrl+N):</b> baixa caixa fechada, ampola avulsa (abre caixa se preciso) ou dose em mg.</li>
+            <li><b>📈 BI &amp; Financeiro:</b> DRE, Fluxo de Caixa, Despesas, Semáforos e Auditoria da base.</li>
+          </ol>
+        </div>
+        <div style="background:#0b1120; border:1px solid #1e293b; border-radius:10px; padding:11px 13px;">
+          <div style="font-weight:800; color:#fbbf24; margin-bottom:6px;">🎨 Legenda de Disponibilidade &amp; Semáforos</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:6px;">
+            <div>🟢 <b>Livre BH:</b> disponível para vender agora</div>
+            <div>🟡 <b>Reservado:</b> comprometido em encomenda</div>
+            <div>🔵 <b>Chegando:</b> pago em trânsito para BH</div>
+            <div>🇵🇾 <b>A pedir:</b> encomenda sem compra no lote</div>
+          </div>
+        </div>
+        <div style="background:#0b1120; border:1px solid #1e293b; border-radius:10px; padding:11px 13px;">
+          <div style="font-weight:800; color:#c4b5fd; margin-bottom:6px;">⌨️ Atalhos de Teclado</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:6px;">
+            <div><kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;">Ctrl / ⌘ + K</kbd> Buscar produto</div>
+            <div><kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;">Ctrl / ⌘ + N</kbd> Nova Venda</div>
+            <div><kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;">?</kbd> Abrir esta ajuda</div>
+            <div><kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;">Esc</kbd> ou clique fora: Fechar janela</div>
+          </div>
+        </div>
+        <div style="background:#0b1120; border:1px solid #1e293b; border-radius:10px; padding:11px 13px;">
+          <div style="font-weight:800; color:#38bdf8; margin-bottom:4px;">☁️ Sincronização Mac ⇄ iPhone</div>
+          <div>Os dados ficam salvos localmente no aparelho (PWA offline). Ao trocar de aparelho, use <b>☁️ Sincronizar</b> para gerar link ou QR Code e unir vendas, despesas e estoque sem perda.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast notification -->
   <div id="toastBox" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#052e16;font-weight:800;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:400;"></div>
 
-  <script type="module" src="dominio/index.js?v=20261122_1700"></script>
-  <script src="pricing_config.js?v=20261122_1700"></script>
-  <script src="dados_catalogo.js?v=20261122_1700"></script>
-  <script src="bi_engine.js?v=20261122_1700"></script>
-  <script src="app.js?v=20261122_1700"></script>
-  <script type="module" src="store/index.js?v=20261122_1700"></script>
+  <script type="module" src="dominio/index.js?v=20261127_2005"></script>
+  <script src="pricing_config.js?v=20261127_2005"></script>
+  <script src="dados_catalogo.js?v=20261127_2005"></script>
+  <script src="bi_engine.js?v=20261127_2005"></script>
+  <script src="app.js?v=20261127_2005"></script>
+  <script type="module" src="store/index.js?v=20261127_2005"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
