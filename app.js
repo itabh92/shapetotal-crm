@@ -8659,11 +8659,11 @@ ${fmtDoseList(reta)}
       }
     }
 
-    // Atalhos rápidos no teclado (Ctrl+K busca, Ctrl+N Venda Rápida, ? Ajuda, Esc fecha modais)
+    // Atalhos rápidos no teclado (Ctrl+K ou / busca, Ctrl+N Venda Rápida, ? Ajuda, Esc fecha modais ou limpa busca)
     document.addEventListener('keydown', e => {
       const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
       const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') || (!isTyping && !e.ctrlKey && !e.metaKey && !e.altKey && e.key === '/')) {
         e.preventDefault();
         const s = document.getElementById('searchInput');
         if (s) { s.focus(); s.select && s.select(); }
@@ -8676,7 +8676,20 @@ ${fmtDoseList(reta)}
         e.preventDefault();
         if (window.CRM && window.CRM.openAjudaModal) window.CRM.openAjudaModal();
       } else if (e.key === 'Escape') {
-        document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
+        const openModals = document.querySelectorAll('.modal-backdrop.open');
+        if (openModals.length > 0) {
+          openModals.forEach(m => m.classList.remove('open'));
+        } else {
+          const s = document.getElementById('searchInput');
+          if (s && (document.activeElement === s || s.value.trim() !== '')) {
+            if (window.CRM && typeof window.CRM.clearCatalogFilters === 'function') {
+              window.CRM.clearCatalogFilters();
+            } else {
+              s.value = '';
+            }
+            if (document.activeElement === s) s.blur();
+          }
+        }
       }
     });
 
