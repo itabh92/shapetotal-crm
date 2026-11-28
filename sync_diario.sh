@@ -21,12 +21,12 @@ avisar_italo.enviar_telegram(sys.argv[1])
 on_error() {
   local linha="$1"
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERRO na rotina diária ShapeTotal (linha $linha)" >> "$LOG_FILE"
-  aviso_telegram "❌ *ShapeTotal CRM — Falha na rotina das 07h00* (linha $linha). Verifique o log em $LOG_FILE."
+  aviso_telegram "❌ *ShapeTotal CRM — Falha na rotina das 11h00* (linha $linha). Verifique o log em $LOG_FILE."
 }
 trap 'on_error $LINENO' ERR
 
 echo "==================================================" >> "$LOG_FILE"
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Iniciando rotina diária 07h00 ShapeTotal CRM..." >> "$LOG_FILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Iniciando rotina diária 11h00 ShapeTotal CRM..." >> "$LOG_FILE"
 
 # 1. Sincronizar API shapetotal.com (produtos, dólar, promoções e atualização de fotos)
 /usr/bin/python3 "$CRM_DIR/atualizar_site.py" --refresh-fotos >> "$LOG_FILE" 2>&1
@@ -75,13 +75,13 @@ PYEOF
 PUSH_STATUS="Sem alterações novas no site"
 if [ -n "$(git status --porcelain)" ]; then
   git add -A
-  git commit -m "chore(catalogo): rotina diária 07h00 ($(date +%Y-%m-%d) · $RESUMO)" >> "$LOG_FILE" 2>&1
+  git commit -m "chore(catalogo): rotina diária 11h00 ($(date +%Y-%m-%d) · $RESUMO)" >> "$LOG_FILE" 2>&1
   git push origin main >> "$LOG_FILE" 2>&1
   PUSH_STATUS="Site publicado no GitHub Pages"
 fi
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Concluído: $RESUMO | $PUSH_STATUS" >> "$LOG_FILE"
-aviso_telegram "✅ *ShapeTotal CRM atualizado (07h00)*
+aviso_telegram "✅ *ShapeTotal CRM atualizado (11h00)*
 • $RESUMO
 • 6 PDFs oficiais regenerados (CRM, Downloads e Desktop)
 • Testes automatizados: OK
